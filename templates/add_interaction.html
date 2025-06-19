@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>Add New Infrastructure Interaction</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.interaction_type.label }}</label>
+                            {{ form.interaction_type(class="form-select") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.lifecycle_stage.label }}</label>
+                            {{ form.lifecycle_stage(class="form-select") }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.source_infrastructure.label }}</label>
+                            {{ form.source_infrastructure(class="form-control") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.target_infrastructure.label }}</label>
+                            {{ form.target_infrastructure(class="form-control") }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.interaction_description.label }}</label>
+                        {{ form.interaction_description(class="form-control", rows="4") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.technical_details.label }}</label>
+                        {{ form.technical_details(class="form-control", rows="3") }}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.benefits.label }}</label>
+                            {{ form.benefits(class="form-control", rows="3") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.challenges.label }}</label>
+                            {{ form.challenges(class="form-control", rows="3") }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.contact_person.label }}</label>
+                            {{ form.contact_person(class="form-control") }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.organization.label }}</label>
+                            {{ form.organization(class="form-control") }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.email.label }}</label>
+                            {{ form.email(class="form-control") }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.priority_level.label }}</label>
+                            {{ form.priority_level(class="form-select") }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.implementation_complexity.label }}</label>
+                            {{ form.implementation_complexity(class="form-select") }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.current_status.label }}</label>
+                            {{ form.current_status(class="form-select") }}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
