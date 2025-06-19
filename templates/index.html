@@ -3,219 +3,838 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Research Data Lifecycle Visualization</title>
+    <title>MaLDReTH Infrastructure Visualization</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
+            padding: 0;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f7fa;
             color: #333;
-            text-align: center;
+            line-height: 1.6;
         }
-        #visualization {
-            min-height: 600px;
+        
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .nav-buttons a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-buttons a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .info-box {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .info-box h2 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .controls {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        button, select {
+            padding: 0.5rem 1rem;
             border: 1px solid #ddd;
             border-radius: 4px;
-            padding: 20px;
-            margin: 20px 0;
-            background-color: #fafafa;
-        }
-        .controls {
-            text-align: center;
-            margin: 20px 0;
-        }
-        button {
-            padding: 10px 20px;
-            margin: 5px;
-            border: none;
-            border-radius: 4px;
-            background-color: #007bff;
-            color: white;
+            background-color: white;
             cursor: pointer;
             font-size: 14px;
+            transition: all 0.3s;
         }
+        
         button:hover {
-            background-color: #0056b3;
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
         }
-        .info {
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #e9ecef;
-            border-radius: 4px;
+        
+        button.active {
+            background-color: #2c3e50;
+            color: white;
+            border-color: #2c3e50;
         }
-        .loading {
-            text-align: center;
-            padding: 50px;
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        #visualization {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 2rem;
+            min-height: 600px;
+        }
+        
+        #details-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .stage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .stage-card {
+            background: #ecf0f1;
+            padding: 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .stage-card:hover {
+            background: #d5dbdb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stage-card.active {
+            border-color: #3498db;
+            background: #e8f4f8;
+        }
+        
+        .stage-card h3 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stage-card p {
+            font-size: 0.9rem;
             color: #666;
         }
-        .error {
-            color: #dc3545;
-            padding: 15px;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
+        
+        .category-section {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
             border-radius: 4px;
-            margin: 20px 0;
+        }
+        
+        .category-section h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tool-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .tool-item {
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tool-item:hover {
+            background: #e8f4f8;
+            border-color: #3498db;
+        }
+        
+        .tool-metadata {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 3px;
+            margin-right: 0.25rem;
+        }
+        
+        .badge-open {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .badge-closed {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .badge-freemium {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .badge-api {
+            background: #3498db;
+            color: white;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        .error {
+            color: #e74c3c;
+            padding: 1rem;
+            background-color: #ffe6e6;
+            border: 1px solid #ffcccc;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 0.25rem;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .search-result-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .search-result-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .close-button {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .close-button:hover {
+            color: #333;
         }
     </style>
 </head>
 <body>
+    <div class="header">
+        <div class="header-content">
+            <h1>MaLDReTH Infrastructure Visualization</h1>
+            <div class="nav-buttons">
+                <a href="/">Visualization</a>
+                <a href="/curator">Curator Interface</a>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
-        <h1>Research Data Lifecycle Visualization</h1>
-        
-        <div class="info">
-            <p>This visualization shows the MaLDReTH (Mapping the Landscape of Digital Research Tools Harmonised) Research Data Lifecycle model.</p>
-            <p>Click on any stage to explore its categories and tools.</p>
+        <div class="info-box">
+            <h2>Research Data Lifecycle Infrastructure</h2>
+            <p>Explore the MaLDReTH (Mapping the Landscape of Digital Research Tools Harmonised) Research Data Lifecycle model. 
+               This visualization shows the relationships and interactions between different research infrastructure tools across the lifecycle stages.</p>
         </div>
 
         <div class="controls">
-            <button onclick="loadVisualization('circular')">Circular View</button>
+            <div class="control-group">
+                <button onclick="setView('stages')" class="active" id="btn-stages">Lifecycle Stages</button>
+                <button onclick="setView('tools')" id="btn-tools">All Tools</button>
+                <button onclick="setView('interactions')" id="btn-interactions">Infrastructure Interactions</button>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search tools, categories, or stages...">
+                <div id="search-results" class="search-results" style="display: none;"></div>
+            </div>
+            
+            <button onclick="showStatistics()">Statistics</button>
             <button onclick="initializeDatabase()">Initialize Database</button>
         </div>
 
-        <div id="visualization">
-            <div class="loading">Loading visualization...</div>
+        <div class="main-content">
+            <div id="visualization">
+                <div class="loading">Loading visualization...</div>
+            </div>
+            
+            <div id="details-panel">
+                <h3>Details</h3>
+                <p>Select a stage or tool to view details</p>
+            </div>
         </div>
 
-        <div id="stage-info" style="display: none;">
-            <h2>Stage Information</h2>
-            <div id="stage-details"></div>
+        <div id="statistics-section" style="display: none;">
+            <h2>Infrastructure Statistics</h2>
+            <div class="stats-grid" id="stats-grid"></div>
+        </div>
+    </div>
+
+    <!-- Tool Detail Modal -->
+    <div id="tool-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Tool Details</h2>
+                <span class="close-button" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modal-body"></div>
         </div>
     </div>
 
     <script>
-        // Load the visualization when the page loads
+        let currentView = 'stages';
+        let allData = {
+            stages: [],
+            tools: [],
+            interactions: []
+        };
+
+        // Initialize the application
         window.addEventListener('DOMContentLoaded', () => {
-            loadVisualization('circular');
+            loadStagesView();
+            setupSearch();
         });
 
-        // Load visualization data
-        async function loadVisualization(viewMode) {
-            const vizContainer = document.getElementById('visualization');
-            vizContainer.innerHTML = '<div class="loading">Loading visualization...</div>';
+        // View switching
+        function setView(view) {
+            currentView = view;
             
-            try {
-                const response = await fetch(`/api/layout/${viewMode}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                
-                renderVisualization(data);
-            } catch (error) {
-                console.error('Error loading visualization:', error);
-                vizContainer.innerHTML = `
-                    <div class="error">
-                        <strong>Error loading visualization:</strong> ${error.message}<br>
-                        <br>
-                        Try clicking "Initialize Database" button above if this is your first time running the application.
-                    </div>
-                `;
+            // Update button states
+            document.querySelectorAll('.control-group button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`btn-${view}`).classList.add('active');
+            
+            // Load appropriate view
+            switch(view) {
+                case 'stages':
+                    loadStagesView();
+                    break;
+                case 'tools':
+                    loadToolsView();
+                    break;
+                case 'interactions':
+                    loadInteractionsView();
+                    break;
             }
         }
 
-        // Render the visualization
-        function renderVisualization(data) {
+        // Load stages view
+        async function loadStagesView() {
             const vizContainer = document.getElementById('visualization');
+            vizContainer.innerHTML = '<div class="loading">Loading stages...</div>';
             
-            // For now, let's create a simple text-based visualization
-            let html = '<h3>Research Data Lifecycle Stages:</h3>';
-            
-            if (data.stages && data.stages.length > 0) {
-                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">';
+            try {
+                const response = await fetch('/api/stages');
+                const stages = await response.json();
+                allData.stages = stages;
                 
-                data.stages.forEach(stage => {
+                let html = '<h3>Research Data Lifecycle Stages</h3>';
+                html += '<div class="stage-grid">';
+                
+                stages.forEach(stage => {
                     html += `
-                        <div style="padding: 15px; background-color: #e9ecef; border-radius: 4px; cursor: pointer;" 
-                             onclick="loadStageDetails(${stage.id}, '${stage.name}')">
-                            <h4 style="margin: 0 0 10px 0;">${stage.name}</h4>
-                            <small>Click to view categories and tools</small>
+                        <div class="stage-card" onclick="loadStageDetails(${stage.id})">
+                            <h3>${stage.name}</h3>
+                            <p>${stage.description ? stage.description.substring(0, 100) + '...' : 'Click to view details'}</p>
                         </div>
                     `;
                 });
                 
                 html += '</div>';
-                
-                if (data.connections && data.connections.length > 0) {
-                    html += '<h4 style="margin-top: 30px;">Connections:</h4>';
-                    html += '<ul>';
-                    data.connections.forEach(conn => {
-                        html += `<li>${conn.from} → ${conn.to} (${conn.type})</li>`;
-                    });
-                    html += '</ul>';
-                }
-            } else {
-                html += '<p>No stages found. Please initialize the database.</p>';
+                vizContainer.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading stages:', error);
+                vizContainer.innerHTML = '<div class="error">Error loading stages. Please try again.</div>';
             }
-            
-            vizContainer.innerHTML = html;
         }
 
         // Load stage details
-        async function loadStageDetails(stageId, stageName) {
-            const detailsContainer = document.getElementById('stage-info');
-            const detailsContent = document.getElementById('stage-details');
+        async function loadStageDetails(stageId) {
+            const detailsPanel = document.getElementById('details-panel');
+            detailsPanel.innerHTML = '<div class="loading">Loading stage details...</div>';
             
-            detailsContainer.style.display = 'block';
-            detailsContent.innerHTML = '<div class="loading">Loading stage details...</div>';
+            // Highlight selected stage
+            document.querySelectorAll('.stage-card').forEach((card, index) => {
+                card.classList.toggle('active', allData.stages[index].id === stageId);
+            });
             
             try {
-                const response = await fetch(`/api/stage/${stageId}/categories`);
-                const categories = await response.json();
+                const response = await fetch(`/api/stage/${stageId}`);
+                const stage = await response.json();
                 
-                let html = `<h3>${stageName}</h3>`;
+                let html = `<h3>${stage.name}</h3>`;
+                html += `<p>${stage.description}</p>`;
                 
-                if (categories.error) {
-                    html += `<p>No categories found for this stage.</p>`;
-                } else {
-                    html += '<div>';
-                    for (const category of categories) {
+                if (stage.categories && stage.categories.length > 0) {
+                    html += '<h4>Tool Categories:</h4>';
+                    
+                    for (const category of stage.categories) {
+                        html += `<div class="category-section">`;
                         html += `<h4>${category.category}</h4>`;
+                        html += `<p>${category.description || ''}</p>`;
+                        html += `<p><small>${category.tool_count} tools</small></p>`;
                         
                         // Load tools for this category
-                        try {
-                            const toolsResponse = await fetch(`/api/category/${category.id}/tools`);
-                            const tools = await toolsResponse.json();
-                            
-                            if (!tools.error) {
-                                html += '<ul>';
-                                tools.forEach(tool => {
-                                    html += `<li>${tool.name}</li>`;
-                                });
-                                html += '</ul>';
-                            }
-                        } catch (error) {
-                            console.error('Error loading tools:', error);
+                        const toolsResponse = await fetch(`/api/category/${category.id}/tools`);
+                        const tools = await toolsResponse.json();
+                        
+                        if (tools && tools.length > 0) {
+                            html += '<ul class="tool-list">';
+                            tools.forEach(tool => {
+                                html += `<li class="tool-item" onclick="showToolDetails(${tool.id})">${tool.name}</li>`;
+                            });
+                            html += '</ul>';
                         }
+                        
+                        html += '</div>';
+                    }
+                }
+                
+                detailsPanel.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading stage details:', error);
+                detailsPanel.innerHTML = '<div class="error">Error loading details</div>';
+            }
+        }
+
+        // Load all tools view
+        async function loadToolsView() {
+            const vizContainer = document.getElementById('visualization');
+            vizContainer.innerHTML = '<div class="loading">Loading tools...</div>';
+            
+            try {
+                const response = await fetch('/api/tools');
+                const tools = await response.json();
+                allData.tools = tools;
+                
+                let html = '<h3>All Research Tools</h3>';
+                
+                // Group tools by stage
+                const toolsByStage = {};
+                tools.forEach(tool => {
+                    if (!toolsByStage[tool.stage_name]) {
+                        toolsByStage[tool.stage_name] = [];
+                    }
+                    toolsByStage[tool.stage_name].push(tool);
+                });
+                
+                // Display tools grouped by stage
+                for (const [stageName, stageTools] of Object.entries(toolsByStage)) {
+                    html += `<div class="category-section">`;
+                    html += `<h4>${stageName}</h4>`;
+                    html += '<ul class="tool-list">';
+                    
+                    stageTools.forEach(tool => {
+                        html += `<li class="tool-item" onclick="showToolDetails(${tool.id})">`;
+                        html += `<strong>${tool.name}</strong>`;
+                        html += '<div class="tool-metadata">';
+                        
+                        if (tool.source_type) {
+                            html += `<span class="badge badge-${tool.source_type}">${tool.source_type}</span>`;
+                        }
+                        if (tool.api_available) {
+                            html += '<span class="badge badge-api">API</span>';
+                        }
+                        html += ` - ${tool.category}`;
+                        html += '</div>';
+                        html += '</li>';
+                    });
+                    
+                    html += '</ul>';
+                    html += '</div>';
+                }
+                
+                vizContainer.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading tools:', error);
+                vizContainer.innerHTML = '<div class="error">Error loading tools. Please try again.</div>';
+            }
+        }
+
+        // Show tool details in modal
+        async function showToolDetails(toolId) {
+            try {
+                const response = await fetch(`/api/tool/${toolId}`);
+                const tool = await response.json();
+                
+                document.getElementById('modal-title').textContent = tool.name;
+                
+                let html = '<div>';
+                html += `<p><strong>Provider:</strong> ${tool.provider || 'N/A'}</p>`;
+                html += `<p><strong>Description:</strong> ${tool.description || 'No description available'}</p>`;
+                
+                if (tool.url) {
+                    html += `<p><strong>URL:</strong> <a href="${tool.url}" target="_blank">${tool.url}</a></p>`;
+                }
+                
+                html += '<h4>Metadata</h4>';
+                html += `<p><strong>Source Type:</strong> <span class="badge badge-${tool.source_type}">${tool.source_type || 'Unknown'}</span></p>`;
+                html += `<p><strong>Scope:</strong> ${tool.scope || 'Unknown'}</p>`;
+                html += `<p><strong>Interoperable:</strong> ${tool.interoperable ? 'Yes' : 'No'}</p>`;
+                html += `<p><strong>API Available:</strong> ${tool.api_available ? 'Yes' : 'No'}</p>`;
+                
+                if (tool.data_formats && tool.data_formats.length > 0) {
+                    html += `<p><strong>Data Formats:</strong> ${tool.data_formats.join(', ')}</p>`;
+                }
+                
+                if (tool.standards_compliant && tool.standards_compliant.length > 0) {
+                    html += `<p><strong>Standards Compliant:</strong> ${tool.standards_compliant.join(', ')}</p>`;
+                }
+                
+                html += '</div>';
+                
+                document.getElementById('modal-body').innerHTML = html;
+                document.getElementById('tool-modal').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading tool details:', error);
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('tool-modal').style.display = 'none';
+        }
+
+        // Setup search functionality
+        function setupSearch() {
+            const searchInput = document.getElementById('search-input');
+            const searchResults = document.getElementById('search-results');
+            let searchTimeout;
+            
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                const query = e.target.value.trim();
+                
+                if (query.length < 2) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+                
+                searchTimeout = setTimeout(() => {
+                    searchTools(query);
+                }, 300);
+            });
+            
+            // Hide search results when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-box')) {
+                    searchResults.style.display = 'none';
+                }
+            });
+        }
+
+        // Search tools
+        async function searchTools(query) {
+            const searchResults = document.getElementById('search-results');
+            
+            try {
+                const response = await fetch(`/api/search/tools?q=${encodeURIComponent(query)}`);
+                const results = await response.json();
+                
+                if (results.length === 0) {
+                    searchResults.innerHTML = '<div class="search-result-item">No results found</div>';
+                } else {
+                    let html = '';
+                    results.forEach(tool => {
+                        html += `
+                            <div class="search-result-item" onclick="showToolDetails(${tool.id}); document.getElementById('search-results').style.display='none';">
+                                <strong>${tool.name}</strong> - ${tool.stage_name} / ${tool.category}
+                            </div>
+                        `;
+                    });
+                }
+                
+                searchResults.innerHTML = html;
+                searchResults.style.display = 'block';
+            } catch (error) {
+                console.error('Error searching:', error);
+                searchResults.innerHTML = '<div class="search-result-item">Error searching</div>';
+            }
+        }
+
+        // Load infrastructure interactions view
+        async function loadInteractionsView() {
+            const vizContainer = document.getElementById('visualization');
+            vizContainer.innerHTML = '<div class="loading">Loading infrastructure interactions...</div>';
+            
+            try {
+                const response = await fetch('/api/interactions');
+                const interactions = await response.json();
+                allData.interactions = interactions;
+                
+                let html = '<h3>Infrastructure Interactions</h3>';
+                
+                if (interactions.length === 0) {
+                    html += '<p>No infrastructure interactions have been recorded yet.</p>';
+                    html += '<p>Use the Curator Interface to add tool interactions.</p>';
+                } else {
+                    html += '<div style="margin-bottom: 1rem;">';
+                    html += `<p>Found ${interactions.length} infrastructure interactions</p>`;
+                    html += '</div>';
+                    
+                    // Create a simple table view of interactions
+                    html += '<table style="width: 100%; border-collapse: collapse;">';
+                    html += '<thead>';
+                    html += '<tr style="background: #f8f9fa;">';
+                    html += '<th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #dee2e6;">From Tool</th>';
+                    html += '<th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #dee2e6;">To Tool</th>';
+                    html += '<th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #dee2e6;">Type</th>';
+                    html += '<th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #dee2e6;">Direction</th>';
+                    html += '<th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #dee2e6;">Verified</th>';
+                    html += '</tr>';
+                    html += '</thead>';
+                    html += '<tbody>';
+                    
+                    interactions.forEach(interaction => {
+                        html += '<tr style="border-bottom: 1px solid #dee2e6;">';
+                        html += `<td style="padding: 0.75rem;">${interaction.from_tool_name}</td>`;
+                        html += `<td style="padding: 0.75rem;">${interaction.to_tool_name}</td>`;
+                        html += `<td style="padding: 0.75rem;">${interaction.interaction_type}</td>`;
+                        html += `<td style="padding: 0.75rem;">${interaction.data_flow_direction || 'unidirectional'}</td>`;
+                        html += `<td style="padding: 0.75rem;">${interaction.verified ? '✓' : '✗'}</td>`;
+                        html += '</tr>';
+                    });
+                    
+                    html += '</tbody>';
+                    html += '</table>';
+                }
+                
+                vizContainer.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading interactions:', error);
+                vizContainer.innerHTML = '<div class="error">Error loading interactions. Please try again.</div>';
+            }
+        }
+
+        // Show statistics
+        async function showStatistics() {
+            const statsSection = document.getElementById('statistics-section');
+            const statsGrid = document.getElementById('stats-grid');
+            
+            try {
+                const response = await fetch('/api/statistics');
+                const stats = await response.json();
+                
+                let html = '';
+                
+                // Basic counts
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.total_stages}</div>
+                        <div class="stat-label">Lifecycle Stages</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.total_categories}</div>
+                        <div class="stat-label">Tool Categories</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.total_tools}</div>
+                        <div class="stat-label">Total Tools</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.total_interactions}</div>
+                        <div class="stat-label">Infrastructure Interactions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.verified_interactions}</div>
+                        <div class="stat-label">Verified Interactions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.interoperable_tools}</div>
+                        <div class="stat-label">Interoperable Tools</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.api_available_tools}</div>
+                        <div class="stat-label">Tools with APIs</div>
+                    </div>
+                `;
+                
+                // Tools by source type
+                if (stats.tools_by_source_type) {
+                    html += '<div class="stat-card" style="grid-column: span 2;">';
+                    html += '<h4>Tools by Source Type</h4>';
+                    for (const [type, count] of Object.entries(stats.tools_by_source_type)) {
+                        html += `<p>${type}: ${count}</p>`;
                     }
                     html += '</div>';
                 }
                 
-                detailsContent.innerHTML = html;
+                // Most connected tools
+                if (stats.most_connected_tools && stats.most_connected_tools.length > 0) {
+                    html += '<div class="stat-card" style="grid-column: span 2;">';
+                    html += '<h4>Most Connected Tools</h4>';
+                    html += '<ol>';
+                    stats.most_connected_tools.forEach(tool => {
+                        html += `<li>${tool.name} (${tool.connection_count} connections)</li>`;
+                    });
+                    html += '</ol>';
+                    html += '</div>';
+                }
+                
+                statsGrid.innerHTML = html;
+                statsSection.style.display = 'block';
+                
+                // Scroll to statistics
+                statsSection.scrollIntoView({ behavior: 'smooth' });
             } catch (error) {
-                console.error('Error loading stage details:', error);
-                detailsContent.innerHTML = `<div class="error">Error loading stage details: ${error.message}</div>`;
+                console.error('Error loading statistics:', error);
+                alert('Error loading statistics');
             }
         }
 
         // Initialize database
         async function initializeDatabase() {
-            if (!confirm('This will reset the database with initial data. Continue?')) {
+            if (!confirm('This will reset the database with initial MaLDReTH data. Continue?')) {
                 return;
             }
             
@@ -231,13 +850,22 @@
                 
                 if (result.status === 'success') {
                     alert('Database initialized successfully!');
-                    loadVisualization('circular');
+                    // Reload current view
+                    setView(currentView);
                 } else {
                     alert('Error initializing database: ' + (result.error || 'Unknown error'));
                 }
             } catch (error) {
                 console.error('Error initializing database:', error);
                 alert('Error initializing database: ' + error.message);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('tool-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
             }
         }
     </script>
