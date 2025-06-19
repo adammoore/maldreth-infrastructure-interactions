@@ -2,19 +2,14 @@
 MaLDReTH Infrastructure Interactions Collection Flask Application
 =================================================================
 
-Simplified version optimized for Heroku deployment.
+Simplified version that works reliably on Heroku.
 """
 
 import os
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Any
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_file
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SelectField, SubmitField
-from wtforms.validators import DataRequired, Optional as OptionalValidator
 import pandas as pd
 from io import BytesIO
 
@@ -39,7 +34,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 
 # Data Model
 class InfrastructureInteraction(db.Model):
@@ -66,7 +60,7 @@ class InfrastructureInteraction(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self):
         """Convert to dictionary for JSON serialization."""
         return {
             'id': self.id,
@@ -89,135 +83,6 @@ class InfrastructureInteraction(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
-
-# Forms
-class InfrastructureInteractionForm(FlaskForm):
-    """Form for collecting infrastructure interaction data."""
-    
-    interaction_type = SelectField(
-        'Interaction Type',
-        choices=[
-            ('data_flow', 'Data Flow'),
-            ('api_integration', 'API Integration'),
-            ('metadata_exchange', 'Metadata Exchange'),
-            ('authentication', 'Authentication/Authorization'),
-            ('workflow_orchestration', 'Workflow Orchestration'),
-            ('storage_federation', 'Storage Federation'),
-            ('compute_federation', 'Compute Federation'),
-            ('service_composition', 'Service Composition'),
-            ('other', 'Other')
-        ],
-        validators=[DataRequired()]
-    )
-    
-    source_infrastructure = StringField(
-        'Source Infrastructure',
-        validators=[DataRequired()]
-    )
-    
-    target_infrastructure = StringField(
-        'Target Infrastructure', 
-        validators=[DataRequired()]
-    )
-    
-    lifecycle_stage = SelectField(
-        'Research Data Lifecycle Stage',
-        choices=[
-            ('conceptualise', 'Conceptualise'),
-            ('plan', 'Plan'),
-            ('collect', 'Collect'),
-            ('process', 'Process'),
-            ('analyse', 'Analyse'),
-            ('store', 'Store'),
-            ('publish', 'Publish'),
-            ('preserve', 'Preserve'),
-            ('share', 'Share'),
-            ('access', 'Access'),
-            ('transform', 'Transform')
-        ],
-        validators=[DataRequired()]
-    )
-    
-    interaction_description = TextAreaField(
-        'Interaction Description',
-        validators=[DataRequired()]
-    )
-    
-    technical_details = TextAreaField(
-        'Technical Details',
-        validators=[OptionalValidator()]
-    )
-    
-    standards_protocols = StringField(
-        'Standards & Protocols',
-        validators=[OptionalValidator()]
-    )
-    
-    benefits = TextAreaField(
-        'Benefits',
-        validators=[OptionalValidator()]
-    )
-    
-    challenges = TextAreaField(
-        'Challenges',
-        validators=[OptionalValidator()]
-    )
-    
-    examples = TextAreaField(
-        'Examples',
-        validators=[OptionalValidator()]
-    )
-    
-    contact_person = StringField(
-        'Contact Person',
-        validators=[OptionalValidator()]
-    )
-    
-    organization = StringField(
-        'Organization',
-        validators=[OptionalValidator()]
-    )
-    
-    email = StringField(
-        'Email',
-        validators=[OptionalValidator()]
-    )
-    
-    priority_level = SelectField(
-        'Priority Level',
-        choices=[('', 'Select Priority')] + [
-            ('high', 'High'),
-            ('medium', 'Medium'),
-            ('low', 'Low')
-        ],
-        validators=[OptionalValidator()]
-    )
-    
-    implementation_complexity = SelectField(
-        'Implementation Complexity',
-        choices=[('', 'Select Complexity')] + [
-            ('low', 'Low'),
-            ('medium', 'Medium'),
-            ('high', 'High'),
-            ('very_high', 'Very High')
-        ],
-        validators=[OptionalValidator()]
-    )
-    
-    current_status = SelectField(
-        'Current Status',
-        choices=[('', 'Select Status')] + [
-            ('concept', 'Concept'),
-            ('planned', 'Planned'),
-            ('in_development', 'In Development'),
-            ('pilot', 'Pilot'),
-            ('production', 'Production'),
-            ('deprecated', 'Deprecated')
-        ],
-        validators=[OptionalValidator()]
-    )
-    
-    submit = SubmitField('Submit')
 
 # Routes
 @app.route('/')
@@ -250,27 +115,36 @@ def index():
 @app.route('/add', methods=['GET', 'POST'])
 def add_interaction():
     """Add a new infrastructure interaction."""
-    form = InfrastructureInteractionForm()
-    
-    if form.validate_on_submit():
+    if request.method == 'POST':
         try:
+            # Get form data with validation
+            required_fields = ['interaction_type', 'source_infrastructure', 
+                             'target_infrastructure', 'lifecycle_stage', 
+                             'interaction_description']
+            
+            # Check required fields
+            for field in required_fields:
+                if not request.form.get(field):
+                    flash(f'{field.replace("_", " ").title()} is required.', 'error')
+                    return render_template('add_interaction.html')
+            
             interaction = InfrastructureInteraction(
-                interaction_type=form.interaction_type.data,
-                source_infrastructure=form.source_infrastructure.data,
-                target_infrastructure=form.target_infrastructure.data,
-                lifecycle_stage=form.lifecycle_stage.data,
-                interaction_description=form.interaction_description.data,
-                technical_details=form.technical_details.data,
-                standards_protocols=form.standards_protocols.data,
-                benefits=form.benefits.data,
-                challenges=form.challenges.data,
-                examples=form.examples.data,
-                contact_person=form.contact_person.data,
-                organization=form.organization.data,
-                email=form.email.data,
-                priority_level=form.priority_level.data or None,
-                implementation_complexity=form.implementation_complexity.data or None,
-                current_status=form.current_status.data or None
+                interaction_type=request.form.get('interaction_type'),
+                source_infrastructure=request.form.get('source_infrastructure'),
+                target_infrastructure=request.form.get('target_infrastructure'),
+                lifecycle_stage=request.form.get('lifecycle_stage'),
+                interaction_description=request.form.get('interaction_description'),
+                technical_details=request.form.get('technical_details'),
+                standards_protocols=request.form.get('standards_protocols'),
+                benefits=request.form.get('benefits'),
+                challenges=request.form.get('challenges'),
+                examples=request.form.get('examples'),
+                contact_person=request.form.get('contact_person'),
+                organization=request.form.get('organization'),
+                email=request.form.get('email'),
+                priority_level=request.form.get('priority_level') or None,
+                implementation_complexity=request.form.get('implementation_complexity') or None,
+                current_status=request.form.get('current_status') or None
             )
             
             db.session.add(interaction)
@@ -284,7 +158,7 @@ def add_interaction():
             db.session.rollback()
             flash('An error occurred while adding the interaction.', 'error')
     
-    return render_template('add_interaction.html', form=form)
+    return render_template('add_interaction.html')
 
 @app.route('/interactions')
 def view_interactions():
@@ -295,7 +169,11 @@ def view_interactions():
         
         interactions = InfrastructureInteraction.query.order_by(
             InfrastructureInteraction.created_at.desc()
-        ).paginate(page=page, per_page=per_page, error_out=False)
+        ).paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
         
         return render_template('interactions.html', interactions=interactions)
     
@@ -303,6 +181,17 @@ def view_interactions():
         logger.error(f"Error viewing interactions: {str(e)}")
         flash('An error occurred while loading interactions.', 'error')
         return render_template('interactions.html', interactions=None)
+
+@app.route('/interaction/<int:id>')
+def view_interaction(id):
+    """View details of a specific interaction."""
+    try:
+        interaction = InfrastructureInteraction.query.get_or_404(id)
+        return render_template('interaction_detail.html', interaction=interaction)
+    except Exception as e:
+        logger.error(f"Error viewing interaction {id}: {str(e)}")
+        flash('An error occurred while loading the interaction.', 'error')
+        return redirect(url_for('view_interactions'))
 
 @app.route('/api/interactions', methods=['GET'])
 def api_get_interactions():
@@ -319,6 +208,55 @@ def api_get_interactions():
         return jsonify({
             'success': False,
             'error': 'An error occurred while fetching interactions'
+        }), 500
+
+@app.route('/api/interactions', methods=['POST'])
+def api_create_interaction():
+    """API endpoint to create a new interaction."""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'No data provided'
+            }), 400
+        
+        # Create new interaction
+        interaction = InfrastructureInteraction(
+            interaction_type=data.get('interaction_type'),
+            source_infrastructure=data.get('source_infrastructure'),
+            target_infrastructure=data.get('target_infrastructure'),
+            lifecycle_stage=data.get('lifecycle_stage'),
+            interaction_description=data.get('interaction_description'),
+            technical_details=data.get('technical_details'),
+            standards_protocols=data.get('standards_protocols'),
+            benefits=data.get('benefits'),
+            challenges=data.get('challenges'),
+            examples=data.get('examples'),
+            contact_person=data.get('contact_person'),
+            organization=data.get('organization'),
+            email=data.get('email'),
+            priority_level=data.get('priority_level'),
+            implementation_complexity=data.get('implementation_complexity'),
+            current_status=data.get('current_status')
+        )
+        
+        db.session.add(interaction)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'data': interaction.to_dict(),
+            'message': 'Interaction created successfully'
+        }), 201
+    
+    except Exception as e:
+        logger.error(f"Error in API create interaction: {str(e)}")
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': 'An error occurred while creating the interaction'
         }), 500
 
 @app.route('/export/csv')
@@ -351,8 +289,9 @@ def export_csv():
 @app.cli.command()
 def init_db():
     """Initialize the database."""
-    db.create_all()
-    print("Database initialized successfully!")
+    with app.app_context():
+        db.create_all()
+        print("Database initialized successfully!")
 
 # Error handlers
 @app.errorhandler(404)
@@ -368,7 +307,22 @@ def internal_error(error):
                          error_code=500, 
                          error_message="Internal server error"), 500
 
+# Database initialization for Heroku
+@app.before_first_request
+def create_tables():
+    """Create database tables before first request."""
+    try:
+        db.create_all()
+        logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.error(f"Error creating database tables: {str(e)}")
+
 if __name__ == '__main__':
     # For local development
     port = int(os.environ.get('PORT', 5000))
+    
+    # Create tables if they don't exist
+    with app.app_context():
+        db.create_all()
+    
     app.run(host='0.0.0.0', port=port, debug=True)
