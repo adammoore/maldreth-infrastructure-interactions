@@ -1,41 +1,143 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div class="jumbotron bg-light p-4 rounded mb-4">
-    <h1 class="display-4">MaLDReTH Infrastructure Interactions</h1>
-    <p class="lead">Collect and manage potential infrastructure interactions for the MaLDReTH 2 Working Group.</p>
-    <a class="btn btn-primary btn-lg" href="{{ url_for('add_interaction') }}">Add New Interaction</a>
-</div>
-
-<div class="row">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body text-center">
-                <h5 class="card-title">Total Interactions</h5>
-                <h2 class="text-primary">{{ total_interactions }}</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaLDReTH Infrastructure Interactions</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-network-wired me-2"></i>MaLDReTH Infrastructure Interactions
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                <a class="nav-link" href="{{ url_for('add_interaction') }}">Add Interaction</a>
+                <a class="nav-link" href="{{ url_for('view_interactions') }}">View All</a>
             </div>
         </div>
-    </div>
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5>Recent Interactions</h5>
-            </div>
-            <div class="card-body">
-                {% if recent_interactions %}
-                    {% for interaction in recent_interactions %}
-                        <div class="border-bottom pb-2 mb-2">
-                            <strong>{{ interaction.source_infrastructure }}</strong> → 
-                            <strong>{{ interaction.target_infrastructure }}</strong>
-                            <br>
-                            <small class="text-muted">{{ interaction.lifecycle_stage.title() }} | {{ interaction.created_at.strftime('%Y-%m-%d') }}</small>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="jumbotron bg-light p-5 rounded mb-4">
+            <h1 class="display-4">MaLDReTH Infrastructure Interactions</h1>
+            <p class="lead">Collect and manage potential infrastructure interactions for the MaLDReTH 2 Working Group meeting.</p>
+            <hr class="my-4">
+            <p>Document how different research infrastructures interact, identify integration opportunities, and support the development of a comprehensive research data ecosystem.</p>
+            <a class="btn btn-primary btn-lg" href="{{ url_for('add_interaction') }}">
+                <i class="fas fa-plus me-2"></i>Add New Interaction
+            </a>
+            <a class="btn btn-outline-secondary btn-lg ms-2" href="{{ url_for('view_interactions') }}">
+                <i class="fas fa-list me-2"></i>Browse Interactions
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <div>
+                                <h5 class="card-title mb-0">Total Interactions</h5>
+                                <h2 class="text-primary mb-0">{{ total_interactions }}</h2>
+                            </div>
+                            <div class="ms-3">
+                                <i class="fas fa-network-wired fa-2x text-primary"></i>
+                            </div>
                         </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="text-muted">No interactions yet. <a href="{{ url_for('add_interaction') }}">Add the first one!</a></p>
-                {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Interactions</h5>
+                        <a href="{{ url_for('view_interactions') }}" class="btn btn-sm btn-outline-primary">
+                            View All <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_interactions %}
+                            {% for interaction in recent_interactions %}
+                                <div class="border-bottom pb-2 mb-3">
+                                    <h6 class="mb-1">
+                                        {{ interaction.source_infrastructure }} 
+                                        <i class="fas fa-arrow-right mx-1 text-muted"></i> 
+                                        {{ interaction.target_infrastructure }}
+                                    </h6>
+                                    <p class="mb-1 text-muted small">{{ interaction.interaction_description[:100] }}...</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-secondary">{{ interaction.lifecycle_stage.title() }}</span>
+                                        <small class="text-muted">{{ interaction.created_at.strftime('%Y-%m-%d') if interaction.created_at }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted mb-0">No interactions yet. <a href="{{ url_for('add_interaction') }}">Add the first one!</a></p>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
+
+        {% if stage_counts %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Interactions by Lifecycle Stage</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for stage, count in stage_counts.items() %}
+                                    <div class="col-md-3 col-sm-6 mb-2">
+                                        <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                            <span class="fw-bold">{{ stage.title() }}</span>
+                                            <span class="badge bg-primary">{{ count }}</span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
     </div>
-</div>
-{% endblock %}
+
+    <footer class="bg-light mt-5 py-3">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2025 MaLDReTH Working Group. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p class="mb-0">
+                        <a href="https://www.rd-alliance.org/groups/rda-ofr-mapping-landscape-digital-research-tools-wg/" 
+                           target="_blank" class="text-decoration-none">
+                            <i class="fas fa-external-link-alt me-1"></i>RDA Working Group
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
