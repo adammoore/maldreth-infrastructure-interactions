@@ -1,10 +1,45 @@
 import logging
-from typing import Dict, List, Union
-from flask import Flask, render_template, jsonify, request
-from database import query_db, insert_db, init_db, populate_db
-from config import DATABASE_CONFIG, APP_CONFIG, LOGGING_CONFIG
 import logging.config
+import sqlite3
+import json
 import os
+from typing import Dict, List, Union, Optional, Tuple, Any
+from contextlib import closing
+from flask import Flask, render_template, jsonify, request
+
+# Configuration
+DATABASE_CONFIG = {
+    'DATABASE': 'database.db',
+    'SQLITE_URI': 'sqlite:///database.db',
+    'DEBUG': True,
+    'SECRET_KEY': 'your_secret_key_here'
+}
+
+APP_CONFIG = {
+    'HOST': '0.0.0.0',  # Changed to 0.0.0.0 for Heroku
+    'PORT': 5000,
+    'DEBUG': False  # Set to False for production
+}
+
+LOGGING_CONFIG = {
+    'version': 1,
+    'formatters': {
+        'default': {
+            'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+        }
+    },
+    'handlers': {
+        'wsgi': {
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://flask.logging.wsgi_errors_stream',
+            'formatter': 'default'
+        }
+    },
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+}
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger(__name__)
@@ -12,7 +47,173 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config.from_object(DATABASE_CONFIG)
 
-# Initialize database on startup instead of using deprecated before_first_request
+# Database functions
+def get_db_connection():
+    """Create and return a database connection."""
+    return sqlite3.connect(DATABASE_CONFIG['DATABASE'])
+
+def init_db() -> None:
+    """Initialize the database using the schema."""
+    try:
+        with closing(get_db_connection()) as db:
+            db.cursor().executescript('''
+                DROP TABLE IF EXISTS stages;
+                DROP TABLE IF EXISTS tool_categories;
+                DROP TABLE IF EXISTS tools;
+                DROP TABLE IF EXISTS connections;
+
+                CREATE TABLE stages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    x INTEGER,
+                    y INTEGER
+                );
+
+                CREATE TABLE tool_categories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    stage_id INTEGER,
+                    category TEXT NOT NULL,
+                    FOREIGN KEY(stage_id) REFERENCES stages(id)
+                );
+
+                CREATE TABLE tools (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    category_id INTEGER,
+                    name TEXT NOT NULL,
+                    FOREIGN KEY(category_id) REFERENCES tool_categories(id)
+                );
+
+                CREATE TABLE connections (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    view_mode TEXT NOT NULL,
+                    from_stage TEXT NOT NULL,
+                    to_stage TEXT NOT NULL,
+                    type TEXT NOT NULL
+                );
+            ''')
+            db.commit()
+        logger.info("Database initialized successfully.")
+    except sqlite3.Error as e:
+        logger.error(f"Error initializing database: {e}")
+        raise
+
+def query_db(query: str, args: Tuple = (), one: bool = False) -> Optional[List[Tuple]]:
+    """Execute a database query and return the results."""
+    try:
+        with closing(get_db_connection()) as db:
+            cur = db.execute(query, args)
+            rv = cur.fetchall()
+            return (rv[0] if rv else None) if one else rv
+    except sqlite3.Error as e:
+        logger.error(f"Error executing query: {e}")
+        return None
+
+def insert_db(query: str, args: Tuple = ()) -> int:
+    """Execute an insert query and return the last row id."""
+    try:
+        with closing(get_db_connection()) as db:
+            cur = db.cursor()
+            cur.execute(query, args)
+            db.commit()
+            return cur.lastrowid
+    except sqlite3.Error as e:
+        logger.error(f"Error executing insert: {e}")
+        raise
+
+def populate_db() -> None:
+    """Populate the database with initial data."""
+    try:
+        with closing(get_db_connection()) as db:
+            cursor = db.cursor()
+
+            # Define stages with their positions
+            stages_data = [
+                ('Conceptualise', 600, 100),
+                ('Plan', 800, 200),
+                ('Fund', 900, 400),
+                ('Collect', 900, 600),
+                ('Process', 800, 800),
+                ('Analyse', 600, 900),
+                ('Store', 400, 900),
+                ('Publish', 200, 800),
+                ('Preserve', 100, 600),
+                ('Share', 100, 400),
+                ('Access', 200, 200),
+                ('Transform', 400, 100)
+            ]
+
+            # Insert stages
+            for name, x, y in stages_data:
+                cursor.execute('INSERT INTO stages (name, x, y) VALUES (?, ?, ?)', (name, x, y))
+                logger.info(f"Inserted stage: {name}")
+
+            # Define connections
+            connections_data = [
+                ('circular', 'Conceptualise', 'Plan', 'solid'),
+                ('circular', 'Plan', 'Fund', 'solid'),
+                ('circular', 'Fund', 'Collect', 'solid'),
+                ('circular', 'Collect', 'Process', 'solid'),
+                ('circular', 'Process', 'Analyse', 'solid'),
+                ('circular', 'Analyse', 'Store', 'solid'),
+                ('circular', 'Store', 'Publish', 'solid'),
+                ('circular', 'Publish', 'Preserve', 'solid'),
+                ('circular', 'Preserve', 'Share', 'solid'),
+                ('circular', 'Share', 'Access', 'solid'),
+                ('circular', 'Access', 'Transform', 'solid'),
+                ('circular', 'Transform', 'Conceptualise', 'solid')
+            ]
+
+            # Insert connections
+            for view_mode, from_stage, to_stage, conn_type in connections_data:
+                cursor.execute('INSERT INTO connections (view_mode, from_stage, to_stage, type) VALUES (?, ?, ?, ?)', 
+                               (view_mode, from_stage, to_stage, conn_type))
+                logger.info(f"Inserted connection from {from_stage} to {to_stage}")
+
+            # Insert tool categories and tools for each stage
+            tool_data = {
+                'Conceptualise': [
+                    ('Mind mapping, concept mapping and knowledge modelling', ['Miro', 'MindMeister', 'XMind']),
+                    ('Diagramming and flowchart', ['Lucidchart', 'Draw.io', 'Creately']),
+                    ('Wireframing and prototyping', ['Balsamiq', 'Figma'])
+                ],
+                'Plan': [
+                    ('Data management planning (DMP)', ['DMP Tool', 'DMP Online', 'RDMO']),
+                    ('Project planning', ['Trello', 'Asana', 'Microsoft Project']),
+                    ('Combined DMP/project', ['Data Stewardship Wizard', 'Redbox research data', 'Argos'])
+                ],
+                'Collect': [
+                    ('Quantitative data collection tool', ['Open Data Kit', 'GBIF', 'Cedar WorkBench']),
+                    ('Qualitative data collection', ['Survey Monkey', 'Online Surveys', 'Zooniverse']),
+                    ('Harvesting tool', ['Netlytic', 'IRODS', 'DROID'])
+                ]
+            }
+
+            # Get stage IDs
+            cursor.execute('SELECT id, name FROM stages')
+            stage_map = {name: id for id, name in cursor.fetchall()}
+
+            # Insert tool categories and tools
+            for stage_name, categories in tool_data.items():
+                if stage_name in stage_map:
+                    stage_id = stage_map[stage_name]
+                    for category_name, tools in categories:
+                        cursor.execute('INSERT INTO tool_categories (stage_id, category) VALUES (?, ?)', 
+                                       (stage_id, category_name))
+                        category_id = cursor.lastrowid
+                        logger.info(f"Inserted category: {category_name} for stage: {stage_name}")
+                        
+                        for tool in tools:
+                            cursor.execute('INSERT INTO tools (category_id, name) VALUES (?, ?)', 
+                                           (category_id, tool))
+                            logger.info(f"Inserted tool: {tool} for category: {category_name}")
+
+            db.commit()
+        logger.info("Database populated successfully.")
+    except (sqlite3.Error, json.JSONDecodeError, IOError) as e:
+        logger.error(f"Error populating database: {e}")
+        raise
+
+# Initialize database on startup
 def initialize_app():
     """Initialize the application and database."""
     try:
@@ -27,6 +228,7 @@ def initialize_app():
         logger.error(f"Error during initialization: {e}")
         raise
 
+# Routes
 @app.route('/')
 def index() -> str:
     """Render the index page."""
@@ -183,26 +385,13 @@ def initialize_database():
         logger.error(f"Error initializing database: {e}")
         return jsonify({'error': 'Failed to initialize database'}), 500
 
-def main():
-    try:
-        # Initialize the app and database before starting
-        initialize_app()
-        
-        # Get port from environment variable (for Heroku) or use default
-        port = int(os.environ.get('PORT', APP_CONFIG['PORT']))
-        
-        # In production (Heroku), we don't run app.run()
-        # The web server (gunicorn) will handle it
-        if __name__ == '__main__':
-            app.run(host=APP_CONFIG['HOST'], port=port, debug=APP_CONFIG['DEBUG'])
-    except Exception as e:
-        logger.critical(f"Failed to start the application: {e}")
-        raise
-
-# For Heroku, we need the app to be available at module level
-# Initialize the database when the module is imported
-if __name__ != '__main__':
+# Initialize the app when module is imported
+try:
     initialize_app()
+except Exception as e:
+    logger.error(f"Failed to initialize app on import: {e}")
+    # Don't raise here to allow the app to start even if initialization fails
 
 if __name__ == '__main__':
-    main()
+    port = int(os.environ.get('PORT', APP_CONFIG['PORT']))
+    app.run(host=APP_CONFIG['HOST'], port=port, debug=APP_CONFIG['DEBUG'])
