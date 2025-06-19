@@ -1,0 +1,82 @@
+name: Deploy to Heroku
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Run tests
+      run: |
+        # Create a simple test to ensure app imports correctly
+        python -c "import app; print('App imported successfully')"
+    
+    - name: Check code quality
+      run: |
+        pip install flake8
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv,__pycache__
+        # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=venv,__pycache__
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to Heroku
+      uses: akhileshns/heroku-deploy@v3.12.14
+      with:
+        heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+        heroku_app_name: ${{secrets.HEROKU_APP_NAME}}
+        heroku_email: ${{secrets.HEROKU_EMAIL}}
+        buildpack: "heroku/python"
+        
+    - name: Run database initialization
+      env:
+        HEROKU_API_KEY: ${{secrets.HEROKU_API_KEY}}
+        HEROKU_APP_NAME: ${{secrets.HEROKU_APP_NAME}}
+      run: |
+        # Install Heroku CLI
+        curl https://cli-assets.heroku.com/install.sh | sh
+        
+        # Run database initialization command
+        heroku run python -c "from app import init_db, populate_db; init_db(); populate_db()" --app $HEROKU_APP_NAME || true
+
+  health-check:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Check deployed app health
+      run: |
+        sleep 30  # Wait for app to fully start
+        response=$(curl -s -o /dev/null -w "%{http_code}" https://${{secrets.HEROKU_APP_NAME}}.herokuapp.com/)
+        if [ $response -eq 200 ]; then
+          echo "✅ Health check passed! App is running."
+        else
+          echo "❌ Health check failed! HTTP status: $response"
+          exit 1
+        fi
