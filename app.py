@@ -1,6 +1,3 @@
-# Fixed Flask Application (app.py)
-
-```python
 import logging
 from typing import Dict, List, Union
 from flask import Flask, render_template, jsonify, request
