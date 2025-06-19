@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="jumbotron bg-light p-4 rounded mb-4">
+    <h1 class="display-4">MaLDReTH Infrastructure Interactions</h1>
+    <p class="lead">Collect and manage potential infrastructure interactions for the MaLDReTH 2 Working Group.</p>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('add_interaction') }}">Add New Interaction</a>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="card-title">Total Interactions</h5>
+                <h2 class="text-primary">{{ total_interactions }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Interactions</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_interactions %}
+                    {% for interaction in recent_interactions %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <strong>{{ interaction.source_infrastructure }}</strong> → 
+                            <strong>{{ interaction.target_infrastructure }}</strong>
+                            <br>
+                            <small class="text-muted">{{ interaction.lifecycle_stage.title() }} | {{ interaction.created_at.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No interactions yet. <a href="{{ url_for('add_interaction') }}">Add the first one!</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
