@@ -3,141 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MaLDReTH Infrastructure Interactions</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Research Data Lifecycle Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        #visualization {
+            min-height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 20px 0;
+            background-color: #fafafa;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        .error {
+            color: #dc3545;
+            padding: 15px;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="fas fa-network-wired me-2"></i>MaLDReTH Infrastructure Interactions
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{{ url_for('index') }}">Home</a>
-                <a class="nav-link" href="{{ url_for('add_interaction') }}">Add Interaction</a>
-                <a class="nav-link" href="{{ url_for('view_interactions') }}">View All</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div class="jumbotron bg-light p-5 rounded mb-4">
-            <h1 class="display-4">MaLDReTH Infrastructure Interactions</h1>
-            <p class="lead">Collect and manage potential infrastructure interactions for the MaLDReTH 2 Working Group meeting.</p>
-            <hr class="my-4">
-            <p>Document how different research infrastructures interact, identify integration opportunities, and support the development of a comprehensive research data ecosystem.</p>
-            <a class="btn btn-primary btn-lg" href="{{ url_for('add_interaction') }}">
-                <i class="fas fa-plus me-2"></i>Add New Interaction
-            </a>
-            <a class="btn btn-outline-secondary btn-lg ms-2" href="{{ url_for('view_interactions') }}">
-                <i class="fas fa-list me-2"></i>Browse Interactions
-            </a>
+    <div class="container">
+        <h1>Research Data Lifecycle Visualization</h1>
+        
+        <div class="info">
+            <p>This visualization shows the MaLDReTH (Mapping the Landscape of Digital Research Tools Harmonised) Research Data Lifecycle model.</p>
+            <p>Click on any stage to explore its categories and tools.</p>
         </div>
 
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <div class="d-flex align-items-center justify-content-center">
-                            <div>
-                                <h5 class="card-title mb-0">Total Interactions</h5>
-                                <h2 class="text-primary mb-0">{{ total_interactions }}</h2>
-                            </div>
-                            <div class="ms-3">
-                                <i class="fas fa-network-wired fa-2x text-primary"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Recent Interactions</h5>
-                        <a href="{{ url_for('view_interactions') }}" class="btn btn-sm btn-outline-primary">
-                            View All <i class="fas fa-arrow-right ms-1"></i>
-                        </a>
-                    </div>
-                    <div class="card-body">
-                        {% if recent_interactions %}
-                            {% for interaction in recent_interactions %}
-                                <div class="border-bottom pb-2 mb-3">
-                                    <h6 class="mb-1">
-                                        {{ interaction.source_infrastructure }} 
-                                        <i class="fas fa-arrow-right mx-1 text-muted"></i> 
-                                        {{ interaction.target_infrastructure }}
-                                    </h6>
-                                    <p class="mb-1 text-muted small">{{ interaction.interaction_description[:100] }}...</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-secondary">{{ interaction.lifecycle_stage.title() }}</span>
-                                        <small class="text-muted">{{ interaction.created_at.strftime('%Y-%m-%d') if interaction.created_at }}</small>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-muted mb-0">No interactions yet. <a href="{{ url_for('add_interaction') }}">Add the first one!</a></p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+        <div class="controls">
+            <button onclick="loadVisualization('circular')">Circular View</button>
+            <button onclick="initializeDatabase()">Initialize Database</button>
         </div>
 
-        {% if stage_counts %}
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">Interactions by Lifecycle Stage</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                {% for stage, count in stage_counts.items() %}
-                                    <div class="col-md-3 col-sm-6 mb-2">
-                                        <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
-                                            <span class="fw-bold">{{ stage.title() }}</span>
-                                            <span class="badge bg-primary">{{ count }}</span>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
+        <div id="visualization">
+            <div class="loading">Loading visualization...</div>
+        </div>
+
+        <div id="stage-info" style="display: none;">
+            <h2>Stage Information</h2>
+            <div id="stage-details"></div>
+        </div>
     </div>
 
-    <footer class="bg-light mt-5 py-3">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-0">&copy; 2025 MaLDReTH Working Group. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-end">
-                    <p class="mb-0">
-                        <a href="https://www.rd-alliance.org/groups/rda-ofr-mapping-landscape-digital-research-tools-wg/" 
-                           target="_blank" class="text-decoration-none">
-                            <i class="fas fa-external-link-alt me-1"></i>RDA Working Group
-                        </a>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <script>
+        // Load the visualization when the page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            loadVisualization('circular');
+        });
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        // Load visualization data
+        async function loadVisualization(viewMode) {
+            const vizContainer = document.getElementById('visualization');
+            vizContainer.innerHTML = '<div class="loading">Loading visualization...</div>';
+            
+            try {
+                const response = await fetch(`/api/layout/${viewMode}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                renderVisualization(data);
+            } catch (error) {
+                console.error('Error loading visualization:', error);
+                vizContainer.innerHTML = `
+                    <div class="error">
+                        <strong>Error loading visualization:</strong> ${error.message}<br>
+                        <br>
+                        Try clicking "Initialize Database" button above if this is your first time running the application.
+                    </div>
+                `;
+            }
+        }
+
+        // Render the visualization
+        function renderVisualization(data) {
+            const vizContainer = document.getElementById('visualization');
+            
+            // For now, let's create a simple text-based visualization
+            let html = '<h3>Research Data Lifecycle Stages:</h3>';
+            
+            if (data.stages && data.stages.length > 0) {
+                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">';
+                
+                data.stages.forEach(stage => {
+                    html += `
+                        <div style="padding: 15px; background-color: #e9ecef; border-radius: 4px; cursor: pointer;" 
+                             onclick="loadStageDetails(${stage.id}, '${stage.name}')">
+                            <h4 style="margin: 0 0 10px 0;">${stage.name}</h4>
+                            <small>Click to view categories and tools</small>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                
+                if (data.connections && data.connections.length > 0) {
+                    html += '<h4 style="margin-top: 30px;">Connections:</h4>';
+                    html += '<ul>';
+                    data.connections.forEach(conn => {
+                        html += `<li>${conn.from} → ${conn.to} (${conn.type})</li>`;
+                    });
+                    html += '</ul>';
+                }
+            } else {
+                html += '<p>No stages found. Please initialize the database.</p>';
+            }
+            
+            vizContainer.innerHTML = html;
+        }
+
+        // Load stage details
+        async function loadStageDetails(stageId, stageName) {
+            const detailsContainer = document.getElementById('stage-info');
+            const detailsContent = document.getElementById('stage-details');
+            
+            detailsContainer.style.display = 'block';
+            detailsContent.innerHTML = '<div class="loading">Loading stage details...</div>';
+            
+            try {
+                const response = await fetch(`/api/stage/${stageId}/categories`);
+                const categories = await response.json();
+                
+                let html = `<h3>${stageName}</h3>`;
+                
+                if (categories.error) {
+                    html += `<p>No categories found for this stage.</p>`;
+                } else {
+                    html += '<div>';
+                    for (const category of categories) {
+                        html += `<h4>${category.category}</h4>`;
+                        
+                        // Load tools for this category
+                        try {
+                            const toolsResponse = await fetch(`/api/category/${category.id}/tools`);
+                            const tools = await toolsResponse.json();
+                            
+                            if (!tools.error) {
+                                html += '<ul>';
+                                tools.forEach(tool => {
+                                    html += `<li>${tool.name}</li>`;
+                                });
+                                html += '</ul>';
+                            }
+                        } catch (error) {
+                            console.error('Error loading tools:', error);
+                        }
+                    }
+                    html += '</div>';
+                }
+                
+                detailsContent.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading stage details:', error);
+                detailsContent.innerHTML = `<div class="error">Error loading stage details: ${error.message}</div>`;
+            }
+        }
+
+        // Initialize database
+        async function initializeDatabase() {
+            if (!confirm('This will reset the database with initial data. Continue?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/initialize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('Database initialized successfully!');
+                    loadVisualization('circular');
+                } else {
+                    alert('Error initializing database: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error initializing database:', error);
+                alert('Error initializing database: ' + error.message);
+            }
+        }
+    </script>
 </body>
 </html>
