@@ -1,96 +1,314 @@
 {% extends "base.html" %}
 
+{% block title %}Add Interaction - MaLDReTH Infrastructure Interactions{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .form-section h4 {
+        color: #495057;
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .required {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header">
-                <h3>Add New Infrastructure Interaction</h3>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    {{ form.hidden_tag() }}
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.interaction_type.label }}</label>
-                            {{ form.interaction_type(class="form-select") }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.lifecycle_stage.label }}</label>
-                            {{ form.lifecycle_stage(class="form-select") }}
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.source_infrastructure.label }}</label>
-                            {{ form.source_infrastructure(class="form-control") }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.target_infrastructure.label }}</label>
-                            {{ form.target_infrastructure(class="form-control") }}
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">{{ form.interaction_description.label }}</label>
-                        {{ form.interaction_description(class="form-control", rows="4") }}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">{{ form.technical_details.label }}</label>
-                        {{ form.technical_details(class="form-control", rows="3") }}
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.benefits.label }}</label>
-                            {{ form.benefits(class="form-control", rows="3") }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.challenges.label }}</label>
-                            {{ form.challenges(class="form-control", rows="3") }}
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">{{ form.contact_person.label }}</label>
-                            {{ form.contact_person(class="form-control") }}
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">{{ form.organization.label }}</label>
-                            {{ form.organization(class="form-control") }}
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">{{ form.email.label }}</label>
-                            {{ form.email(class="form-control") }}
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">{{ form.priority_level.label }}</label>
-                            {{ form.priority_level(class="form-select") }}
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">{{ form.implementation_complexity.label }}</label>
-                            {{ form.implementation_complexity(class="form-select") }}
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">{{ form.current_status.label }}</label>
-                            {{ form.current_status(class="form-select") }}
-                        </div>
-                    </div>
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
-                        {{ form.submit(class="btn btn-primary") }}
-                    </div>
-                </form>
-            </div>
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="bi bi-plus-circle me-2"></i>
+                Add New Interaction
+            </h1>
+            <a href="{{ url_for('view_interactions') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Back to List
+            </a>
         </div>
+
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('submit_interaction') }}" id="interactionForm">
+            <!-- Core Information Section -->
+            <div class="form-section">
+                <h4>
+                    <i class="bi bi-info-circle me-2"></i>
+                    Core Information
+                </h4>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="interaction_type" class="form-label">
+                            Interaction Type <span class="required">*</span>
+                        </label>
+                        <select class="form-select" id="interaction_type" name="interaction_type" required>
+                            <option value="">Select interaction type...</option>
+                            <option value="data_flow" {{ 'selected' if form_data and form_data.get('interaction_type') == 'data_flow' }}>Data Flow</option>
+                            <option value="api_call" {{ 'selected' if form_data and form_data.get('interaction_type') == 'api_call' }}>API Call</option>
+                            <option value="file_transfer" {{ 'selected' if form_data and form_data.get('interaction_type') == 'file_transfer' }}>File Transfer</option>
+                            <option value="database_connection" {{ 'selected' if form_data and form_data.get('interaction_type') == 'database_connection' }}>Database Connection</option>
+                            <option value="authentication" {{ 'selected' if form_data and form_data.get('interaction_type') == 'authentication' }}>Authentication</option>
+                            <option value="authorization" {{ 'selected' if form_data and form_data.get('interaction_type') == 'authorization' }}>Authorization</option>
+                            <option value="metadata_exchange" {{ 'selected' if form_data and form_data.get('interaction_type') == 'metadata_exchange' }}>Metadata Exchange</option>
+                            <option value="workflow_integration" {{ 'selected' if form_data and form_data.get('interaction_type') == 'workflow_integration' }}>Workflow Integration</option>
+                            <option value="service_discovery" {{ 'selected' if form_data and form_data.get('interaction_type') == 'service_discovery' }}>Service Discovery</option>
+                            <option value="monitoring" {{ 'selected' if form_data and form_data.get('interaction_type') == 'monitoring' }}>Monitoring</option>
+                            <option value="backup_sync" {{ 'selected' if form_data and form_data.get('interaction_type') == 'backup_sync' }}>Backup/Sync</option>
+                            <option value="user_interface" {{ 'selected' if form_data and form_data.get('interaction_type') == 'user_interface' }}>User Interface</option>
+                            <option value="other" {{ 'selected' if form_data and form_data.get('interaction_type') == 'other' }}>Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="lifecycle_stage" class="form-label">
+                            Lifecycle Stage <span class="required">*</span>
+                        </label>
+                        <select class="form-select" id="lifecycle_stage" name="lifecycle_stage" required>
+                            <option value="">Select lifecycle stage...</option>
+                            <option value="conceptualise" {{ 'selected' if form_data and form_data.get('lifecycle_stage') == 'conceptualise' }}>Conceptualise</option>
+                            <option value="plan" {{ 'selected' if form_data and form_data.get('lifecycle_stage') == 'plan' }}>Plan</option>
+                            <option value="collect" {{ 'selected' if form_data and form_data.get('lifecycle_stage') == 'collect' }}>Collect</option>
+                            <option value="process" {{ 'selected' if form_data and form_data.get('lifecycle_stage') == 'process' }}>Process</option>
+                            <option value="analyse" {{ 'selected' if form_data and form_data.get('lifecycle_stage') == 'analyse' }}>Analyse</option>
+                            <option value="store" {{ 'selected' if form_data and form_data.get('lifecycle_stage') == 'store' }}>Store</option>
+                            <option value="publish" {{ 'selected' if form_data and form_data.get('lifecycle_stage') == 'publish' }}>Publish</option>
+                            <option value="preserve" {{ 'selected' if form_data and form_data.get('lifecycle_stage') == 'preserve' }}>Preserve</option>
+                            <option value="share" {{ 'selected' if form_data and form_data.get('lifecycle_stage') == 'share' }}>Share</option>
+                            <option value="access" {{ 'selected' if form_data and form_data.get('lifecycle_stage') == 'access' }}>Access</option>
+                            <option value="transform" {{ 'selected' if form_data and form_data.get('lifecycle_stage') == 'transform' }}>Transform</option>
+                            <option value="cross_cutting" {{ 'selected' if form_data and form_data.get('lifecycle_stage') == 'cross_cutting' }}>Cross-cutting</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="source_infrastructure" class="form-label">
+                            Source Infrastructure <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="source_infrastructure" 
+                               name="source_infrastructure" 
+                               placeholder="e.g., Research Repository, CRIS System..."
+                               value="{{ form_data.get('source_infrastructure', '') if form_data }}" required>
+                        <div class="form-text">The infrastructure component that initiates the interaction</div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="target_infrastructure" class="form-label">
+                            Target Infrastructure <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="target_infrastructure" 
+                               name="target_infrastructure" 
+                               placeholder="e.g., Analysis Platform, Data Warehouse..."
+                               value="{{ form_data.get('target_infrastructure', '') if form_data }}" required>
+                        <div class="form-text">The infrastructure component that receives the interaction</div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label">
+                        Description <span class="required">*</span>
+                    </label>
+                    <textarea class="form-control" id="description" name="description" rows="3" 
+                              placeholder="Describe the interaction in detail..." required>{{ form_data.get('description', '') if form_data }}</textarea>
+                    <div class="form-text">Provide a detailed description of what this interaction does</div>
+                </div>
+            </div>
+
+            <!-- Technical Details Section -->
+            <div class="form-section">
+                <h4>
+                    <i class="bi bi-gear me-2"></i>
+                    Technical Details
+                </h4>
+                
+                <div class="mb-3">
+                    <label for="technical_details" class="form-label">Technical Implementation</label>
+                    <textarea class="form-control" id="technical_details" name="technical_details" rows="3" 
+                              placeholder="e.g., REST API, OAuth 2.0, SWORD protocol...">{{ form_data.get('technical_details', '') if form_data }}</textarea>
+                    <div class="form-text">Technical standards, protocols, or implementation details</div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="benefits" class="form-label">Benefits</label>
+                        <textarea class="form-control" id="benefits" name="benefits" rows="2" 
+                                  placeholder="What are the advantages of this interaction?">{{ form_data.get('benefits', '') if form_data }}</textarea>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="challenges" class="form-label">Challenges</label>
+                        <textarea class="form-control" id="challenges" name="challenges" rows="2" 
+                                  placeholder="What are the limitations or difficulties?">{{ form_data.get('challenges', '') if form_data }}</textarea>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="examples" class="form-label">Examples</label>
+                    <textarea class="form-control" id="examples" name="examples" rows="2" 
+                              placeholder="Real-world examples of this interaction in practice">{{ form_data.get('examples', '') if form_data }}</textarea>
+                </div>
+            </div>
+
+            <!-- Contact Information Section -->
+            <div class="form-section">
+                <h4>
+                    <i class="bi bi-person me-2"></i>
+                    Contact Information
+                </h4>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="contact_person" class="form-label">Contact Person</label>
+                        <input type="text" class="form-control" id="contact_person" 
+                               name="contact_person" 
+                               placeholder="Dr. Jane Smith"
+                               value="{{ form_data.get('contact_person', '') if form_data }}">
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="organization" class="form-label">Organization</label>
+                        <input type="text" class="form-control" id="organization" 
+                               name="organization" 
+                               placeholder="University XYZ"
+                               value="{{ form_data.get('organization', '') if form_data }}">
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" 
+                               name="email" 
+                               placeholder="jane.smith@university.edu"
+                               value="{{ form_data.get('email', '') if form_data }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classification Section -->
+            <div class="form-section">
+                <h4>
+                    <i class="bi bi-tags me-2"></i>
+                    Classification
+                </h4>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="priority" class="form-label">Priority</label>
+                        <select class="form-select" id="priority" name="priority">
+                            <option value="">Select priority...</option>
+                            <option value="high" {{ 'selected' if form_data and form_data.get('priority') == 'high' }}>High</option>
+                            <option value="medium" {{ 'selected' if form_data and form_data.get('priority') == 'medium' }}>Medium</option>
+                            <option value="low" {{ 'selected' if form_data and form_data.get('priority') == 'low' }}>Low</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="complexity" class="form-label">Complexity</label>
+                        <select class="form-select" id="complexity" name="complexity">
+                            <option value="">Select complexity...</option>
+                            <option value="simple" {{ 'selected' if form_data and form_data.get('complexity') == 'simple' }}>Simple</option>
+                            <option value="moderate" {{ 'selected' if form_data and form_data.get('complexity') == 'moderate' }}>Moderate</option>
+                            <option value="complex" {{ 'selected' if form_data and form_data.get('complexity') == 'complex' }}>Complex</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="proposed" {{ 'selected' if form_data and form_data.get('status') == 'proposed' }}>Proposed</option>
+                            <option value="implemented" {{ 'selected' if form_data and form_data.get('status') == 'implemented' }}>Implemented</option>
+                            <option value="deprecated" {{ 'selected' if form_data and form_data.get('status') == 'deprecated' }}>Deprecated</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Section -->
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted">
+                    <small>
+                        <span class="required">*</span> Required fields
+                    </small>
+                </div>
+                
+                <div>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary me-2">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Save Interaction
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.getElementById('interactionForm');
+    const requiredFields = form.querySelectorAll('[required]');
+    
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        requiredFields.forEach(function(field) {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+    
+    // Real-time validation
+    requiredFields.forEach(function(field) {
+        field.addEventListener('blur', function() {
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            }
+        });
+    });
+    
+    // Auto-resize textareas
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(function(textarea) {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+});
+</script>
 {% endblock %}
