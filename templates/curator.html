@@ -3,1024 +3,1476 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MaLDReTH Curator Interface</title>
+    <title>MaLDReTH Research Data Lifecycle - Curation Interface</title>
     <style>
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f5f7fa;
-            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
-        
-        .header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .header h1 {
-            font-size: 1.8rem;
-            font-weight: 600;
-        }
-        
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .nav-buttons a {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-        
-        .nav-buttons a:hover {
-            background-color: rgba(255,255,255,0.1);
-        }
-        
+
         .container {
             max-width: 1400px;
-            margin: 2rem auto;
-            padding: 0 2rem;
+            margin: 0 auto;
+            padding: 20px;
         }
-        
-        .tabs {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
-        
-        .tab-buttons {
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .nav-tabs {
             display: flex;
-            border-bottom: 1px solid #ddd;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
         }
-        
+
         .tab-button {
-            padding: 1rem 2rem;
-            background: none;
+            background: rgba(255, 255, 255, 0.9);
             border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
             cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s;
-            position: relative;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-        
+
         .tab-button:hover {
-            background-color: #f8f9fa;
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
-        
+
         .tab-button.active {
-            color: #3498db;
+            background: #3498db;
+            color: white;
+            transform: translateY(-2px);
         }
-        
-        .tab-button.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background-color: #3498db;
-        }
-        
+
         .tab-content {
-            padding: 2rem;
-        }
-        
-        .tab-panel {
             display: none;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
-        
-        .tab-panel.active {
+
+        .tab-content.active {
             display: block;
+            animation: fadeIn 0.5s ease-in-out;
         }
-        
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
         }
-        
+
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 8px;
             font-weight: 500;
+            color: #2c3e50;
         }
-        
+
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            background: white;
         }
-        
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
         .form-group textarea {
-            min-height: 100px;
             resize: vertical;
+            min-height: 100px;
         }
-        
+
         .form-row {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
         }
-        
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-        
+
         .btn {
-            padding: 0.75rem 1.5rem;
+            background: #3498db;
+            color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
         }
-        
-        .btn-primary {
-            background-color: #3498db;
-            color: white;
+
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
-        
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
-        
+
         .btn-secondary {
-            background-color: #95a5a6;
-            color: white;
+            background: #95a5a6;
         }
-        
+
         .btn-secondary:hover {
-            background-color: #7f8c8d;
+            background: #7f8c8d;
         }
-        
+
         .btn-danger {
-            background-color: #e74c3c;
-            color: white;
+            background: #e74c3c;
         }
-        
+
         .btn-danger:hover {
-            background-color: #c0392b;
+            background: #c0392b;
         }
-        
+
+        .btn-success {
+            background: #27ae60;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
         .data-table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 20px;
             background: white;
-            border-radius: 8px;
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-        
+
         .data-table th,
         .data-table td {
-            padding: 1rem;
+            padding: 15px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #ecf0f1;
         }
-        
+
         .data-table th {
-            background-color: #f8f9fa;
+            background: #34495e;
+            color: white;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+        .stage-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border-left: 5px solid #3498db;
+        }
+
+        .stage-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .stage-title {
+            font-size: 1.4em;
             font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
         }
-        
-        .data-table tr:hover {
-            background-color: #f8f9fa;
+
+        .stage-description {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            line-height: 1.6;
         }
-        
+
+        .category-list {
+            margin-top: 15px;
+        }
+
+        .category-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 3px solid #27ae60;
+        }
+
+        .category-name {
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .tool-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tool-tag {
+            background: #3498db;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #e74c3c;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .statistics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
         .action-buttons {
             display: flex;
-            gap: 0.5rem;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
         }
-        
-        .action-buttons button {
-            padding: 0.25rem 0.75rem;
-            font-size: 0.875rem;
-        }
-        
-        .checkbox-group {
-            display: flex;
-            gap: 2rem;
-            margin-top: 0.5rem;
-        }
-        
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: normal;
-        }
-        
-        .success-message {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-        }
-        
-        .error-message {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-        }
-        
-        .log-entry {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 0.5rem;
-        }
-        
-        .log-entry-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-        }
-        
-        .log-entry-date {
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-        
-        .loading {
+
+        .visualization-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             text-align: center;
-            padding: 2rem;
-            color: #666;
+        }
+
+        .lifecycle-diagram {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .lifecycle-stage {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            min-width: 150px;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .lifecycle-stage:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        }
+
+        .lifecycle-stage::after {
+            content: '→';
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: #3498db;
+        }
+
+        .lifecycle-stage:last-child::after {
+            content: '';
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .lifecycle-stage::after {
+                content: '↓';
+                right: 50%;
+                top: 100%;
+                transform: translateX(50%);
+            }
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-content">
-            <h1>MaLDReTH Curator Interface</h1>
-            <div class="nav-buttons">
-                <a href="/">Visualization</a>
-                <a href="/curator">Curator Interface</a>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>MaLDReTH Research Data Lifecycle</h1>
+            <p>Mapping the Landscape of Digital Research Tools - Curation Interface</p>
+            <div class="statistics-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalStages">12</div>
+                    <div class="stat-label">Lifecycle Stages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCategories">36</div>
+                    <div class="stat-label">Tool Categories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalTools">150</div>
+                    <div class="stat-label">Research Tools</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="lastUpdated">Today</div>
+                    <div class="stat-label">Last Updated</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="tab-button active" onclick="showTab('overview')">Overview</button>
+            <button class="tab-button" onclick="showTab('stages')">Manage Stages</button>
+            <button class="tab-button" onclick="showTab('categories')">Tool Categories</button>
+            <button class="tab-button" onclick="showTab('tools')">Research Tools</button>
+            <button class="tab-button" onclick="showTab('visualization')">Visualization</button>
+            <button class="tab-button" onclick="showTab('import-export')">Import/Export</button>
+        </div>
+
+        <!-- Tab Contents -->
+        
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <h2>Research Data Lifecycle Overview</h2>
+            <p>The MaLDReTH (Mapping the Landscape of Digital Research Tools Harmonised) model represents a comprehensive framework for understanding and categorizing research tools across the complete data lifecycle.</p>
+            
+            <div class="lifecycle-diagram">
+                <div class="lifecycle-stage" onclick="selectStage('conceptualise')">Conceptualise</div>
+                <div class="lifecycle-stage" onclick="selectStage('plan')">Plan</div>
+                <div class="lifecycle-stage" onclick="selectStage('collect')">Collect</div>
+                <div class="lifecycle-stage" onclick="selectStage('process')">Process</div>
+                <div class="lifecycle-stage" onclick="selectStage('analyse')">Analyse</div>
+                <div class="lifecycle-stage" onclick="selectStage('store')">Store</div>
+                <div class="lifecycle-stage" onclick="selectStage('publish')">Publish</div>
+                <div class="lifecycle-stage" onclick="selectStage('preserve')">Preserve</div>
+                <div class="lifecycle-stage" onclick="selectStage('share')">Share</div>
+                <div class="lifecycle-stage" onclick="selectStage('access')">Access</div>
+                <div class="lifecycle-stage" onclick="selectStage('transform')">Transform</div>
+            </div>
+
+            <div id="stageDetails" style="display: none;">
+                <div class="stage-card">
+                    <div class="stage-title" id="selectedStageTitle"></div>
+                    <div class="stage-description" id="selectedStageDescription"></div>
+                    <div class="category-list" id="selectedStageCategories"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stages Management Tab -->
+        <div id="stages" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Lifecycle Stages Management</h2>
+                <button class="btn btn-success" onclick="openModal('addStageModal')">Add New Stage</button>
+            </div>
+            
+            <input type="text" class="search-box" placeholder="Search stages..." onkeyup="filterStages(this.value)">
+            
+            <table class="data-table" id="stagesTable">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Stage Name</th>
+                        <th>Description</th>
+                        <th>Tool Categories</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="stagesTableBody">
+                    <!-- Dynamic content will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tool Categories Tab -->
+        <div id="categories" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Tool Categories Management</h2>
+                <button class="btn btn-success" onclick="openModal('addCategoryModal')">Add New Category</button>
+            </div>
+            
+            <input type="text" class="search-box" placeholder="Search categories..." onkeyup="filterCategories(this.value)">
+            
+            <table class="data-table" id="categoriesTable">
+                <thead>
+                    <tr>
+                        <th>Category Name</th>
+                        <th>Stage</th>
+                        <th>Description</th>
+                        <th>Tools Count</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="categoriesTableBody">
+                    <!-- Dynamic content will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Research Tools Tab -->
+        <div id="tools" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Research Tools Management</h2>
+                <button class="btn btn-success" onclick="openModal('addToolModal')">Add New Tool</button>
+            </div>
+            
+            <div class="form-row" style="margin-bottom: 20px;">
+                <input type="text" class="search-box" placeholder="Search tools..." onkeyup="filterTools(this.value)">
+                <select onchange="filterByCategory(this.value)" style="padding: 15px; border-radius: 8px; border: 2px solid #e0e0e0;">
+                    <option value="">All Categories</option>
+                    <!-- Dynamic options will be loaded here -->
+                </select>
+            </div>
+            
+            <table class="data-table" id="toolsTable">
+                <thead>
+                    <tr>
+                        <th>Tool Name</th>
+                        <th>Category</th>
+                        <th>Stage</th>
+                        <th>Provider</th>
+                        <th>URL</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="toolsTableBody">
+                    <!-- Dynamic content will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Visualization Tab -->
+        <div id="visualization" class="tab-content">
+            <div class="visualization-container">
+                <h2>Lifecycle Visualization</h2>
+                <p>Interactive visualization of the research data lifecycle and tool relationships</p>
+                
+                <div style="margin: 20px 0;">
+                    <button class="btn" onclick="toggleVisualization('circular')">Circular View</button>
+                    <button class="btn btn-secondary" onclick="toggleVisualization('linear')">Linear View</button>
+                    <button class="btn btn-secondary" onclick="toggleVisualization('network')">Network View</button>
+                </div>
+                
+                <div id="visualizationArea" style="min-height: 400px; border: 2px dashed #e0e0e0; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #7f8c8d;">
+                    <p>Visualization will be rendered here</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import/Export Tab -->
+        <div id="import-export" class="tab-content">
+            <h2>Data Import/Export</h2>
+            
+            <div class="form-row">
+                <div>
+                    <h3>Import Data</h3>
+                    <div class="form-group">
+                        <label for="importFile">Select file to import:</label>
+                        <input type="file" id="importFile" accept=".json,.csv,.xlsx" onchange="handleFileImport(this)">
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn" onclick="importData()">Import Data</button>
+                        <button class="btn btn-secondary" onclick="validateImport()">Validate Import</button>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3>Export Data</h3>
+                    <div class="form-group">
+                        <label for="exportFormat">Export format:</label>
+                        <select id="exportFormat">
+                            <option value="json">JSON</option>
+                            <option value="csv">CSV</option>
+                            <option value="xlsx">Excel</option>
+                        </select>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn" onclick="exportData()">Export All Data</button>
+                        <button class="btn btn-secondary" onclick="exportStages()">Export Stages Only</button>
+                        <button class="btn btn-secondary" onclick="exportTools()">Export Tools Only</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <h3>Data Backup & Restore</h3>
+                <div class="action-buttons">
+                    <button class="btn btn-success" onclick="createBackup()">Create Backup</button>
+                    <button class="btn btn-secondary" onclick="restoreBackup()">Restore from Backup</button>
+                    <button class="btn btn-danger" onclick="resetDatabase()">Reset Database</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="container">
-        <div id="message-area"></div>
-        
-        <div class="tabs">
-            <div class="tab-buttons">
-                <button class="tab-button active" onclick="showTab('tools')">Manage Tools</button>
-                <button class="tab-button" onclick="showTab('interactions')">Infrastructure Interactions</button>
-                <button class="tab-button" onclick="showTab('categories')">Tool Categories</button>
-                <button class="tab-button" onclick="showTab('curation-log')">Curation Log</button>
-            </div>
-            
-            <div class="tab-content">
-                <!-- Tools Tab -->
-                <div id="tools-tab" class="tab-panel active">
-                    <h2>Manage Tools</h2>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="tool-search">Search Tools</label>
-                            <input type="text" id="tool-search" placeholder="Search by name, provider, or category...">
-                        </div>
-                        <div class="form-group">
-                            <label for="tool-stage-filter">Filter by Stage</label>
-                            <select id="tool-stage-filter">
-                                <option value="">All Stages</option>
-                            </select>
-                        </div>
+    <!-- Modals -->
+    
+    <!-- Add Stage Modal -->
+    <div id="addStageModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addStageModal')">&times;</span>
+            <h2>Add New Lifecycle Stage</h2>
+            <form onsubmit="addStage(event)">
+                <div class="form-group">
+                    <label for="stageName">Stage Name:</label>
+                    <input type="text" id="stageName" required>
+                </div>
+                <div class="form-group">
+                    <label for="stageDescription">Description:</label>
+                    <textarea id="stageDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="stageOrder">Order:</label>
+                    <input type="number" id="stageOrder" min="1" required>
+                </div>
+                <div class="action-buttons">
+                    <button type="submit" class="btn">Add Stage</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addStageModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="addCategoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addCategoryModal')">&times;</span>
+            <h2>Add New Tool Category</h2>
+            <form onsubmit="addCategory(event)">
+                <div class="form-group">
+                    <label for="categoryName">Category Name:</label>
+                    <input type="text" id="categoryName" required>
+                </div>
+                <div class="form-group">
+                    <label for="categoryStage">Lifecycle Stage:</label>
+                    <select id="categoryStage" required>
+                        <!-- Dynamic options will be loaded here -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="categoryDescription">Description:</label>
+                    <textarea id="categoryDescription" required></textarea>
+                </div>
+                <div class="action-buttons">
+                    <button type="submit" class="btn">Add Category</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addCategoryModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Tool Modal -->
+    <div id="addToolModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addToolModal')">&times;</span>
+            <h2>Add New Research Tool</h2>
+            <form onsubmit="addTool(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="toolName">Tool Name:</label>
+                        <input type="text" id="toolName" required>
                     </div>
-                    
-                    <div id="tools-list" style="margin-top: 2rem;">
-                        <div class="loading">Loading tools...</div>
+                    <div class="form-group">
+                        <label for="toolProvider">Provider:</label>
+                        <input type="text" id="toolProvider">
                     </div>
                 </div>
-                
-                <!-- Infrastructure Interactions Tab -->
-                <div id="interactions-tab" class="tab-panel">
-                    <h2>Infrastructure Interactions</h2>
-                    
-                    <button class="btn btn-primary" onclick="showAddInteractionForm()">Add New Interaction</button>
-                    
-                    <div id="interaction-form" style="display: none; margin-top: 2rem;">
-                        <h3>Add Infrastructure Interaction</h3>
-                        <form onsubmit="saveInteraction(event)">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="from-tool">From Tool</label>
-                                    <select id="from-tool" required>
-                                        <option value="">Select a tool...</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="to-tool">To Tool</label>
-                                    <select id="to-tool" required>
-                                        <option value="">Select a tool...</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="interaction-type">Interaction Type</label>
-                                <select id="interaction-type" required>
-                                    <option value="">Select type...</option>
-                                    <option value="data-exchange">Data Exchange</option>
-                                    <option value="api-integration">API Integration</option>
-                                    <option value="file-transfer">File Transfer</option>
-                                    <option value="authentication">Authentication</option>
-                                    <option value="workflow">Workflow Integration</option>
-                                    <option value="metadata-sync">Metadata Synchronization</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="interaction-description">Description</label>
-                                <textarea id="interaction-description" placeholder="Describe how these tools interact..."></textarea>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="data-flow">Data Flow Direction</label>
-                                    <select id="data-flow">
-                                        <option value="unidirectional">Unidirectional (From → To)</option>
-                                        <option value="bidirectional">Bidirectional (From ↔ To)</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="integration-method">Integration Method</label>
-                                    <input type="text" id="integration-method" placeholder="e.g., REST API, WebDAV, OAuth2">
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Authentication Required</label>
-                                <div class="checkbox-group">
-                                    <label>
-                                        <input type="checkbox" id="auth-required">
-                                        Authentication is required for this interaction
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="curator-name">Your Name</label>
-                                    <input type="text" id="curator-name" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="curator-email">Your Email</label>
-                                    <input type="email" id="curator-email" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Save Interaction</button>
-                                <button type="button" class="btn btn-secondary" onclick="hideAddInteractionForm()">Cancel</button>
-                            </div>
-                        </form>
+                <div class="form-group">
+                    <label for="toolCategory">Category:</label>
+                    <select id="toolCategory" required>
+                        <!-- Dynamic options will be loaded here -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="toolURL">URL:</label>
+                    <input type="url" id="toolURL">
+                </div>
+                <div class="form-group">
+                    <label for="toolDescription">Description:</label>
+                    <textarea id="toolDescription"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="toolType">Tool Type:</label>
+                        <input type="text" id="toolType">
                     </div>
-                    
-                    <div id="interactions-list" style="margin-top: 2rem;">
-                        <div class="loading">Loading interactions...</div>
+                    <div class="form-group">
+                        <label for="toolSource">Source:</label>
+                        <select id="toolSource">
+                            <option value="open">Open Source</option>
+                            <option value="closed">Closed Source</option>
+                            <option value="mixed">Mixed</option>
+                        </select>
                     </div>
                 </div>
-                
-                <!-- Categories Tab -->
-                <div id="categories-tab" class="tab-panel">
-                    <h2>Tool Categories</h2>
-                    <p>View and manage tool categories by lifecycle stage.</p>
-                    
-                    <div id="categories-list">
-                        <div class="loading">Loading categories...</div>
-                    </div>
+                <div class="form-group">
+                    <label for="toolInteroperable">Interoperable:</label>
+                    <select id="toolInteroperable">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                        <option value="partial">Partial</option>
+                    </select>
                 </div>
-                
-                <!-- Curation Log Tab -->
-                <div id="curation-log-tab" class="tab-panel">
-                    <h2>Curation Log</h2>
-                    <p>View the history of changes made to the infrastructure data.</p>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="log-filter-type">Filter by Type</label>
-                            <select id="log-filter-type" onchange="loadCurationLog()">
-                                <option value="">All Types</option>
-                                <option value="tool">Tools</option>
-                                <option value="interaction">Interactions</option>
-                                <option value="category">Categories</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div id="curation-log-list">
-                        <div class="loading">Loading curation log...</div>
-                    </div>
+                <div class="action-buttons">
+                    <button type="submit" class="btn">Add Tool</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addToolModal')">Cancel</button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 
     <script>
-        let allTools = [];
-        let allStages = [];
-        
-        // Initialize the curator interface
-        window.addEventListener('DOMContentLoaded', () => {
-            loadStages();
-            loadTools();
-            loadInteractions();
-        });
-        
-        // Tab switching
+        // Sample data - in a real application, this would come from a backend API
+        let lifecycleData = {
+            stages: [
+                {
+                    id: 1,
+                    name: "Conceptualise",
+                    description: "To formulate the initial research idea or hypothesis, and define the scope of the research project and the data component/requirements of that project.",
+                    order: 1,
+                    categories: [
+                        {
+                            id: 1,
+                            name: "Mind mapping, concept mapping and knowledge modelling",
+                            tools: ["Miro", "Meister Labs", "XMind"]
+                        },
+                        {
+                            id: 2,
+                            name: "Diagramming and flowchart",
+                            tools: ["Lucidchart", "Draw.io", "Creately"]
+                        },
+                        {
+                            id: 3,
+                            name: "Wireframing and prototyping",
+                            tools: ["Balsamiq", "Figma"]
+                        }
+                    ]
+                },
+                {
+                    id: 2,
+                    name: "Plan",
+                    description: "To establish a structured strategic framework for management of the research project, outlining aims, objectives, methodologies, and resources required for data collection, management and analysis.",
+                    order: 2,
+                    categories: [
+                        {
+                            id: 4,
+                            name: "Data management planning (DMP)",
+                            tools: ["DMP Tool", "DMP Online", "RDMO"]
+                        },
+                        {
+                            id: 5,
+                            name: "Project planning",
+                            tools: ["Trello", "Asana", "Microsoft Project"]
+                        },
+                        {
+                            id: 6,
+                            name: "Combined DMP/project",
+                            tools: ["Data Stewardship Wizard", "Redbox research data", "Argos"]
+                        }
+                    ]
+                },
+                {
+                    id: 3,
+                    name: "Collect",
+                    description: "To use predefined procedures, methodologies and instruments to acquire and store data that is reliable, fit for purpose and of sufficient quality to test the research hypothesis.",
+                    order: 3,
+                    categories: [
+                        {
+                            id: 7,
+                            name: "Quantitative data collection tool",
+                            tools: ["Open Data Kit", "GBIF", "Cedar WorkBench"]
+                        },
+                        {
+                            id: 8,
+                            name: "Qualitative data collection (e.g. Survey tool)",
+                            tools: ["Survey Monkey", "Online Surveys", "Zooniverse"]
+                        },
+                        {
+                            id: 9,
+                            name: "Harvesting tool (e.g. WebScrapers)",
+                            tools: ["Netlytic", "IRODS", "DROID"]
+                        }
+                    ]
+                },
+                {
+                    id: 4,
+                    name: "Process",
+                    description: "To make new and existing data analysis-ready through standardised pre-processing, cleaning, reformatting, structuring, filtering, and quality control checks.",
+                    order: 4,
+                    categories: [
+                        {
+                            id: 10,
+                            name: "Electronic laboratory notebooks (ELNs)",
+                            tools: ["elabnext", "E-lab FTW", "RSpace", "Lab Archives"]
+                        },
+                        {
+                            id: 11,
+                            name: "Scientific computing across all programming languages",
+                            tools: ["Jupyter", "Mathematica", "WebAssembly"]
+                        },
+                        {
+                            id: 12,
+                            name: "Metadata Tool",
+                            tools: ["CEDAR Workbench (biomedical data)"]
+                        }
+                    ]
+                },
+                {
+                    id: 5,
+                    name: "Analyse",
+                    description: "To derive insights, knowledge, and understanding from processed data through iterative exploration and interpretation of experimental or computational results.",
+                    order: 5,
+                    categories: [
+                        {
+                            id: 13,
+                            name: "Remediation (e.g. motion capture for gait analysis)",
+                            tools: ["Track3D"]
+                        },
+                        {
+                            id: 14,
+                            name: "Computational methods (e.g. Statistical software)",
+                            tools: ["SPSS", "Matlab"]
+                        },
+                        {
+                            id: 15,
+                            name: "Computational tools",
+                            tools: ["Jupyter", "RStudio", "Eclipse"]
+                        }
+                    ]
+                },
+                {
+                    id: 6,
+                    name: "Store",
+                    description: "To record data using technological media appropriate for processing and analysis whilst maintaining data integrity and security.",
+                    order: 6,
+                    categories: [
+                        {
+                            id: 16,
+                            name: "Data Repository",
+                            tools: ["Figshare", "Zenodo", "Dataverse"]
+                        },
+                        {
+                            id: 17,
+                            name: "Archive",
+                            tools: ["Libsafe"]
+                        },
+                        {
+                            id: 18,
+                            name: "Management tool",
+                            tools: ["iRODS", "GLOBUS", "Mediaflux"]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Tab management
         function showTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-panel').forEach(panel => {
-                panel.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.classList.remove('active');
-            });
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
             
-            // Show selected tab
-            document.getElementById(`${tabName}-tab`).classList.add('active');
+            // Remove active class from all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => button.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
             event.target.classList.add('active');
             
-            // Load tab-specific data
+            // Load data for the selected tab
+            loadTabData(tabName);
+        }
+
+        // Load data for specific tabs
+        function loadTabData(tabName) {
             switch(tabName) {
-                case 'tools':
-                    loadTools();
-                    break;
-                case 'interactions':
-                    loadInteractions();
+                case 'stages':
+                    loadStagesTable();
                     break;
                 case 'categories':
-                    loadCategories();
+                    loadCategoriesTable();
                     break;
-                case 'curation-log':
-                    loadCurationLog();
+                case 'tools':
+                    loadToolsTable();
+                    break;
+                case 'visualization':
+                    initializeVisualization();
                     break;
             }
         }
-        
-        // Load stages for filters
-        async function loadStages() {
-            try {
-                const response = await fetch('/api/stages');
-                allStages = await response.json();
-                
-                // Populate stage filter
-                const stageFilter = document.getElementById('tool-stage-filter');
-                stageFilter.innerHTML = '<option value="">All Stages</option>';
-                allStages.forEach(stage => {
-                    const option = document.createElement('option');
-                    option.value = stage.id;
-                    option.textContent = stage.name;
-                    stageFilter.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error loading tool:', error);
-                showMessage('Error loading tool details', 'error');
-            }
-        }
-        
-        // Update tool
-        async function updateTool(event, toolId) {
-            event.preventDefault();
+
+        // Load stages table
+        function loadStagesTable() {
+            const tbody = document.getElementById('stagesTableBody');
+            tbody.innerHTML = '';
             
-            const data = {
-                name: document.getElementById('edit-name').value,
-                provider: document.getElementById('edit-provider').value,
-                url: document.getElementById('edit-url').value,
-                description: document.getElementById('edit-description').value,
-                source_type: document.getElementById('edit-source-type').value,
-                scope: document.getElementById('edit-scope').value,
-                interoperable: document.getElementById('edit-interoperable').checked,
-                api_available: document.getElementById('edit-api-available').checked,
-                curator_name: document.getElementById('edit-curator-name').value,
-                curator_email: document.getElementById('edit-curator-email').value,
-                reason: 'Tool information updated'
-            };
-            
-            try {
-                const response = await fetch(`/api/tool/${toolId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showMessage('Tool updated successfully!', 'success');
-                    closeEditForm();
-                    loadTools();
-                } else {
-                    showMessage('Error updating tool', 'error');
-                }
-            } catch (error) {
-                console.error('Error updating tool:', error);
-                showMessage('Error updating tool', 'error');
-            }
-        }
-        
-        // Close edit form
-        function closeEditForm() {
-            const overlay = document.getElementById('edit-overlay');
-            if (overlay) {
-                overlay.remove();
-            }
-        }
-        
-        // Load categories
-        async function loadCategories() {
-            const categoriesList = document.getElementById('categories-list');
-            categoriesList.innerHTML = '<div class="loading">Loading categories...</div>';
-            
-            try {
-                const response = await fetch('/api/stages');
-                const stages = await response.json();
-                
-                let html = '';
-                for (const stage of stages) {
-                    const stageResponse = await fetch(`/api/stage/${stage.id}`);
-                    const stageData = await stageResponse.json();
-                    
-                    html += `<div style="margin-bottom: 2rem;">`;
-                    html += `<h3>${stage.name}</h3>`;
-                    
-                    if (stageData.categories && stageData.categories.length > 0) {
-                        html += '<table class="data-table">';
-                        html += '<thead><tr><th>Category</th><th>Description</th><th>Tool Count</th></tr></thead>';
-                        html += '<tbody>';
-                        
-                        stageData.categories.forEach(category => {
-                            html += '<tr>';
-                            html += `<td>${category.category}</td>`;
-                            html += `<td>${category.description || 'N/A'}</td>`;
-                            html += `<td>${category.tool_count}</td>`;
-                            html += '</tr>';
-                        });
-                        
-                        html += '</tbody></table>';
-                    } else {
-                        html += '<p>No categories found for this stage.</p>';
-                    }
-                    
-                    html += '</div>';
-                }
-                
-                categoriesList.innerHTML = html;
-            } catch (error) {
-                console.error('Error loading categories:', error);
-                categoriesList.innerHTML = '<div class="error">Error loading categories</div>';
-            }
-        }
-        
-        // Load curation log
-        async function loadCurationLog() {
-            const logList = document.getElementById('curation-log-list');
-            const filterType = document.getElementById('log-filter-type').value;
-            
-            try {
-                let url = '/api/curation-log';
-                if (filterType) {
-                    url += `?entity_type=${filterType}`;
-                }
-                
-                const response = await fetch(url);
-                const logs = await response.json();
-                
-                if (logs.length === 0) {
-                    logList.innerHTML = '<p>No curation log entries found.</p>';
-                    return;
-                }
-                
-                let html = '';
-                logs.forEach(log => {
-                    html += '<div class="log-entry">';
-                    html += '<div class="log-entry-header">';
-                    html += `<strong>${log.action} ${log.entity_type}</strong>`;
-                    html += `<span class="log-entry-date">${new Date(log.created_at).toLocaleString()}</span>`;
-                    html += '</div>';
-                    html += `<p>By: ${log.curator_name || 'Unknown'} (${log.curator_email || 'N/A'})</p>`;
-                    if (log.reason) {
-                        html += `<p>Reason: ${log.reason}</p>`;
-                    }
-                    html += '</div>';
-                });
-                
-                logList.innerHTML = html;
-            } catch (error) {
-                console.error('Error loading curation log:', error);
-                logList.innerHTML = '<div class="error">Error loading curation log</div>';
-            }
-        }
-        
-        // Show message
-        function showMessage(message, type) {
-            const messageArea = document.getElementById('message-area');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
-            messageDiv.textContent = message;
-            
-            messageArea.innerHTML = '';
-            messageArea.appendChild(messageDiv);
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                messageDiv.remove();
-            }, 5000);
-        }
-    </script>
-</body>
-</html>) {
-                console.error('Error loading stages:', error);
-            }
-        }
-        
-        // Load and display tools
-        async function loadTools() {
-            try {
-                const response = await fetch('/api/tools');
-                allTools = await response.json();
-                displayTools(allTools);
-                
-                // Populate tool selects for interactions
-                populateToolSelects();
-                
-                // Setup search and filter listeners
-                setupToolFilters();
-            } catch (error) {
-                console.error('Error loading tools:', error);
-                showMessage('Error loading tools', 'error');
-            }
-        }
-        
-        // Display tools in table
-        function displayTools(tools) {
-            const toolsList = document.getElementById('tools-list');
-            
-            if (tools.length === 0) {
-                toolsList.innerHTML = '<p>No tools found.</p>';
-                return;
-            }
-            
-            let html = '<table class="data-table">';
-            html += '<thead><tr>';
-            html += '<th>Name</th>';
-            html += '<th>Stage</th>';
-            html += '<th>Category</th>';
-            html += '<th>Provider</th>';
-            html += '<th>Source</th>';
-            html += '<th>API</th>';
-            html += '<th>Actions</th>';
-            html += '</tr></thead>';
-            html += '<tbody>';
-            
-            tools.forEach(tool => {
-                html += '<tr>';
-                html += `<td>${tool.name}</td>`;
-                html += `<td>${tool.stage_name}</td>`;
-                html += `<td>${tool.category}</td>`;
-                html += `<td>${tool.provider || 'N/A'}</td>`;
-                html += `<td>${tool.source_type || 'Unknown'}</td>`;
-                html += `<td>${tool.api_available ? '✓' : '✗'}</td>`;
-                html += '<td class="action-buttons">';
-                html += `<button class="btn btn-primary" onclick="editTool(${tool.id})">Edit</button>`;
-                html += '</td>';
-                html += '</tr>';
-            });
-            
-            html += '</tbody></table>';
-            toolsList.innerHTML = html;
-        }
-        
-        // Setup tool filters
-        function setupToolFilters() {
-            const searchInput = document.getElementById('tool-search');
-            const stageFilter = document.getElementById('tool-stage-filter');
-            
-            searchInput.addEventListener('input', filterTools);
-            stageFilter.addEventListener('change', filterTools);
-        }
-        
-        function filterTools() {
-            const searchTerm = document.getElementById('tool-search').value.toLowerCase();
-            const stageFilter = document.getElementById('tool-stage-filter').value;
-            
-            const filteredTools = allTools.filter(tool => {
-                const matchesSearch = !searchTerm || 
-                    tool.name.toLowerCase().includes(searchTerm) ||
-                    (tool.provider && tool.provider.toLowerCase().includes(searchTerm)) ||
-                    tool.category.toLowerCase().includes(searchTerm);
-                
-                const matchesStage = !stageFilter || tool.stage_name === allStages.find(s => s.id == stageFilter)?.name;
-                
-                return matchesSearch && matchesStage;
-            });
-            
-            displayTools(filteredTools);
-        }
-        
-        // Populate tool selects for interactions
-        function populateToolSelects() {
-            const fromSelect = document.getElementById('from-tool');
-            const toSelect = document.getElementById('to-tool');
-            
-            // Clear existing options
-            fromSelect.innerHTML = '<option value="">Select a tool...</option>';
-            toSelect.innerHTML = '<option value="">Select a tool...</option>';
-            
-            // Group tools by stage
-            const toolsByStage = {};
-            allTools.forEach(tool => {
-                if (!toolsByStage[tool.stage_name]) {
-                    toolsByStage[tool.stage_name] = [];
-                }
-                toolsByStage[tool.stage_name].push(tool);
-            });
-            
-            // Add options grouped by stage
-            Object.entries(toolsByStage).forEach(([stageName, tools]) => {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = stageName;
-                
-                tools.forEach(tool => {
-                    const option = document.createElement('option');
-                    option.value = tool.id;
-                    option.textContent = tool.name;
-                    optgroup.appendChild(option);
-                });
-                
-                fromSelect.appendChild(optgroup.cloneNode(true));
-                toSelect.appendChild(optgroup);
+            lifecycleData.stages.forEach(stage => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${stage.order}</td>
+                    <td><strong>${stage.name}</strong></td>
+                    <td>${stage.description.substring(0, 100)}...</td>
+                    <td>${stage.categories.length} categories</td>
+                    <td>
+                        <button class="btn" onclick="editStage(${stage.id})" style="padding: 5px 10px; margin: 2px;">Edit</button>
+                        <button class="btn btn-danger" onclick="deleteStage(${stage.id})" style="padding: 5px 10px; margin: 2px;">Delete</button>
+                    </td>
+                `;
             });
         }
-        
-        // Show/hide interaction form
-        function showAddInteractionForm() {
-            document.getElementById('interaction-form').style.display = 'block';
-        }
-        
-        function hideAddInteractionForm() {
-            document.getElementById('interaction-form').style.display = 'none';
-            document.getElementById('interaction-form').querySelector('form').reset();
-        }
-        
-        // Save interaction
-        async function saveInteraction(event) {
-            event.preventDefault();
+
+        // Load categories table
+        function loadCategoriesTable() {
+            const tbody = document.getElementById('categoriesTableBody');
+            tbody.innerHTML = '';
             
-            const data = {
-                from_tool_id: parseInt(document.getElementById('from-tool').value),
-                to_tool_id: parseInt(document.getElementById('to-tool').value),
-                interaction_type: document.getElementById('interaction-type').value,
-                interaction_description: document.getElementById('interaction-description').value,
-                data_flow_direction: document.getElementById('data-flow').value,
-                integration_method: document.getElementById('integration-method').value,
-                authentication_required: document.getElementById('auth-required').checked,
-                curator_name: document.getElementById('curator-name').value,
-                curator_email: document.getElementById('curator-email').value
-            };
-            
-            try {
-                const response = await fetch('/api/interactions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
+            lifecycleData.stages.forEach(stage => {
+                stage.categories.forEach(category => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td><strong>${category.name}</strong></td>
+                        <td>${stage.name}</td>
+                        <td>Category description placeholder</td>
+                        <td>${category.tools.length} tools</td>
+                        <td>
+                            <button class="btn" onclick="editCategory(${category.id})" style="padding: 5px 10px; margin: 2px;">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteCategory(${category.id})" style="padding: 5px 10px; margin: 2px;">Delete</button>
+                        </td>
+                    `;
                 });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showMessage('Interaction added successfully!', 'success');
-                    hideAddInteractionForm();
-                    loadInteractions();
-                } else {
-                    showMessage('Error adding interaction: ' + (result.error || 'Unknown error'), 'error');
-                }
-            } catch (error) {
-                console.error('Error saving interaction:', error);
-                showMessage('Error saving interaction', 'error');
-            }
-        }
-        
-        // Load and display interactions
-        async function loadInteractions() {
-            try {
-                const response = await fetch('/api/interactions');
-                const interactions = await response.json();
-                displayInteractions(interactions);
-            } catch (error) {
-                console.error('Error loading interactions:', error);
-                showMessage('Error loading interactions', 'error');
-            }
-        }
-        
-        // Display interactions
-        function displayInteractions(interactions) {
-            const interactionsList = document.getElementById('interactions-list');
-            
-            if (interactions.length === 0) {
-                interactionsList.innerHTML = '<p>No infrastructure interactions recorded yet.</p>';
-                return;
-            }
-            
-            let html = '<table class="data-table">';
-            html += '<thead><tr>';
-            html += '<th>From Tool</th>';
-            html += '<th>To Tool</th>';
-            html += '<th>Type</th>';
-            html += '<th>Direction</th>';
-            html += '<th>Method</th>';
-            html += '<th>Verified</th>';
-            html += '<th>Actions</th>';
-            html += '</tr></thead>';
-            html += '<tbody>';
-            
-            interactions.forEach(interaction => {
-                html += '<tr>';
-                html += `<td>${interaction.from_tool_name}</td>`;
-                html += `<td>${interaction.to_tool_name}</td>`;
-                html += `<td>${interaction.interaction_type}</td>`;
-                html += `<td>${interaction.data_flow_direction}</td>`;
-                html += `<td>${interaction.integration_method || 'N/A'}</td>`;
-                html += `<td>${interaction.verified ? '✓ Verified' : '✗ Not Verified'}</td>`;
-                html += '<td class="action-buttons">';
-                if (!interaction.verified) {
-                    html += `<button class="btn btn-primary" onclick="verifyInteraction(${interaction.id})">Verify</button>`;
-                }
-                html += `<button class="btn btn-danger" onclick="deleteInteraction(${interaction.id})">Delete</button>`;
-                html += '</td>';
-                html += '</tr>';
             });
-            
-            html += '</tbody></table>';
-            interactionsList.innerHTML = html;
         }
-        
-        // Verify interaction
-        async function verifyInteraction(interactionId) {
-            const verifierName = prompt('Enter your name to verify this interaction:');
-            if (!verifierName) return;
+
+        // Load tools table
+        function loadToolsTable() {
+            const tbody = document.getElementById('toolsTableBody');
+            tbody.innerHTML = '';
             
-            try {
-                const response = await fetch(`/api/interaction/${interactionId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        verified: true,
-                        verified_by: verifierName
-                    })
+            lifecycleData.stages.forEach(stage => {
+                stage.categories.forEach(category => {
+                    category.tools.forEach(tool => {
+                        const row = tbody.insertRow();
+                        row.innerHTML = `
+                            <td><strong>${tool}</strong></td>
+                            <td>${category.name}</td>
+                            <td>${stage.name}</td>
+                            <td>Provider TBD</td>
+                            <td><a href="#" target="_blank">Link TBD</a></td>
+                            <td>
+                                <button class="btn" onclick="editTool('${tool}')" style="padding: 5px 10px; margin: 2px;">Edit</button>
+                                <button class="btn btn-danger" onclick="deleteTool('${tool}')" style="padding: 5px 10px; margin: 2px;">Delete</button>
+                            </td>
+                        `;
+                    });
                 });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showMessage('Interaction verified successfully!', 'success');
-                    loadInteractions();
-                } else {
-                    showMessage('Error verifying interaction', 'error');
-                }
-            } catch (error) {
-                console.error('Error verifying interaction:', error);
-                showMessage('Error verifying interaction', 'error');
-            }
+            });
         }
-        
-        // Delete interaction
-        async function deleteInteraction(interactionId) {
-            if (!confirm('Are you sure you want to delete this interaction?')) return;
+
+        // Stage selection for overview
+        function selectStage(stageName) {
+            const stage = lifecycleData.stages.find(s => s.name.toLowerCase() === stageName);
+            if (!stage) return;
             
-            try {
-                const response = await fetch(`/api/interaction/${interactionId}`, {
-                    method: 'DELETE'
-                });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showMessage('Interaction deleted successfully!', 'success');
-                    loadInteractions();
-                } else {
-                    showMessage('Error deleting interaction', 'error');
-                }
-            } catch (error) {
-                console.error('Error deleting interaction:', error);
-                showMessage('Error deleting interaction', 'error');
-            }
-        }
-        
-        // Edit tool
-        async function editTool(toolId) {
-            try {
-                const response = await fetch(`/api/tool/${toolId}`);
-                const tool = await response.json();
-                
-                // Create edit form in a modal
-                const formHtml = `
-                    <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 600px; margin: 2rem auto;">
-                        <h3>Edit Tool: ${tool.name}</h3>
-                        <form onsubmit="updateTool(event, ${toolId})">
-                            <div class="form-group">
-                                <label>Name</label>
-                                <input type="text" id="edit-name" value="${tool.name}" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Provider</label>
-                                <input type="text" id="edit-provider" value="${tool.provider || ''}">
-                            </div>
-                            <div class="form-group">
-                                <label>URL</label>
-                                <input type="url" id="edit-url" value="${tool.url || ''}">
-                            </div>
-                            <div class="form-group">
-                                <label>Description</label>
-                                <textarea id="edit-description">${tool.description || ''}</textarea>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Source Type</label>
-                                    <select id="edit-source-type">
-                                        <option value="open" ${tool.source_type === 'open' ? 'selected' : ''}>Open</option>
-                                        <option value="closed" ${tool.source_type === 'closed' ? 'selected' : ''}>Closed</option>
-                                        <option value="freemium" ${tool.source_type === 'freemium' ? 'selected' : ''}>Freemium</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Scope</label>
-                                    <select id="edit-scope">
-                                        <option value="generic" ${tool.scope === 'generic' ? 'selected' : ''}>Generic</option>
-                                        <option value="disciplinary" ${tool.scope === 'disciplinary' ? 'selected' : ''}>Disciplinary</option>
-                                        <option value="domain-specific" ${tool.scope === 'domain-specific' ? 'selected' : ''}>Domain-specific</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="checkbox-group">
-                                <label>
-                                    <input type="checkbox" id="edit-interoperable" ${tool.interoperable ? 'checked' : ''}>
-                                    Interoperable
-                                </label>
-                                <label>
-                                    <input type="checkbox" id="edit-api-available" ${tool.api_available ? 'checked' : ''}>
-                                    API Available
-                                </label>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Curator Name</label>
-                                    <input type="text" id="edit-curator-name" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Curator Email</label>
-                                    <input type="email" id="edit-curator-email" required>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
-                                <button type="button" class="btn btn-secondary" onclick="closeEditForm()">Cancel</button>
-                            </div>
-                        </form>
+            document.getElementById('selectedStageTitle').textContent = stage.name;
+            document.getElementById('selectedStageDescription').textContent = stage.description;
+            
+            const categoriesContainer = document.getElementById('selectedStageCategories');
+            categoriesContainer.innerHTML = '';
+            
+            stage.categories.forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category-item';
+                categoryDiv.innerHTML = `
+                    <div class="category-name">${category.name}</div>
+                    <div class="tool-tags">
+                        ${category.tools.map(tool => `<span class="tool-tag">${tool}</span>`).join('')}
                     </div>
                 `;
+                categoriesContainer.appendChild(categoryDiv);
+            });
+            
+            document.getElementById('stageDetails').style.display = 'block';
+        }
+
+        // Modal management
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+            
+            // Populate dropdowns if needed
+            if (modalId === 'addCategoryModal') {
+                populateStageDropdown('categoryStage');
+            } else if (modalId === 'addToolModal') {
+                populateCategoryDropdown('toolCategory');
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Populate dropdowns
+        function populateStageDropdown(selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '';
+            
+            lifecycleData.stages.forEach(stage => {
+                const option = document.createElement('option');
+                option.value = stage.id;
+                option.textContent = stage.name;
+                select.appendChild(option);
+            });
+        }
+
+        function populateCategoryDropdown(selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '';
+            
+            lifecycleData.stages.forEach(stage => {
+                stage.categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = `${stage.name} - ${category.name}`;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // Form submission handlers
+        function addStage(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('stageName').value;
+            const description = document.getElementById('stageDescription').value;
+            const order = parseInt(document.getElementById('stageOrder').value);
+            
+            // In a real application, this would make an API call
+            const newStage = {
+                id: Date.now(),
+                name: name,
+                description: description,
+                order: order,
+                categories: []
+            };
+            
+            lifecycleData.stages.push(newStage);
+            lifecycleData.stages.sort((a, b) => a.order - b.order);
+            
+            closeModal('addStageModal');
+            loadStagesTable();
+            showAlert('Stage added successfully!', 'success');
+            
+            // Reset form
+            event.target.reset();
+        }
+
+        function addCategory(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('categoryName').value;
+            const stageId = parseInt(document.getElementById('categoryStage').value);
+            const description = document.getElementById('categoryDescription').value;
+            
+            // Find the stage and add the category
+            const stage = lifecycleData.stages.find(s => s.id === stageId);
+            if (stage) {
+                const newCategory = {
+                    id: Date.now(),
+                    name: name,
+                    tools: []
+                };
+                stage.categories.push(newCategory);
                 
-                // Create overlay
-                const overlay = document.createElement('div');
-                overlay.id = 'edit-overlay';
-                overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow: auto;';
-                overlay.innerHTML = formHtml;
-                document.body.appendChild(overlay);
-                
-            } catch (error
+                closeModal('addCategoryModal');
+                loadCategoriesTable();
+                showAlert('Category added successfully!', 'success');
+            }
+            
+            // Reset form
+            event.target.reset();
+        }
+
+        function addTool(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('toolName').value;
+            const categoryId = parseInt(document.getElementById('toolCategory').value);
+            const provider = document.getElementById('toolProvider').value;
+            const url = document.getElementById('toolURL').value;
+            const description = document.getElementById('toolDescription').value;
+            
+            // Find the category and add the tool
+            for (let stage of lifecycleData.stages) {
+                const category = stage.categories.find(c => c.id === categoryId);
+                if (category) {
+                    category.tools.push(name);
+                    break;
+                }
+            }
+            
+            closeModal('addToolModal');
+            loadToolsTable();
+            showAlert('Tool added successfully!', 'success');
+            
+            // Reset form
+            event.target.reset();
+        }
+
+        // Search and filter functions
+        function filterStages(searchTerm) {
+            const rows = document.querySelectorAll('#stagesTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm.toLowerCase()) ? '' : 'none';
+            });
+        }
+
+        function filterCategories(searchTerm) {
+            const rows = document.querySelectorAll('#categoriesTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm.toLowerCase()) ? '' : 'none';
+            });
+        }
+
+        function filterTools(searchTerm) {
+            const rows = document.querySelectorAll('#toolsTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm.toLowerCase()) ? '' : 'none';
+            });
+        }
+
+        function filterByCategory(categoryName) {
+            const rows = document.querySelectorAll('#toolsTableBody tr');
+            rows.forEach(row => {
+                if (!categoryName) {
+                    row.style.display = '';
+                } else {
+                    const categoryCell = row.cells[1].textContent;
+                    row.style.display = categoryCell.includes(categoryName) ? '' : 'none';
+                }
+            });
+        }
+
+        // Edit and delete functions (placeholders)
+        function editStage(stageId) {
+            showAlert('Edit stage functionality would be implemented here', 'info');
+        }
+
+        function deleteStage(stageId) {
+            if (confirm('Are you sure you want to delete this stage?')) {
+                lifecycleData.stages = lifecycleData.stages.filter(s => s.id !== stageId);
+                loadStagesTable();
+                showAlert('Stage deleted successfully!', 'success');
+            }
+        }
+
+        function editCategory(categoryId) {
+            showAlert('Edit category functionality would be implemented here', 'info');
+        }
+
+        function deleteCategory(categoryId) {
+            if (confirm('Are you sure you want to delete this category?')) {
+                // Find and remove the category
+                for (let stage of lifecycleData.stages) {
+                    stage.categories = stage.categories.filter(c => c.id !== categoryId);
+                }
+                loadCategoriesTable();
+                showAlert('Category deleted successfully!', 'success');
+            }
+        }
+
+        function editTool(toolName) {
+            showAlert('Edit tool functionality would be implemented here', 'info');
+        }
+
+        function deleteTool(toolName) {
+            if (confirm('Are you sure you want to delete this tool?')) {
+                // Find and remove the tool
+                for (let stage of lifecycleData.stages) {
+                    for (let category of stage.categories) {
+                        category.tools = category.tools.filter(t => t !== toolName);
+                    }
+                }
+                loadToolsTable();
+                showAlert('Tool deleted successfully!', 'success');
+            }
+        }
+
+        // Visualization functions
+        function initializeVisualization() {
+            const visualizationArea = document.getElementById('visualizationArea');
+            visualizationArea.innerHTML = `
+                <div style="text-align: center; padding: 50px;">
+                    <h3>Interactive Lifecycle Visualization</h3>
+                    <p>This would contain an interactive D3.js or similar visualization</p>
+                    <p>Showing connections between stages, categories, and tools</p>
+                    <div style="margin-top: 30px;">
+                        <div style="display: inline-block; margin: 10px; padding: 20px; background: #3498db; color: white; border-radius: 10px;">
+                            Conceptualise → Plan → Collect → Process → Analyse → Store
+                        </div>
+                        <br>
+                        <div style="display: inline-block; margin: 10px; padding: 20px; background: #27ae60; color: white; border-radius: 10px;">
+                            Publish → Preserve → Share → Access → Transform ↰
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleVisualization(viewType) {
+            const visualizationArea = document.getElementById('visualizationArea');
+            
+            switch(viewType) {
+                case 'circular':
+                    visualizationArea.innerHTML = '<div style="padding: 50px; text-align: center;"><h3>Circular Visualization</h3><p>Stages arranged in a circle showing the cyclical nature of the research data lifecycle</p></div>';
+                    break;
+                case 'linear':
+                    visualizationArea.innerHTML = '<div style="padding: 50px; text-align: center;"><h3>Linear Visualization</h3><p>Stages arranged in a linear sequence from left to right</p></div>';
+                    break;
+                case 'network':
+                    visualizationArea.innerHTML = '<div style="padding: 50px; text-align: center;"><h3>Network Visualization</h3><p>Interactive network showing relationships between stages, categories, and tools</p></div>';
+                    break;
+            }
+        }
+
+        // Import/Export functions
+        function handleFileImport(input) {
+            const file = input.files[0];
+            if (file) {
+                showAlert(`Selected file: ${file.name} (${file.size} bytes)`, 'info');
+            }
+        }
+
+        function importData() {
+            showAlert('Import functionality would be implemented here', 'info');
+        }
+
+        function validateImport() {
+            showAlert('Import validation would be performed here', 'info');
+        }
+
+        function exportData() {
+            const format = document.getElementById('exportFormat').value;
+            const dataStr = JSON.stringify(lifecycleData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `maldreth_data.${format}`;
+            link.click();
+            
+            showAlert(`Data exported as ${format.toUpperCase()}`, 'success');
+        }
+
+        function exportStages() {
+            const stagesData = lifecycleData.stages.map(stage => ({
+                name: stage.name,
+                description: stage.description,
+                order: stage.order
+            }));
+            
+            const dataStr = JSON.stringify(stagesData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = 'maldreth_stages.json';
+            link.click();
+            
+            showAlert('Stages exported successfully', 'success');
+        }
+
+        function exportTools() {
+            const toolsData = [];
+            lifecycleData.stages.forEach(stage => {
+                stage.categories.forEach(category => {
+                    category.tools.forEach(tool => {
+                        toolsData.push({
+                            tool: tool,
+                            category: category.name,
+                            stage: stage.name
+                        });
+                    });
+                });
+            });
+            
+            const dataStr = JSON.stringify(toolsData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = 'maldreth_tools.json';
+            link.click();
+            
+            showAlert('Tools exported successfully', 'success');
+        }
+
+        function createBackup() {
+            const backupData = {
+                timestamp: new Date().toISOString(),
+                version: '1.0.0',
+                data: lifecycleData
+            };
+            
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `maldreth_backup_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            showAlert('Backup created successfully', 'success');
+        }
+
+        function restoreBackup() {
+            showAlert('Backup restoration functionality would be implemented here', 'info');
+        }
+
+        function resetDatabase() {
+            if (confirm('Are you sure you want to reset the database? This action cannot be undone.')) {
+                showAlert('Database reset functionality would be implemented here', 'info');
+            }
+        }
+
+        // Utility functions
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.style.maxWidth = '400px';
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load initial data for the overview tab
+            loadTabData('overview');
+            
+            // Update statistics
+            document.getElementById('totalStages').textContent = lifecycleData.stages.length;
+            
+            let totalCategories = 0;
+            let totalTools = 0;
+            lifecycleData.stages.forEach(stage => {
+                totalCategories += stage.categories.length;
+                stage.categories.forEach(category => {
+                    totalTools += category.tools.length;
+                });
+            });
+            
+            document.getElementById('totalCategories').textContent = totalCategories;
+            document.getElementById('totalTools').textContent = totalTools;
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString();
+        });
+    </script>
+</body>
+</html>
