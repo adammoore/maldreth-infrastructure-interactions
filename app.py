@@ -31,6 +31,17 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
+# Fix for Heroku Postgres URL
+database_url = os.environ.get('DATABASE_URL', '')
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    os.environ['DATABASE_URL'] = database_url
+
+# Then your existing app configuration
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///maldreth.db'
+
+
 # Configuration for Heroku
 class Config:
     """Application configuration optimized for Heroku deployment"""
@@ -177,11 +188,63 @@ class InfrastructureInteraction(db.Model):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
+# Add this to your app.py right after the app creation
+@app.before_first_request
+def create_tables():
+    """Create database tables before first request"""
+    try:
+        db.create_all()
+        app.logger.info("Database tables created")
+    except Exception as e:
+        app.logger.error(f"Error creating tables: {e}")
+
+# Or for newer Flask versions, use this instead:
+with app.app_context():
+    db.create_all()
+
 # Routes
 @app.route('/')
 def index():
     """Main index page"""
     return render_template('index.html')
+
+@app.route('/api/test-db', methods=['GET'])
+def test_db():
+    """Test database connection and tables"""
+    try:
+        # Test connection
+        db.session.execute('SELECT 1')
+        
+        # Create tables if they don't exist
+        db.create_all()
+        
+        # Get counts
+        stages = LifecycleStage.query.count()
+        categories = ToolCategory.query.count() 
+        tools = Tool.query.count()
+        
+        # If empty, initialize
+        if stages == 0:
+            from initialize_db import initialize_database
+            initialize_database()
+            stages = LifecycleStage.query.count()
+            categories = ToolCategory.query.count()
+            tools = Tool.query.count()
+            
+        return jsonify({
+            'status': 'success',
+            'database': 'connected',
+            'stages': stages,
+            'categories': categories,
+            'tools': tools
+        })
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
 
 @app.route('/api/init-db', methods=['GET', 'POST'])  # Allow GET temporarily
 def init_db_route():
