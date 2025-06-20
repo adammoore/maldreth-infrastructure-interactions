@@ -183,24 +183,81 @@ def index():
     """Main index page"""
     return render_template('index.html')
 
-@app.route('/api/init-db', methods=['POST'])
-def init_db():
-    """Initialize database tables - REMOVE IN PRODUCTION"""
+@app.route('/api/init-db', methods=['GET', 'POST'])  # Allow GET temporarily
+def init_db_route():
+    """Initialize database - REMOVE IN PRODUCTION"""
     try:
+        # Create tables
         db.create_all()
+        app.logger.info("Database tables created")
         
         # Check if already initialized
-        if LifecycleStage.query.count() > 0:
-            return jsonify({'message': 'Database already initialized'}), 200
-            
-        # Run initialization
+        stage_count = LifecycleStage.query.count()
+        if stage_count > 0:
+            return jsonify({
+                'message': 'Database already initialized',
+                'stages': stage_count,
+                'categories': ToolCategory.query.count(),
+                'tools': Tool.query.count()
+            }), 200
+        
+        # Initialize with data
         from initialize_db import initialize_database
         initialize_database()
         
-        return jsonify({'message': 'Database initialized successfully'}), 200
+        # Get counts after initialization
+        return jsonify({
+            'message': 'Database initialized successfully',
+            'stages': LifecycleStage.query.count(),
+            'categories': ToolCategory.query.count(),
+            'tools': Tool.query.count()
+        }), 200
     except Exception as e:
         app.logger.error(f"Error initializing database: {e}")
-        return jsonify({'error': str(e)}), 500
+        import traceback
+        tb = traceback.format_exc()
+        return jsonify({
+            'error': str(e),
+            'traceback': tb
+        }), 500
+
+@app.route('/api/db-check', methods=['GET'])
+def db_check():
+    """Check database status"""
+    try:
+        # Try to connect to database
+        db.session.execute('SELECT 1')
+        
+        # Check tables
+        tables = db.session.execute("""
+            SELECT tablename 
+            FROM pg_tables 
+            WHERE schemaname = 'public'
+        """).fetchall()
+        
+        table_names = [t[0] for t in tables]
+        
+        return jsonify({
+            'database': 'connected',
+            'tables': table_names,
+            'expected_tables': [
+                'lifecycle_stages',
+                'tool_categories', 
+                'tools',
+                'user_interactions'
+            ],
+            'missing_tables': [t for t in [
+                'lifecycle_stages',
+                'tool_categories',
+                'tools', 
+                'user_interactions'
+            ] if t not in table_names]
+        })
+    except Exception as e:
+        return jsonify({
+            'database': 'error',
+            'error': str(e)
+        }), 500
 
 @app.route('/curator')
 def curator():
