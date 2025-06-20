@@ -1,56 +1,9 @@
-<<<<<<< HEAD
-# MaLDReTH Infrastructure Interactions - Heroku Optimized
-=======
-# MaLDReTH Research Data Lifecycle Infrastructure
-# Heroku-optimized requirements with pandas/numpy issue resolved
-
-# Core Flask framework and extensions
->>>>>>> a47a6afe308eebe3ddbb98dd559edacd2affe218
 Flask==2.3.3
 Flask-SQLAlchemy==3.0.5
-Flask-Migrate==4.0.5
 Flask-CORS==4.0.0
-<<<<<<< HEAD
-gunicorn==21.2.0
 psycopg2-binary==2.9.7
-SQLAlchemy==2.0.21
-=======
-
-# Production WSGI server
+python-dotenv==1.0.0
 gunicorn==21.2.0
-
-# Database support
-SQLAlchemy==2.0.21
-psycopg2-binary==2.9.7
-
-# Core dependencies
->>>>>>> a47a6afe308eebe3ddbb98dd559edacd2affe218
-Werkzeug==2.3.7
-Jinja2==3.1.2
-python-dotenv==1.0.0
-python-dateutil==2.8.2
-marshmallow==3.20.1
-click>=8.0
-itsdangerous>=2.0
-MarkupSafe>=2.0
-<<<<<<< HEAD
-six==1.16.0
-=======
-
-# Environment and configuration
-python-dotenv==1.0.0
-
-# Date/time utilities
-python-dateutil==2.8.2
-
-# Basic utilities
-six==1.16.0
-
-# Data validation (lightweight alternative to pandas for simple operations)
-marshmallow==3.20.1
-
-# Optional: Only uncomment if you absolutely need Excel/advanced CSV support
-# pandas==2.1.1
-# numpy==1.24.4  # Pin to compatible version if needed
-# openpyxl==3.1.2
->>>>>>> a47a6afe308eebe3ddbb98dd559edacd2affe218
+requests==2.31.0
+beautifulsoup4==4.12.2
+validators==0.20.0
