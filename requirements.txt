@@ -1,13 +1,36 @@
+# MaLDReTH Research Data Lifecycle Curation Interface
+# Requirements for Heroku deployment
+
+# Core Flask framework and extensions
 Flask==2.3.3
-Werkzeug==2.3.7
 Flask-SQLAlchemy==3.0.5
 Flask-Migrate==4.0.5
-Flask-WTF==1.2.1
-WTForms==3.1.1
-pandas==2.1.4
-XlsxWriter==3.1.9
-python-dotenv==1.0.0
+Flask-CORS==4.0.0
+
+# Database support
+SQLAlchemy==2.0.21
+psycopg2-binary==2.9.7
+
+# Data processing and export
+pandas==2.1.1
+openpyxl==3.1.2
+
+# Web server for production
 gunicorn==21.2.0
-psycopg2-binary==2.9.9
-MarkupSafe==2.1.3
+
+# Environment management
+python-dotenv==1.0.0
+
+# Core dependencies
+Werkzeug==2.3.7
 Jinja2==3.1.2
+click>=8.0
+itsdangerous>=2.0
+MarkupSafe>=2.0
+
+# Data validation and serialization
+marshmallow==3.20.1
+
+# Utilities
+python-dateutil==2.8.2
+six==1.16.0
