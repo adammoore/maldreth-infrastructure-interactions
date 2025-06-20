@@ -27,41 +27,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Initialize Flask app
-app = Flask(__name__)
-CORS(app)
-
 # Fix for Heroku Postgres URL
 database_url = os.environ.get('DATABASE_URL', '')
 if database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
-    os.environ['DATABASE_URL'] = database_url
 
-# Then your existing app configuration
+
+# Initialize Flask app
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///maldreth.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-
-# Configuration for Heroku
-class Config:
-    """Application configuration optimized for Heroku deployment"""
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'maldreth-infrastructure-key-2024'
-    
-    # Database configuration - Heroku provides DATABASE_URL
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///maldreth.db'
-    
-    # Fix for Heroku Postgres URL format change
-    if SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
-        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace("postgres://", "postgresql://", 1)
-    
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,
-        'pool_recycle': 300,
-    }
-    
-    DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
-    PORT = int(os.environ.get('PORT', 5000))
+# Initialize extensions
+db.init_app(app)
+CORS(app)
 
 app.config.from_object(Config)
 
@@ -187,20 +167,6 @@ class InfrastructureInteraction(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
-
-# Add this to your app.py right after the app creation
-@app.before_first_request
-def create_tables():
-    """Create database tables before first request"""
-    try:
-        db.create_all()
-        app.logger.info("Database tables created")
-    except Exception as e:
-        app.logger.error(f"Error creating tables: {e}")
-
-# Or for newer Flask versions, use this instead:
-with app.app_context():
-    db.create_all()
 
 # Routes
 @app.route('/')
@@ -575,16 +541,24 @@ def internal_error(error):
     logger.error(f"Internal server error: {error}")
     return jsonify({'error': 'Internal server error'}), 500
 
+# Initialize database tables when app starts
+with app.app_context():
+    try:
+        db.create_all()
+        app.logger.info("Database tables created")
+    except Exception as e:
+        app.logger.error(f"Error creating tables: {e}")
+        # Auto-initialize if empty
+        from models import LifecycleStage
+        if LifecycleStage.query.count() == 0:
+            app.logger.info("No data found, initializing database...")
+            from initialize_db import initialize_database
+            initialize_database()
+            app.logger.info(f"Database initialized with {LifecycleStage.query.count()} stages")
+    except Exception as e:
+        app.logger.error(f"Error during database initialization: {e}")
+
 if __name__ == '__main__':
-    # Create database tables and initialize data
-    with app.app_context():
-        try:
-            db.create_all()
-            init_maldreth_data()
-            logger.info("Application started successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize application: {e}")
-            raise
     
     # Run the application
     app.run(
