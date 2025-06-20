@@ -1,379 +1,4 @@
-authentication_required: document.getElementById('auth-required').checked,
-                curator_name: document.getElementById('curator-name').value,
-                curator_email: document.getElementById('curator-email').value
-            };
-            
-            try {
-                const response = await fetch('/api/interactions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showMessage('Interaction added successfully!', 'success');
-                    hideAddInteractionForm();
-                    loadInteractions();
-                } else {
-                    showMessage('Error adding interaction: ' + (result.error || 'Unknown error'), 'error');
-                }
-            } catch (error) {
-                console.error('Error saving interaction:', error);
-                showMessage('Error saving interaction', 'error');
-            }
-        }
-        
-        // Load and display interactions
-        async function loadInteractions() {
-            try {
-                const response = await fetch('/api/interactions');
-                const interactions = await response.json();
-                displayInteractions(interactions);
-            } catch (error) {
-                console.error('Error loading interactions:', error);
-                showMessage('Error loading interactions', 'error');
-            }
-        }
-        
-        // Display interactions
-        function displayInteractions(interactions) {
-            const interactionsList = document.getElementById('interactions-list');
-            
-            if (interactions.length === 0) {
-                interactionsList.innerHTML = '<p>No infrastructure interactions recorded yet.</p>';
-                return;
-            }
-            
-            let html = '<table class="data-table">';
-            html += '<thead><tr>';
-            html += '<th>From Tool</th>';
-            html += '<th>To Tool</th>';
-            html += '<th>Type</th>';
-            html += '<th>Direction</th>';
-            html += '<th>Method</th>';
-            html += '<th>Verified</th>';
-            html += '<th>Actions</th>';
-            html += '</tr></thead>';
-            html += '<tbody>';
-            
-            interactions.forEach(interaction => {
-                html += '<tr>';
-                html += `<td>${interaction.from_tool_name}</td>`;
-                html += `<td>${interaction.to_tool_name}</td>`;
-                html += `<td>${interaction.interaction_type}</td>`;
-                html += `<td>${interaction.data_flow_direction}</td>`;
-                html += `<td>${interaction.integration_method || 'N/A'}</td>`;
-                html += `<td>${interaction.verified ? '✓ Verified' : '✗ Not Verified'}</td>`;
-                html += '<td class="action-buttons">';
-                if (!interaction.verified) {
-                    html += `<button class="btn btn-primary" onclick="verifyInteraction(${interaction.id})">Verify</button>`;
-                }
-                html += `<button class="btn btn-danger" onclick="deleteInteraction(${interaction.id})">Delete</button>`;
-                html += '</td>';
-                html += '</tr>';
-            });
-            
-            html += '</tbody></table>';
-            interactionsList.innerHTML = html;
-        }
-        
-        // Verify interaction
-        async function verifyInteraction(interactionId) {
-            const verifierName = prompt('Enter your name to verify this interaction:');
-            if (!verifierName) return;
-            
-            try {
-                const response = await fetch(`/api/interaction/${interactionId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        verified: true,
-                        verified_by: verifierName
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showMessage('Interaction verified successfully!', 'success');
-                    loadInteractions();
-                } else {
-                    showMessage('Error verifying interaction', 'error');
-                }
-            } catch (error) {
-                console.error('Error verifying interaction:', error);
-                showMessage('Error verifying interaction', 'error');
-            }
-        }
-        
-        // Delete interaction
-        async function deleteInteraction(interactionId) {
-            if (!confirm('Are you sure you want to delete this interaction?')) return;
-            
-            try {
-                const response = await fetch(`/api/interaction/${interactionId}`, {
-                    method: 'DELETE'
-                });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showMessage('Interaction deleted successfully!', 'success');
-                    loadInteractions();
-                } else {
-                    showMessage('Error deleting interaction', 'error');
-                }
-            } catch (error) {
-                console.error('Error deleting interaction:', error);
-                showMessage('Error deleting interaction', 'error');
-            }
-        }
-        
-        // Edit tool
-        async function editTool(toolId) {
-            try {
-                const response = await fetch(`/api/tool/${toolId}`);
-                const tool = await response.json();
-                
-                // Create edit form in a modal (simplified version)
-                const formHtml = `
-                    <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 600px; margin: 2rem auto;">
-                        <h3>Edit Tool: ${tool.name}</h3>
-                        <form onsubmit="updateTool(event, ${toolId})">
-                            <div class="form-group">
-                                <label>Name</label>
-                                <input type="text" id="edit-name" value="${tool.name}" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Provider</label>
-                                <input type="text" id="edit-provider" value="${tool.provider || ''}">
-                            </div>
-                            <div class="form-group">
-                                <label>URL</label>
-                                <input type="url" id="edit-url" value="${tool.url || ''}">
-                            </div>
-                            <div class="form-group">
-                                <label>Description</label>
-                                <textarea id="edit-description">${tool.description || ''}</textarea>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Source Type</label>
-                                    <select id="edit-source-type">
-                                        <option value="open" ${tool.source_type === 'open' ? 'selected' : ''}>Open</option>
-                                        <option value="closed" ${tool.source_type === 'closed' ? 'selected' : ''}>Closed</option>
-                                        <option value="freemium" ${tool.source_type === 'freemium' ? 'selected' : ''}>Freemium</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Scope</label>
-                                    <select id="edit-scope">
-                                        <option value="generic" ${tool.scope === 'generic' ? 'selected' : ''}>Generic</option>
-                                        <option value="disciplinary" ${tool.scope === 'disciplinary' ? 'selected' : ''}>Disciplinary</option>
-                                        <option value="domain-specific" ${tool.scope === 'domain-specific' ? 'selected' : ''}>Domain-specific</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="checkbox-group">
-                                <label>
-                                    <input type="checkbox" id="edit-interoperable" ${tool.interoperable ? 'checked' : ''}>
-                                    Interoperable
-                                </label>
-                                <label>
-                                    <input type="checkbox" id="edit-api-available" ${tool.api_available ? 'checked' : ''}>
-                                    API Available
-                                </label>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Curator Name</label>
-                                    <input type="text" id="edit-curator-name" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Curator Email</label>
-                                    <input type="email" id="edit-curator-email" required>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
-                                <button type="button" class="btn btn-secondary" onclick="closeEditForm()">Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                `;
-                
-                // Create overlay
-                const overlay = document.createElement('div');
-                overlay.id = 'edit-overlay';
-                overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000;';
-                overlay.innerHTML = formHtml;
-                document.body.appendChild(overlay);
-                
-            } catch (error) {
-                console.error('Error loading tool:', error);
-                showMessage('Error loading tool details', 'error');
-            }
-        }
-        
-        // Update tool
-        async function updateTool(event, toolId) {
-            event.preventDefault();
-            
-            const data = {
-                name: document.getElementById('edit-name').value,
-                provider: document.getElementById('edit-provider').value,
-                url: document.getElementById('edit-url').value,
-                description: document.getElementById('edit-description').value,
-                source_type: document.getElementById('edit-source-type').value,
-                scope: document.getElementById('edit-scope').value,
-                interoperable: document.getElementById('edit-interoperable').checked,
-                api_available: document.getElementById('edit-api-available').checked,
-                curator_name: document.getElementById('edit-curator-name').value,
-                curator_email: document.getElementById('edit-curator-email').value,
-                reason: 'Tool information updated'
-            };
-            
-            try {
-                const response = await fetch(`/api/tool/${toolId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showMessage('Tool updated successfully!', 'success');
-                    closeEditForm();
-                    loadTools();
-                } else {
-                    showMessage('Error updating tool', 'error');
-                }
-            } catch (error) {
-                console.error('Error updating tool:', error);
-                showMessage('Error updating tool', 'error');
-            }
-        }
-        
-        // Close edit form
-        function closeEditForm() {
-            const overlay = document.getElementById('edit-overlay');
-            if (overlay) {
-                overlay.remove();
-            }
-        }
-        
-        // Load categories
-        async function loadCategories() {
-            const categoriesList = document.getElementById('categories-list');
-            categoriesList.innerHTML = '<div class="loading">Loading categories...</div>';
-            
-            try {
-                const response = await fetch('/api/stages');
-                const stages = await response.json();
-                
-                let html = '';
-                for (const stage of stages) {
-                    const stageResponse = await fetch(`/api/stage/${stage.id}`);
-                    const stageData = await stageResponse.json();
-                    
-                    html += `<div style="margin-bottom: 2rem;">`;
-                    html += `<h3>${stage.name}</h3>`;
-                    
-                    if (stageData.categories && stageData.categories.length > 0) {
-                        html += '<table class="data-table">';
-                        html += '<thead><tr><th>Category</th><th>Description</th><th>Tool Count</th></tr></thead>';
-                        html += '<tbody>';
-                        
-                        stageData.categories.forEach(category => {
-                            html += '<tr>';
-                            html += `<td>${category.category}</td>`;
-                            html += `<td>${category.description || 'N/A'}</td>`;
-                            html += `<td>${category.tool_count}</td>`;
-                            html += '</tr>';
-                        });
-                        
-                        html += '</tbody></table>';
-                    } else {
-                        html += '<p>No categories found for this stage.</p>';
-                    }
-                    
-                    html += '</div>';
-                }
-                
-                categoriesList.innerHTML = html;
-            } catch (error) {
-                console.error('Error loading categories:', error);
-                categoriesList.innerHTML = '<div class="error">Error loading categories</div>';
-            }
-        }
-        
-        // Load curation log
-        async function loadCurationLog() {
-            const logList = document.getElementById('curation-log-list');
-            const filterType = document.getElementById('log-filter-type').value;
-            
-            try {
-                let url = '/api/curation-log';
-                if (filterType) {
-                    url += `?entity_type=${filterType}`;
-                }
-                
-                const response = await fetch(url);
-                const logs = await response.json();
-                
-                if (logs.length === 0) {
-                    logList.innerHTML = '<p>No curation log entries found.</p>';
-                    return;
-                }
-                
-                let html = '';
-                logs.forEach(log => {
-                    html += '<div class="log-entry">';
-                    html += '<div class="log-entry-header">';
-                    html += `<strong>${log.action} ${log.entity_type}</strong>`;
-                    html += `<span class="log-entry-date">${new Date(log.created_at).toLocaleString()}</span>`;
-                    html += '</div>';
-                    html += `<p>By: ${log.curator_name || 'Unknown'} (${log.curator_email || 'N/A'})</p>`;
-                    if (log.reason) {
-                        html += `<p>Reason: ${log.reason}</p>`;
-                    }
-                    html += '</div>';
-                });
-                
-                logList.innerHTML = html;
-            } catch (error) {
-                console.error('Error loading curation log:', error);
-                logList.innerHTML = '<div class="error">Error loading curation log</div>';
-            }
-        }
-        
-        // Show message
-        function showMessage(message, type) {
-            const messageArea = document.getElementById('message-area');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
-            messageDiv.textContent = message;
-            
-            messageArea.innerHTML = '';
-            messageArea.appendChild(messageDiv);
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                messageDiv.remove();
-            }, 5000);
-        }
-    </script>
-</body>
-</html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -610,25 +235,6 @@ authentication_required: document.getElementById('auth-required').checked,
             font-weight: normal;
         }
         
-        .multi-select {
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 0.5rem;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        
-        .multi-select-item {
-            padding: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .multi-select-item:hover {
-            background-color: #f8f9fa;
-        }
-        
         .success-message {
             background-color: #d4edda;
             color: #155724;
@@ -661,6 +267,12 @@ authentication_required: document.getElementById('auth-required').checked,
         .log-entry-date {
             color: #6c757d;
             font-size: 0.875rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
         }
     </style>
 </head>
@@ -705,7 +317,7 @@ authentication_required: document.getElementById('auth-required').checked,
                     </div>
                     
                     <div id="tools-list" style="margin-top: 2rem;">
-                        <!-- Tools will be loaded here -->
+                        <div class="loading">Loading tools...</div>
                     </div>
                 </div>
                 
@@ -795,7 +407,7 @@ authentication_required: document.getElementById('auth-required').checked,
                     </div>
                     
                     <div id="interactions-list" style="margin-top: 2rem;">
-                        <!-- Interactions will be loaded here -->
+                        <div class="loading">Loading interactions...</div>
                     </div>
                 </div>
                 
@@ -805,7 +417,7 @@ authentication_required: document.getElementById('auth-required').checked,
                     <p>View and manage tool categories by lifecycle stage.</p>
                     
                     <div id="categories-list">
-                        <!-- Categories will be loaded here -->
+                        <div class="loading">Loading categories...</div>
                     </div>
                 </div>
                 
@@ -827,7 +439,7 @@ authentication_required: document.getElementById('auth-required').checked,
                     </div>
                     
                     <div id="curation-log-list">
-                        <!-- Log entries will be loaded here -->
+                        <div class="loading">Loading curation log...</div>
                     </div>
                 </div>
             </div>
@@ -884,6 +496,7 @@ authentication_required: document.getElementById('auth-required').checked,
                 
                 // Populate stage filter
                 const stageFilter = document.getElementById('tool-stage-filter');
+                stageFilter.innerHTML = '<option value="">All Stages</option>';
                 allStages.forEach(stage => {
                     const option = document.createElement('option');
                     option.value = stage.id;
@@ -891,6 +504,164 @@ authentication_required: document.getElementById('auth-required').checked,
                     stageFilter.appendChild(option);
                 });
             } catch (error) {
+                console.error('Error loading tool:', error);
+                showMessage('Error loading tool details', 'error');
+            }
+        }
+        
+        // Update tool
+        async function updateTool(event, toolId) {
+            event.preventDefault();
+            
+            const data = {
+                name: document.getElementById('edit-name').value,
+                provider: document.getElementById('edit-provider').value,
+                url: document.getElementById('edit-url').value,
+                description: document.getElementById('edit-description').value,
+                source_type: document.getElementById('edit-source-type').value,
+                scope: document.getElementById('edit-scope').value,
+                interoperable: document.getElementById('edit-interoperable').checked,
+                api_available: document.getElementById('edit-api-available').checked,
+                curator_name: document.getElementById('edit-curator-name').value,
+                curator_email: document.getElementById('edit-curator-email').value,
+                reason: 'Tool information updated'
+            };
+            
+            try {
+                const response = await fetch(`/api/tool/${toolId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showMessage('Tool updated successfully!', 'success');
+                    closeEditForm();
+                    loadTools();
+                } else {
+                    showMessage('Error updating tool', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating tool:', error);
+                showMessage('Error updating tool', 'error');
+            }
+        }
+        
+        // Close edit form
+        function closeEditForm() {
+            const overlay = document.getElementById('edit-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+        
+        // Load categories
+        async function loadCategories() {
+            const categoriesList = document.getElementById('categories-list');
+            categoriesList.innerHTML = '<div class="loading">Loading categories...</div>';
+            
+            try {
+                const response = await fetch('/api/stages');
+                const stages = await response.json();
+                
+                let html = '';
+                for (const stage of stages) {
+                    const stageResponse = await fetch(`/api/stage/${stage.id}`);
+                    const stageData = await stageResponse.json();
+                    
+                    html += `<div style="margin-bottom: 2rem;">`;
+                    html += `<h3>${stage.name}</h3>`;
+                    
+                    if (stageData.categories && stageData.categories.length > 0) {
+                        html += '<table class="data-table">';
+                        html += '<thead><tr><th>Category</th><th>Description</th><th>Tool Count</th></tr></thead>';
+                        html += '<tbody>';
+                        
+                        stageData.categories.forEach(category => {
+                            html += '<tr>';
+                            html += `<td>${category.category}</td>`;
+                            html += `<td>${category.description || 'N/A'}</td>`;
+                            html += `<td>${category.tool_count}</td>`;
+                            html += '</tr>';
+                        });
+                        
+                        html += '</tbody></table>';
+                    } else {
+                        html += '<p>No categories found for this stage.</p>';
+                    }
+                    
+                    html += '</div>';
+                }
+                
+                categoriesList.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                categoriesList.innerHTML = '<div class="error">Error loading categories</div>';
+            }
+        }
+        
+        // Load curation log
+        async function loadCurationLog() {
+            const logList = document.getElementById('curation-log-list');
+            const filterType = document.getElementById('log-filter-type').value;
+            
+            try {
+                let url = '/api/curation-log';
+                if (filterType) {
+                    url += `?entity_type=${filterType}`;
+                }
+                
+                const response = await fetch(url);
+                const logs = await response.json();
+                
+                if (logs.length === 0) {
+                    logList.innerHTML = '<p>No curation log entries found.</p>';
+                    return;
+                }
+                
+                let html = '';
+                logs.forEach(log => {
+                    html += '<div class="log-entry">';
+                    html += '<div class="log-entry-header">';
+                    html += `<strong>${log.action} ${log.entity_type}</strong>`;
+                    html += `<span class="log-entry-date">${new Date(log.created_at).toLocaleString()}</span>`;
+                    html += '</div>';
+                    html += `<p>By: ${log.curator_name || 'Unknown'} (${log.curator_email || 'N/A'})</p>`;
+                    if (log.reason) {
+                        html += `<p>Reason: ${log.reason}</p>`;
+                    }
+                    html += '</div>';
+                });
+                
+                logList.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading curation log:', error);
+                logList.innerHTML = '<div class="error">Error loading curation log</div>';
+            }
+        }
+        
+        // Show message
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('message-area');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
+            messageDiv.textContent = message;
+            
+            messageArea.innerHTML = '';
+            messageArea.appendChild(messageDiv);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>) {
                 console.error('Error loading stages:', error);
             }
         }
@@ -904,6 +675,9 @@ authentication_required: document.getElementById('auth-required').checked,
                 
                 // Populate tool selects for interactions
                 populateToolSelects();
+                
+                // Setup search and filter listeners
+                setupToolFilters();
             } catch (error) {
                 console.error('Error loading tools:', error);
                 showMessage('Error loading tools', 'error');
@@ -949,9 +723,14 @@ authentication_required: document.getElementById('auth-required').checked,
             toolsList.innerHTML = html;
         }
         
-        // Tool search and filter
-        document.getElementById('tool-search').addEventListener('input', filterTools);
-        document.getElementById('tool-stage-filter').addEventListener('change', filterTools);
+        // Setup tool filters
+        function setupToolFilters() {
+            const searchInput = document.getElementById('tool-search');
+            const stageFilter = document.getElementById('tool-stage-filter');
+            
+            searchInput.addEventListener('input', filterTools);
+            stageFilter.addEventListener('change', filterTools);
+        }
         
         function filterTools() {
             const searchTerm = document.getElementById('tool-search').value.toLowerCase();
@@ -1027,3 +806,221 @@ authentication_required: document.getElementById('auth-required').checked,
                 interaction_description: document.getElementById('interaction-description').value,
                 data_flow_direction: document.getElementById('data-flow').value,
                 integration_method: document.getElementById('integration-method').value,
+                authentication_required: document.getElementById('auth-required').checked,
+                curator_name: document.getElementById('curator-name').value,
+                curator_email: document.getElementById('curator-email').value
+            };
+            
+            try {
+                const response = await fetch('/api/interactions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showMessage('Interaction added successfully!', 'success');
+                    hideAddInteractionForm();
+                    loadInteractions();
+                } else {
+                    showMessage('Error adding interaction: ' + (result.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error saving interaction:', error);
+                showMessage('Error saving interaction', 'error');
+            }
+        }
+        
+        // Load and display interactions
+        async function loadInteractions() {
+            try {
+                const response = await fetch('/api/interactions');
+                const interactions = await response.json();
+                displayInteractions(interactions);
+            } catch (error) {
+                console.error('Error loading interactions:', error);
+                showMessage('Error loading interactions', 'error');
+            }
+        }
+        
+        // Display interactions
+        function displayInteractions(interactions) {
+            const interactionsList = document.getElementById('interactions-list');
+            
+            if (interactions.length === 0) {
+                interactionsList.innerHTML = '<p>No infrastructure interactions recorded yet.</p>';
+                return;
+            }
+            
+            let html = '<table class="data-table">';
+            html += '<thead><tr>';
+            html += '<th>From Tool</th>';
+            html += '<th>To Tool</th>';
+            html += '<th>Type</th>';
+            html += '<th>Direction</th>';
+            html += '<th>Method</th>';
+            html += '<th>Verified</th>';
+            html += '<th>Actions</th>';
+            html += '</tr></thead>';
+            html += '<tbody>';
+            
+            interactions.forEach(interaction => {
+                html += '<tr>';
+                html += `<td>${interaction.from_tool_name}</td>`;
+                html += `<td>${interaction.to_tool_name}</td>`;
+                html += `<td>${interaction.interaction_type}</td>`;
+                html += `<td>${interaction.data_flow_direction}</td>`;
+                html += `<td>${interaction.integration_method || 'N/A'}</td>`;
+                html += `<td>${interaction.verified ? '✓ Verified' : '✗ Not Verified'}</td>`;
+                html += '<td class="action-buttons">';
+                if (!interaction.verified) {
+                    html += `<button class="btn btn-primary" onclick="verifyInteraction(${interaction.id})">Verify</button>`;
+                }
+                html += `<button class="btn btn-danger" onclick="deleteInteraction(${interaction.id})">Delete</button>`;
+                html += '</td>';
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            interactionsList.innerHTML = html;
+        }
+        
+        // Verify interaction
+        async function verifyInteraction(interactionId) {
+            const verifierName = prompt('Enter your name to verify this interaction:');
+            if (!verifierName) return;
+            
+            try {
+                const response = await fetch(`/api/interaction/${interactionId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        verified: true,
+                        verified_by: verifierName
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showMessage('Interaction verified successfully!', 'success');
+                    loadInteractions();
+                } else {
+                    showMessage('Error verifying interaction', 'error');
+                }
+            } catch (error) {
+                console.error('Error verifying interaction:', error);
+                showMessage('Error verifying interaction', 'error');
+            }
+        }
+        
+        // Delete interaction
+        async function deleteInteraction(interactionId) {
+            if (!confirm('Are you sure you want to delete this interaction?')) return;
+            
+            try {
+                const response = await fetch(`/api/interaction/${interactionId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showMessage('Interaction deleted successfully!', 'success');
+                    loadInteractions();
+                } else {
+                    showMessage('Error deleting interaction', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting interaction:', error);
+                showMessage('Error deleting interaction', 'error');
+            }
+        }
+        
+        // Edit tool
+        async function editTool(toolId) {
+            try {
+                const response = await fetch(`/api/tool/${toolId}`);
+                const tool = await response.json();
+                
+                // Create edit form in a modal
+                const formHtml = `
+                    <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 600px; margin: 2rem auto;">
+                        <h3>Edit Tool: ${tool.name}</h3>
+                        <form onsubmit="updateTool(event, ${toolId})">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" id="edit-name" value="${tool.name}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Provider</label>
+                                <input type="text" id="edit-provider" value="${tool.provider || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label>URL</label>
+                                <input type="url" id="edit-url" value="${tool.url || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="edit-description">${tool.description || ''}</textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Source Type</label>
+                                    <select id="edit-source-type">
+                                        <option value="open" ${tool.source_type === 'open' ? 'selected' : ''}>Open</option>
+                                        <option value="closed" ${tool.source_type === 'closed' ? 'selected' : ''}>Closed</option>
+                                        <option value="freemium" ${tool.source_type === 'freemium' ? 'selected' : ''}>Freemium</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Scope</label>
+                                    <select id="edit-scope">
+                                        <option value="generic" ${tool.scope === 'generic' ? 'selected' : ''}>Generic</option>
+                                        <option value="disciplinary" ${tool.scope === 'disciplinary' ? 'selected' : ''}>Disciplinary</option>
+                                        <option value="domain-specific" ${tool.scope === 'domain-specific' ? 'selected' : ''}>Domain-specific</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="checkbox-group">
+                                <label>
+                                    <input type="checkbox" id="edit-interoperable" ${tool.interoperable ? 'checked' : ''}>
+                                    Interoperable
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="edit-api-available" ${tool.api_available ? 'checked' : ''}>
+                                    API Available
+                                </label>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Curator Name</label>
+                                    <input type="text" id="edit-curator-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Curator Email</label>
+                                    <input type="email" id="edit-curator-email" required>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                <button type="button" class="btn btn-secondary" onclick="closeEditForm()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                
+                // Create overlay
+                const overlay = document.createElement('div');
+                overlay.id = 'edit-overlay';
+                overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow: auto;';
+                overlay.innerHTML = formHtml;
+                document.body.appendChild(overlay);
+                
+            } catch (error
