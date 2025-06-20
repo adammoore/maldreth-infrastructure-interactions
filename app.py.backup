@@ -1,0 +1,568 @@
+"""
+MaLDReTH Research Data Lifecycle Infrastructure Interactions
+Simplified version without pandas dependency for Heroku stability
+
+Author: Adam Vials Moore
+Version: 2.1.0 (Heroku-optimized)
+License: Apache 2.0
+"""
+
+import os
+import json
+import logging
+import csv
+import io
+from datetime import datetime
+from typing import Dict, List, Union, Optional
+from flask import Flask, render_template, jsonify, request, Response
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_cors import CORS
+from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Fix for Heroku Postgres URL
+database_url = os.environ.get('DATABASE_URL', '')
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+
+# Initialize Flask app
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///maldreth.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize extensions
+db.init_app(app)
+CORS(app)
+
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+# Database Models
+class LifecycleStage(db.Model):
+    """Model representing a stage in the MaLDReTH research data lifecycle"""
+    __tablename__ = 'lifecycle_stages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text)
+    order = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    tool_categories = db.relationship('ToolCategory', backref='stage', lazy='dynamic', cascade='all, delete-orphan')
+    
+    def to_dict(self) -> Dict:
+        """Convert model instance to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'order': self.order,
+            'categories': [cat.to_dict() for cat in self.tool_categories],
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
+    def __repr__(self):
+        return f"<LifecycleStage(name='{self.name}', order={self.order})>"
+
+class ToolCategory(db.Model):
+    """Model representing a tool category within a lifecycle stage"""
+    __tablename__ = 'tool_categories'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    stage_id = db.Column(db.Integer, db.ForeignKey('lifecycle_stages.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    tools = db.relationship('ResearchTool', backref='category', lazy='dynamic', cascade='all, delete-orphan')
+    
+    def to_dict(self) -> Dict:
+        """Convert model instance to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'stage_id': self.stage_id,
+            'stage_name': self.stage.name if self.stage else None,
+            'tools': [tool.name for tool in self.tools],
+            'tool_count': self.tools.count(),
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+class ResearchTool(db.Model):
+    """Model representing a research tool within the MaLDReTH framework"""
+    __tablename__ = 'research_tools'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    url = db.Column(db.String(500))
+    provider = db.Column(db.String(200))
+    tool_type = db.Column(db.String(100))
+    source_type = db.Column(db.String(50), default='open')
+    scope = db.Column(db.String(100), default='Generic')
+    interoperable = db.Column(db.String(50), default='true')
+    characteristics = db.Column(db.Text)
+    category_id = db.Column(db.Integer, db.ForeignKey('tool_categories.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self) -> Dict:
+        """Convert model instance to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'url': self.url,
+            'provider': self.provider,
+            'tool_type': self.tool_type,
+            'source_type': self.source_type,
+            'scope': self.scope,
+            'interoperable': self.interoperable,
+            'characteristics': self.characteristics,
+            'category_id': self.category_id,
+            'category_name': self.category.name if self.category else None,
+            'stage_name': self.category.stage.name if self.category and self.category.stage else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+class InfrastructureInteraction(db.Model):
+    """Model for tracking infrastructure interactions"""
+    __tablename__ = 'infrastructure_interactions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    interaction_type = db.Column(db.String(100), nullable=False)
+    source_system = db.Column(db.String(100))
+    target_system = db.Column(db.String(100))
+    description = db.Column(db.Text)
+    status = db.Column(db.String(50), default='active')
+    lifecycle_stage_id = db.Column(db.Integer, db.ForeignKey('lifecycle_stages.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self) -> Dict:
+        return {
+            'id': self.id,
+            'interaction_type': self.interaction_type,
+            'source_system': self.source_system,
+            'target_system': self.target_system,
+            'description': self.description,
+            'status': self.status,
+            'lifecycle_stage_id': self.lifecycle_stage_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+# Routes
+@app.route('/')
+def index():
+    """Main index page"""
+    return render_template('index.html')
+
+@app.route('/api/test-db', methods=['GET'])
+def test_db():
+    """Test database connection and tables"""
+    try:
+        # Test connection
+        db.session.execute('SELECT 1')
+        
+        # Create tables if they don't exist
+        db.create_all()
+        
+        # Get counts
+        stages = LifecycleStage.query.count()
+        categories = ToolCategory.query.count() 
+        tools = Tool.query.count()
+        
+        # If empty, initialize
+        if stages == 0:
+            from initialize_db import initialize_database
+            initialize_database()
+            stages = LifecycleStage.query.count()
+            categories = ToolCategory.query.count()
+            tools = Tool.query.count()
+            
+        return jsonify({
+            'status': 'success',
+            'database': 'connected',
+            'stages': stages,
+            'categories': categories,
+            'tools': tools
+        })
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
+@app.route('/api/init-db', methods=['GET', 'POST'])  # Allow GET temporarily
+def init_db_route():
+    """Initialize database - REMOVE IN PRODUCTION"""
+    try:
+        # Create tables
+        db.create_all()
+        app.logger.info("Database tables created")
+        
+        # Check if already initialized
+        stage_count = LifecycleStage.query.count()
+        if stage_count > 0:
+            return jsonify({
+                'message': 'Database already initialized',
+                'stages': stage_count,
+                'categories': ToolCategory.query.count(),
+                'tools': Tool.query.count()
+            }), 200
+        
+        # Initialize with data
+        from initialize_db import initialize_database
+        initialize_database()
+        
+        # Get counts after initialization
+        return jsonify({
+            'message': 'Database initialized successfully',
+            'stages': LifecycleStage.query.count(),
+            'categories': ToolCategory.query.count(),
+            'tools': Tool.query.count()
+        }), 200
+    except Exception as e:
+        app.logger.error(f"Error initializing database: {e}")
+        import traceback
+        tb = traceback.format_exc()
+        return jsonify({
+            'error': str(e),
+            'traceback': tb
+        }), 500
+
+@app.route('/api/db-check', methods=['GET'])
+def db_check():
+    """Check database status"""
+    try:
+        # Try to connect to database
+        db.session.execute('SELECT 1')
+        
+        # Check tables
+        tables = db.session.execute("""
+            SELECT tablename 
+            FROM pg_tables 
+            WHERE schemaname = 'public'
+        """).fetchall()
+        
+        table_names = [t[0] for t in tables]
+        
+        return jsonify({
+            'database': 'connected',
+            'tables': table_names,
+            'expected_tables': [
+                'lifecycle_stages',
+                'tool_categories', 
+                'tools',
+                'user_interactions'
+            ],
+            'missing_tables': [t for t in [
+                'lifecycle_stages',
+                'tool_categories',
+                'tools', 
+                'user_interactions'
+            ] if t not in table_names]
+        })
+    except Exception as e:
+        return jsonify({
+            'database': 'error',
+            'error': str(e)
+        }), 500
+
+@app.route('/curator')
+def curator():
+    """Main curation interface"""
+    return render_template('curator.html')
+
+@app.route('/api/tools', methods=['GET'])
+def get_all_tools():
+    """Get all tools with their categories"""
+    try:
+        tools = Tool.query.join(ToolCategory).join(LifecycleStage).all()
+        return jsonify([{
+            'id': tool.id,
+            'name': tool.name,
+            'url': tool.url,
+            'description': tool.description,
+            'category': tool.category.name,
+            'stage': tool.category.stage.name
+        } for tool in tools])
+    except Exception as e:
+        app.logger.error(f"Error getting tools: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/interactions', methods=['GET'])
+def get_interactions():
+    """Get all user interactions"""
+    try:
+        interactions = UserInteraction.query.order_by(UserInteraction.timestamp.desc()).all()
+        return jsonify([{
+            'id': i.id,
+            'tool_id': i.tool_id,
+            'tool_name': i.tool.name if i.tool else None,
+            'interaction_type': i.interaction_type,
+            'timestamp': i.timestamp.isoformat() if i.timestamp else None,
+            'session_id': i.session_id,
+            'user_feedback': i.user_feedback,
+            'duration': i.duration
+        } for i in interactions])
+    except Exception as e:
+        app.logger.error(f"Error getting interactions: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/health')
+def health_check():
+    """Health check endpoint for Heroku and monitoring"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.utcnow().isoformat(),
+        'version': '2.1.0'
+    })
+
+@app.route('/api/lifecycle-data')
+def get_lifecycle_data():
+    """Get all lifecycle data in the format expected by the frontend"""
+    try:
+        stages = LifecycleStage.query.order_by(LifecycleStage.order).all()
+        
+        data = {
+            'stages': [stage.to_dict() for stage in stages],
+            'total_stages': len(stages),
+            'total_categories': sum(stage.tool_categories.count() for stage in stages),
+            'total_tools': ResearchTool.query.count(),
+            'last_updated': datetime.utcnow().isoformat()
+        }
+        
+        return jsonify(data)
+    except Exception as e:
+        logger.error(f"Error fetching lifecycle data: {e}")
+        return jsonify({'error': 'Failed to fetch lifecycle data'}), 500
+
+@app.route('/api/stages', methods=['GET', 'POST'])
+def manage_stages():
+    """Get all stages or create a new stage"""
+    try:
+        if request.method == 'GET':
+            stages = LifecycleStage.query.order_by(LifecycleStage.order).all()
+            return jsonify([stage.to_dict() for stage in stages])
+        
+        elif request.method == 'POST':
+            data = request.get_json()
+            
+            if not data or not data.get('name'):
+                return jsonify({'error': 'Stage name is required'}), 400
+            
+            stage = LifecycleStage(
+                name=data['name'],
+                description=data.get('description', ''),
+                order=data.get('order', LifecycleStage.query.count() + 1)
+            )
+            
+            db.session.add(stage)
+            db.session.commit()
+            
+            logger.info(f"Created new stage: {stage.name}")
+            return jsonify(stage.to_dict()), 201
+            
+    except Exception as e:
+        logger.error(f"Error managing stages: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to manage stages'}), 500
+
+@app.route('/api/export/<format>')
+def export_data(format):
+    """Export data in various formats without pandas dependency"""
+    try:
+        if format not in ['json', 'csv']:
+            return jsonify({'error': 'Unsupported format. Use json or csv'}), 400
+        
+        stages = LifecycleStage.query.order_by(LifecycleStage.order).all()
+        
+        if format == 'json':
+            data = {
+                'metadata': {
+                    'exported_at': datetime.utcnow().isoformat(),
+                    'version': '2.1.0',
+                    'source': 'MaLDReTH Infrastructure Interactions'
+                },
+                'stages': [stage.to_dict() for stage in stages]
+            }
+            return jsonify(data)
+        
+        elif format == 'csv':
+            # Create CSV data using standard library
+            output = io.StringIO()
+            writer = csv.writer(output)
+            
+            # Write headers
+            writer.writerow([
+                'Stage', 'Stage_Order', 'Category', 'Tool_Name', 
+                'Provider', 'URL', 'Type', 'Source', 'Scope', 'Interoperable'
+            ])
+            
+            # Write data
+            for stage in stages:
+                for category in stage.tool_categories:
+                    for tool in category.tools:
+                        writer.writerow([
+                            stage.name,
+                            stage.order,
+                            category.name,
+                            tool.name,
+                            tool.provider or '',
+                            tool.url or '',
+                            tool.tool_type or '',
+                            tool.source_type,
+                            tool.scope,
+                            tool.interoperable
+                        ])
+            
+            csv_content = output.getvalue()
+            output.close()
+            
+            return Response(
+                csv_content,
+                mimetype='text/csv',
+                headers={'Content-Disposition': 'attachment; filename=maldreth_data.csv'}
+            )
+            
+    except Exception as e:
+        logger.error(f"Error exporting data: {e}")
+        return jsonify({'error': 'Failed to export data'}), 500
+
+@app.route('/api/statistics')
+def get_statistics():
+    """Get application statistics for dashboard"""
+    try:
+        stats = {
+            'total_stages': LifecycleStage.query.count(),
+            'total_categories': ToolCategory.query.count(),
+            'total_tools': ResearchTool.query.count(),
+            'total_interactions': InfrastructureInteraction.query.count(),
+            'last_updated': datetime.utcnow().isoformat(),
+            'by_stage': {}
+        }
+        
+        # Get detailed stats by stage
+        stages = LifecycleStage.query.order_by(LifecycleStage.order).all()
+        for stage in stages:
+            stats['by_stage'][stage.name] = {
+                'categories': stage.tool_categories.count(),
+                'tools': sum(cat.tools.count() for cat in stage.tool_categories)
+            }
+        
+        return jsonify(stats)
+        
+    except Exception as e:
+        logger.error(f"Error getting statistics: {e}")
+        return jsonify({'error': 'Failed to get statistics'}), 500
+
+def init_maldreth_data():
+    """Initialize database with MaLDReTH lifecycle data"""
+    try:
+        if LifecycleStage.query.count() == 0:
+            logger.info("Initializing MaLDReTH data...")
+            
+            # MaLDReTH Lifecycle Stages
+            maldreth_stages = [
+                {
+                    'name': 'Conceptualise',
+                    'description': 'To formulate the initial research idea or hypothesis, and define the scope of the research project and the data component/requirements of that project.',
+                    'order': 1
+                },
+                {
+                    'name': 'Plan',
+                    'description': 'To establish a structured strategic framework for management of the research project, outlining aims, objectives, methodologies, and resources required for data collection, management and analysis.',
+                    'order': 2
+                },
+                {
+                    'name': 'Collect',
+                    'description': 'To use predefined procedures, methodologies and instruments to acquire and store data that is reliable, fit for purpose and of sufficient quality to test the research hypothesis.',
+                    'order': 3
+                }
+            ]
+            
+            # Create stages and sample data
+            for stage_data in maldreth_stages:
+                stage = LifecycleStage(**stage_data)
+                db.session.add(stage)
+                db.session.flush()
+                
+                # Add sample category for each stage
+                category = ToolCategory(
+                    name=f"{stage.name} Tools",
+                    description=f"Tools for the {stage.name} stage",
+                    stage_id=stage.id
+                )
+                db.session.add(category)
+                db.session.flush()
+                
+                # Add sample tool
+                tool = ResearchTool(
+                    name=f"Sample {stage.name} Tool",
+                    description=f"A tool for {stage.name.lower()} activities",
+                    category_id=category.id
+                )
+                db.session.add(tool)
+            
+            db.session.commit()
+            logger.info("MaLDReTH data initialization completed")
+            
+    except Exception as e:
+        logger.error(f"Error initializing data: {e}")
+        db.session.rollback()
+        raise
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'error': 'Resource not found'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    logger.error(f"Internal server error: {error}")
+    return jsonify({'error': 'Internal server error'}), 500
+
+# Initialize database tables when app starts
+with app.app_context():
+    try:
+        db.create_all()
+        app.logger.info("Database tables created")
+    except Exception as e:
+        app.logger.error(f"Error creating tables: {e}")
+        # Auto-initialize if empty
+        from models import LifecycleStage
+        if LifecycleStage.query.count() == 0:
+            app.logger.info("No data found, initializing database...")
+            from initialize_db import initialize_database
+            initialize_database()
+            app.logger.info(f"Database initialized with {LifecycleStage.query.count()} stages")
+    except Exception as e:
+        app.logger.error(f"Error during database initialization: {e}")
+
+if __name__ == '__main__':
+    
+    # Run the application
+    app.run(
+        host='0.0.0.0', 
+        port=app.config['PORT'], 
+        debug=app.config['DEBUG']
+    )
