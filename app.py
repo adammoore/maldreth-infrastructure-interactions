@@ -1,26 +1,24 @@
 """
-MaLDReTH Research Data Lifecycle Visualization Flask Application
-Updated for Heroku deployment and compatibility with existing infrastructure
+MaLDReTH Research Data Lifecycle Infrastructure Interactions
+Simplified version without pandas dependency for Heroku stability
 
-Based on RDA-OfR Working Group specifications and existing maldreth implementations
-Author: Adam Vials Moore / Generated for MaLDReTH project
-Version: 2.0.0
+Author: Adam Vials Moore
+Version: 2.1.0 (Heroku-optimized)
 License: Apache 2.0
 """
 
 import os
 import json
 import logging
-import pandas as pd
+import csv
+import io
 from datetime import datetime
 from typing import Dict, List, Union, Optional
-from flask import Flask, render_template, jsonify, request, send_from_directory, abort
+from flask import Flask, render_template, jsonify, request, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
-import sqlite3
-from contextlib import closing
 
 # Configure logging
 logging.basicConfig(
@@ -33,15 +31,15 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# Configuration for Heroku and local development
+# Configuration for Heroku
 class Config:
     """Application configuration optimized for Heroku deployment"""
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'maldreth-dev-key-2024'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'maldreth-infrastructure-key-2024'
     
     # Database configuration - Heroku provides DATABASE_URL
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///maldreth.db'
     
-    # Fix for Heroku Postgres URL
+    # Fix for Heroku Postgres URL format change
     if SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
         SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace("postgres://", "postgresql://", 1)
     
@@ -51,7 +49,6 @@ class Config:
         'pool_recycle': 300,
     }
     
-    # Heroku configuration
     DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     PORT = int(os.environ.get('PORT', 5000))
 
@@ -61,7 +58,7 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# Database Models based on MaLDReTH specification
+# Database Models
 class LifecycleStage(db.Model):
     """Model representing a stage in the MaLDReTH research data lifecycle"""
     __tablename__ = 'lifecycle_stages'
@@ -100,7 +97,6 @@ class ToolCategory(db.Model):
     description = db.Column(db.Text)
     stage_id = db.Column(db.Integer, db.ForeignKey('lifecycle_stages.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     tools = db.relationship('ResearchTool', backref='category', lazy='dynamic', cascade='all, delete-orphan')
@@ -113,13 +109,10 @@ class ToolCategory(db.Model):
             'description': self.description,
             'stage_id': self.stage_id,
             'stage_name': self.stage.name if self.stage else None,
-            'tools': [tool.name for tool in self.tools],  # Simplified for frontend compatibility
+            'tools': [tool.name for tool in self.tools],
             'tool_count': self.tools.count(),
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
-    
-    def __repr__(self):
-        return f"<ToolCategory(name='{self.name}', stage='{self.stage.name if self.stage else 'None'}')>"
 
 class ResearchTool(db.Model):
     """Model representing a research tool within the MaLDReTH framework"""
@@ -131,13 +124,12 @@ class ResearchTool(db.Model):
     url = db.Column(db.String(500))
     provider = db.Column(db.String(200))
     tool_type = db.Column(db.String(100))
-    source_type = db.Column(db.String(50), default='open')  # open, closed, mixed
-    scope = db.Column(db.String(100))  # Generic, Disciplinary
-    interoperable = db.Column(db.String(50), default='true')  # true, false, partial
-    characteristics = db.Column(db.Text)  # Additional tool characteristics
+    source_type = db.Column(db.String(50), default='open')
+    scope = db.Column(db.String(100), default='Generic')
+    interoperable = db.Column(db.String(50), default='true')
+    characteristics = db.Column(db.Text)
     category_id = db.Column(db.Integer, db.ForeignKey('tool_categories.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def to_dict(self) -> Dict:
         """Convert model instance to dictionary for API responses"""
@@ -157,39 +149,44 @@ class ResearchTool(db.Model):
             'stage_name': self.category.stage.name if self.category and self.category.stage else None,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
-    
-    def __repr__(self):
-        return f"<ResearchTool(name='{self.name}', provider='{self.provider}')>"
 
-class LifecycleConnection(db.Model):
-    """Model representing connections between lifecycle stages"""
-    __tablename__ = 'lifecycle_connections'
+class InfrastructureInteraction(db.Model):
+    """Model for tracking infrastructure interactions"""
+    __tablename__ = 'infrastructure_interactions'
     
     id = db.Column(db.Integer, primary_key=True)
-    from_stage_id = db.Column(db.Integer, db.ForeignKey('lifecycle_stages.id'), nullable=False)
-    to_stage_id = db.Column(db.Integer, db.ForeignKey('lifecycle_stages.id'), nullable=False)
-    connection_type = db.Column(db.String(50), default='normal')  # normal, alternative, bidirectional
+    interaction_type = db.Column(db.String(100), nullable=False)
+    source_system = db.Column(db.String(100))
+    target_system = db.Column(db.String(100))
     description = db.Column(db.Text)
-    
-    from_stage = db.relationship('LifecycleStage', foreign_keys=[from_stage_id])
-    to_stage = db.relationship('LifecycleStage', foreign_keys=[to_stage_id])
+    status = db.Column(db.String(50), default='active')
+    lifecycle_stage_id = db.Column(db.Integer, db.ForeignKey('lifecycle_stages.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def to_dict(self) -> Dict:
         return {
             'id': self.id,
-            'from_stage_id': self.from_stage_id,
-            'to_stage_id': self.to_stage_id,
-            'from_stage_name': self.from_stage.name if self.from_stage else None,
-            'to_stage_name': self.to_stage.name if self.to_stage else None,
-            'connection_type': self.connection_type,
-            'description': self.description
+            'interaction_type': self.interaction_type,
+            'source_system': self.source_system,
+            'target_system': self.target_system,
+            'description': self.description,
+            'status': self.status,
+            'lifecycle_stage_id': self.lifecycle_stage_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
 # Routes
 @app.route('/')
 def index():
-    """Serve the main curation interface"""
-    return render_template('curation.html')
+    """Main index page"""
+    return render_template('index.html')
+
+@app.route('/curator')
+def curator():
+    """Main curation interface"""
+    return render_template('curator.html')
 
 @app.route('/api/health')
 def health_check():
@@ -197,7 +194,7 @@ def health_check():
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.utcnow().isoformat(),
-        'version': '2.0.0'
+        'version': '2.1.0'
     })
 
 @app.route('/api/lifecycle-data')
@@ -206,7 +203,6 @@ def get_lifecycle_data():
     try:
         stages = LifecycleStage.query.order_by(LifecycleStage.order).all()
         
-        # Format data for frontend compatibility
         data = {
             'stages': [stage.to_dict() for stage in stages],
             'total_stages': len(stages),
@@ -251,124 +247,9 @@ def manage_stages():
         db.session.rollback()
         return jsonify({'error': 'Failed to manage stages'}), 500
 
-@app.route('/api/stages/<int:stage_id>', methods=['GET', 'PUT', 'DELETE'])
-def manage_single_stage(stage_id):
-    """Get, update, or delete a specific stage"""
-    try:
-        stage = LifecycleStage.query.get_or_404(stage_id)
-        
-        if request.method == 'GET':
-            return jsonify(stage.to_dict())
-        
-        elif request.method == 'PUT':
-            data = request.get_json()
-            
-            stage.name = data.get('name', stage.name)
-            stage.description = data.get('description', stage.description)
-            stage.order = data.get('order', stage.order)
-            stage.updated_at = datetime.utcnow()
-            
-            db.session.commit()
-            logger.info(f"Updated stage: {stage.name}")
-            return jsonify(stage.to_dict())
-        
-        elif request.method == 'DELETE':
-            stage_name = stage.name
-            db.session.delete(stage)
-            db.session.commit()
-            logger.info(f"Deleted stage: {stage_name}")
-            return '', 204
-            
-    except NotFound:
-        return jsonify({'error': 'Stage not found'}), 404
-    except Exception as e:
-        logger.error(f"Error managing single stage: {e}")
-        db.session.rollback()
-        return jsonify({'error': 'Failed to manage stage'}), 500
-
-@app.route('/api/categories', methods=['GET', 'POST'])
-def manage_categories():
-    """Get all categories or create a new category"""
-    try:
-        if request.method == 'GET':
-            categories = ToolCategory.query.join(LifecycleStage).order_by(LifecycleStage.order, ToolCategory.name).all()
-            return jsonify([cat.to_dict() for cat in categories])
-        
-        elif request.method == 'POST':
-            data = request.get_json()
-            
-            if not data or not data.get('name') or not data.get('stage_id'):
-                return jsonify({'error': 'Category name and stage_id are required'}), 400
-            
-            category = ToolCategory(
-                name=data['name'],
-                description=data.get('description', ''),
-                stage_id=data['stage_id']
-            )
-            
-            db.session.add(category)
-            db.session.commit()
-            
-            logger.info(f"Created new category: {category.name}")
-            return jsonify(category.to_dict()), 201
-            
-    except Exception as e:
-        logger.error(f"Error managing categories: {e}")
-        db.session.rollback()
-        return jsonify({'error': 'Failed to manage categories'}), 500
-
-@app.route('/api/tools', methods=['GET', 'POST'])
-def manage_tools():
-    """Get all tools or create a new tool"""
-    try:
-        if request.method == 'GET':
-            # Get query parameters for filtering
-            category_id = request.args.get('category_id', type=int)
-            stage_id = request.args.get('stage_id', type=int)
-            
-            query = ResearchTool.query.join(ToolCategory).join(LifecycleStage)
-            
-            if category_id:
-                query = query.filter(ResearchTool.category_id == category_id)
-            elif stage_id:
-                query = query.filter(LifecycleStage.id == stage_id)
-            
-            tools = query.order_by(LifecycleStage.order, ToolCategory.name, ResearchTool.name).all()
-            return jsonify([tool.to_dict() for tool in tools])
-        
-        elif request.method == 'POST':
-            data = request.get_json()
-            
-            if not data or not data.get('name') or not data.get('category_id'):
-                return jsonify({'error': 'Tool name and category_id are required'}), 400
-            
-            tool = ResearchTool(
-                name=data['name'],
-                description=data.get('description', ''),
-                url=data.get('url', ''),
-                provider=data.get('provider', ''),
-                tool_type=data.get('tool_type', ''),
-                source_type=data.get('source_type', 'open'),
-                scope=data.get('scope', 'Generic'),
-                interoperable=data.get('interoperable', 'true'),
-                characteristics=data.get('characteristics', ''),
-                category_id=data['category_id']
-            )
-            
-            db.session.add(tool)
-            db.session.commit()
-            
-            logger.info(f"Created new tool: {tool.name}")
-            return jsonify(tool.to_dict()), 201
-            
-    except Exception as e:
-        logger.error(f"Error managing tools: {e}")
-        db.session.rollback()
-        return jsonify({'error': 'Failed to manage tools'}), 500
-
 @app.route('/api/export/<format>')
 def export_data(format):
-    """Export data in various formats"""
+    """Export data in various formats without pandas dependency"""
     try:
         if format not in ['json', 'csv']:
             return jsonify({'error': 'Unsupported format. Use json or csv'}), 400
@@ -379,43 +260,46 @@ def export_data(format):
             data = {
                 'metadata': {
                     'exported_at': datetime.utcnow().isoformat(),
-                    'version': '2.0.0',
-                    'source': 'MaLDReTH Research Data Lifecycle'
+                    'version': '2.1.0',
+                    'source': 'MaLDReTH Infrastructure Interactions'
                 },
                 'stages': [stage.to_dict() for stage in stages]
             }
             return jsonify(data)
         
         elif format == 'csv':
-            # Create CSV data
-            csv_data = []
+            # Create CSV data using standard library
+            output = io.StringIO()
+            writer = csv.writer(output)
+            
+            # Write headers
+            writer.writerow([
+                'Stage', 'Stage_Order', 'Category', 'Tool_Name', 
+                'Provider', 'URL', 'Type', 'Source', 'Scope', 'Interoperable'
+            ])
+            
+            # Write data
             for stage in stages:
                 for category in stage.tool_categories:
                     for tool in category.tools:
-                        csv_data.append({
-                            'Stage': stage.name,
-                            'Stage_Order': stage.order,
-                            'Category': category.name,
-                            'Tool_Name': tool.name,
-                            'Provider': tool.provider or '',
-                            'URL': tool.url or '',
-                            'Type': tool.tool_type or '',
-                            'Source': tool.source_type,
-                            'Scope': tool.scope,
-                            'Interoperable': tool.interoperable,
-                            'Description': tool.description or ''
-                        })
+                        writer.writerow([
+                            stage.name,
+                            stage.order,
+                            category.name,
+                            tool.name,
+                            tool.provider or '',
+                            tool.url or '',
+                            tool.tool_type or '',
+                            tool.source_type,
+                            tool.scope,
+                            tool.interoperable
+                        ])
             
-            if not csv_data:
-                return jsonify({'error': 'No data to export'}), 404
+            csv_content = output.getvalue()
+            output.close()
             
-            # Convert to CSV
-            df = pd.DataFrame(csv_data)
-            csv_output = df.to_csv(index=False)
-            
-            from flask import Response
             return Response(
-                csv_output,
+                csv_content,
                 mimetype='text/csv',
                 headers={'Content-Disposition': 'attachment; filename=maldreth_data.csv'}
             )
@@ -432,7 +316,7 @@ def get_statistics():
             'total_stages': LifecycleStage.query.count(),
             'total_categories': ToolCategory.query.count(),
             'total_tools': ResearchTool.query.count(),
-            'total_connections': LifecycleConnection.query.count(),
+            'total_interactions': InfrastructureInteraction.query.count(),
             'last_updated': datetime.utcnow().isoformat(),
             'by_stage': {}
         }
@@ -457,7 +341,7 @@ def init_maldreth_data():
         if LifecycleStage.query.count() == 0:
             logger.info("Initializing MaLDReTH data...")
             
-            # MaLDReTH Lifecycle Stages as defined in the working group documents
+            # MaLDReTH Lifecycle Stages
             maldreth_stages = [
                 {
                     'name': 'Conceptualise',
@@ -466,169 +350,44 @@ def init_maldreth_data():
                 },
                 {
                     'name': 'Plan',
-                    'description': 'To establish a structured strategic framework for management of the research project, outlining aims, objectives, methodologies, and resources required for data collection, management and analysis. Data management plans (DMP) should be established for this phase of the lifecycle.',
+                    'description': 'To establish a structured strategic framework for management of the research project, outlining aims, objectives, methodologies, and resources required for data collection, management and analysis.',
                     'order': 2
-                },
-                {
-                    'name': 'Fund',
-                    'description': 'To identify and acquire financial resources to support the research project, including data collection, management, analysis, sharing, publishing and preservation.',
-                    'order': 3
                 },
                 {
                     'name': 'Collect',
                     'description': 'To use predefined procedures, methodologies and instruments to acquire and store data that is reliable, fit for purpose and of sufficient quality to test the research hypothesis.',
-                    'order': 4
-                },
-                {
-                    'name': 'Process',
-                    'description': 'To make new and existing data analysis-ready. This may involve standardised pre-processing, cleaning, reformatting, structuring, filtering, and performing quality control checks on data.',
-                    'order': 5
-                },
-                {
-                    'name': 'Analyse',
-                    'description': 'To derive insights, knowledge, and understanding from processed data. Data analysis involves iterative exploration and interpretation of experimental or computational results.',
-                    'order': 6
-                },
-                {
-                    'name': 'Store',
-                    'description': 'To record data using technological media appropriate for processing and analysis whilst maintaining data integrity and security.',
-                    'order': 7
-                },
-                {
-                    'name': 'Publish',
-                    'description': 'To release research data in published form for use by others with appropriate metadata for citation (including a unique persistent identifier) based on FAIR principles.',
-                    'order': 8
-                },
-                {
-                    'name': 'Preserve',
-                    'description': 'To ensure the safety, integrity, and accessibility of data for as long as necessary so that data is as FAIR as possible.',
-                    'order': 9
-                },
-                {
-                    'name': 'Share',
-                    'description': 'To make data available and accessible to humans and/or machines. Data may be shared with project collaborators or published to share it with the wider research community.',
-                    'order': 10
-                },
-                {
-                    'name': 'Access',
-                    'description': 'To control and manage data access by designated users and reusers. This may be in the form of publicly available published information.',
-                    'order': 11
-                },
-                {
-                    'name': 'Transform',
-                    'description': 'To create new data from the original, for example: by migration into a different format; by creating a subset; or combining with other data.',
-                    'order': 12
+                    'order': 3
                 }
             ]
             
-            # Create stages
-            stage_objects = {}
+            # Create stages and sample data
             for stage_data in maldreth_stages:
                 stage = LifecycleStage(**stage_data)
                 db.session.add(stage)
-                db.session.flush()  # To get the ID
-                stage_objects[stage.name] = stage
-            
-            # Sample categories and tools based on the CSV data provided
-            sample_data = [
-                {
-                    'stage': 'Conceptualise',
-                    'categories': [
-                        {
-                            'name': 'Mind mapping, concept mapping and knowledge modelling',
-                            'description': 'Tools that define the entities of research and their relationships',
-                            'tools': ['Miro', 'Meister Labs (MindMeister + MeisterTask)', 'XMind']
-                        },
-                        {
-                            'name': 'Diagramming and flowchart',
-                            'description': 'Tools that detail the research workflow',
-                            'tools': ['Lucidchart', 'Draw.io (now Diagrams.net)', 'Creately']
-                        },
-                        {
-                            'name': 'Wireframing and prototyping',
-                            'description': 'Tools that visualise and demonstrate the research workflow',
-                            'tools': ['Balsamiq', 'Figma']
-                        }
-                    ]
-                },
-                {
-                    'stage': 'Plan',
-                    'categories': [
-                        {
-                            'name': 'Data management planning (DMP)',
-                            'description': 'Tools focused on enabling preparation and submission of data management plans',
-                            'tools': ['DMP Tool', 'DMP Online', 'RDMO']
-                        },
-                        {
-                            'name': 'Project planning',
-                            'description': 'Tools designed to enable project planning',
-                            'tools': ['Trello', 'Asana', 'Microsoft Project']
-                        }
-                    ]
-                },
-                {
-                    'stage': 'Collect',
-                    'categories': [
-                        {
-                            'name': 'Quantitative data collection tool',
-                            'description': 'Tools that collect quantitative data',
-                            'tools': ['Open Data Kit', 'GBIF', 'Cedar WorkBench']
-                        },
-                        {
-                            'name': 'Qualitative data collection (e.g. Survey tool)',
-                            'description': 'Tools that collect qualitative data',
-                            'tools': ['Survey Monkey', 'Online Surveys', 'Zooniverse']
-                        }
-                    ]
-                }
-            ]
-            
-            # Create categories and tools
-            for stage_data in sample_data:
-                stage = stage_objects[stage_data['stage']]
+                db.session.flush()
                 
-                for cat_data in stage_data['categories']:
-                    category = ToolCategory(
-                        name=cat_data['name'],
-                        description=cat_data['description'],
-                        stage_id=stage.id
-                    )
-                    db.session.add(category)
-                    db.session.flush()
-                    
-                    for tool_name in cat_data['tools']:
-                        tool = ResearchTool(
-                            name=tool_name,
-                            category_id=category.id,
-                            source_type='open',
-                            scope='Generic',
-                            interoperable='true'
-                        )
-                        db.session.add(tool)
-            
-            # Create basic connections
-            connections = [
-                (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), 
-                (7, 8), (8, 9), (9, 10), (10, 11), (11, 12), (12, 1)
-            ]
-            
-            for from_order, to_order in connections:
-                from_stage = LifecycleStage.query.filter_by(order=from_order).first()
-                to_stage = LifecycleStage.query.filter_by(order=to_order).first()
+                # Add sample category for each stage
+                category = ToolCategory(
+                    name=f"{stage.name} Tools",
+                    description=f"Tools for the {stage.name} stage",
+                    stage_id=stage.id
+                )
+                db.session.add(category)
+                db.session.flush()
                 
-                if from_stage and to_stage:
-                    connection = LifecycleConnection(
-                        from_stage_id=from_stage.id,
-                        to_stage_id=to_stage.id,
-                        connection_type='normal'
-                    )
-                    db.session.add(connection)
+                # Add sample tool
+                tool = ResearchTool(
+                    name=f"Sample {stage.name} Tool",
+                    description=f"A tool for {stage.name.lower()} activities",
+                    category_id=category.id
+                )
+                db.session.add(tool)
             
             db.session.commit()
-            logger.info("MaLDReTH data initialization completed successfully")
+            logger.info("MaLDReTH data initialization completed")
             
     except Exception as e:
-        logger.error(f"Error initializing MaLDReTH data: {e}")
+        logger.error(f"Error initializing data: {e}")
         db.session.rollback()
         raise
 
@@ -640,11 +399,6 @@ def not_found(error):
 def internal_error(error):
     logger.error(f"Internal server error: {error}")
     return jsonify({'error': 'Internal server error'}), 500
-
-# Heroku requires the application to be callable
-def create_app():
-    """Application factory for Heroku deployment"""
-    return app
 
 if __name__ == '__main__':
     # Create database tables and initialize data
