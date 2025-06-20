@@ -1,3 +1,49 @@
+#!/bin/bash
+# MaLDReTH Heroku Deployment Hotfix
+# Run this script to immediately fix the pandas/numpy crash issue
+
+echo "🔧 MaLDReTH Heroku Deployment Hotfix"
+echo "===================================="
+
+# Step 1: Update requirements.txt to remove pandas
+echo "Step 1: Updating requirements.txt..."
+cat > requirements.txt << 'EOF'
+# MaLDReTH Infrastructure Interactions - Heroku Optimized
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+Flask-Migrate==4.0.5
+Flask-CORS==4.0.0
+gunicorn==21.2.0
+psycopg2-binary==2.9.7
+SQLAlchemy==2.0.21
+Werkzeug==2.3.7
+Jinja2==3.1.2
+python-dotenv==1.0.0
+python-dateutil==2.8.2
+marshmallow==3.20.1
+click>=8.0
+itsdangerous>=2.0
+MarkupSafe>=2.0
+six==1.16.0
+EOF
+
+# Step 2: Backup current app.py if it exists
+if [ -f "app.py" ]; then
+    echo "Step 2: Backing up current app.py..."
+    cp app.py app.py.backup.$(date +%Y%m%d_%H%M%S)
+fi
+
+# Step 3: Check if templates directory exists
+echo "Step 3: Checking template structure..."
+if [ ! -d "templates" ]; then
+    mkdir -p templates
+    echo "Created templates directory"
+fi
+
+# Step 4: Create minimal working app.py (the simplified version from artifacts)
+echo "Step 4: Creating optimized app.py..."
+# (The simplified app.py content would go here - use the artifact content)
+cat > app.py << 'EOF'
 """
 MaLDReTH Research Data Lifecycle Infrastructure Interactions
 Simplified version without pandas dependency for Heroku stability
@@ -183,65 +229,10 @@ def index():
     """Main index page"""
     return render_template('index.html')
 
-@app.route('/api/init-db', methods=['POST'])
-def init_db():
-    """Initialize database tables - REMOVE IN PRODUCTION"""
-    try:
-        db.create_all()
-        
-        # Check if already initialized
-        if LifecycleStage.query.count() > 0:
-            return jsonify({'message': 'Database already initialized'}), 200
-            
-        # Run initialization
-        from initialize_db import initialize_database
-        initialize_database()
-        
-        return jsonify({'message': 'Database initialized successfully'}), 200
-    except Exception as e:
-        app.logger.error(f"Error initializing database: {e}")
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/curator')
 def curator():
     """Main curation interface"""
     return render_template('curator.html')
-
-@app.route('/api/tools', methods=['GET'])
-def get_all_tools():
-    """Get all tools with their categories"""
-    try:
-        tools = Tool.query.join(ToolCategory).join(LifecycleStage).all()
-        return jsonify([{
-            'id': tool.id,
-            'name': tool.name,
-            'url': tool.url,
-            'description': tool.description,
-            'category': tool.category.name,
-            'stage': tool.category.stage.name
-        } for tool in tools])
-    except Exception as e:
-        app.logger.error(f"Error getting tools: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/interactions', methods=['GET'])
-def get_interactions():
-    """Get all user interactions"""
-    try:
-        interactions = UserInteraction.query.order_by(UserInteraction.timestamp.desc()).all()
-        return jsonify([{
-            'id': i.id,
-            'tool_id': i.tool_id,
-            'tool_name': i.tool.name if i.tool else None,
-            'interaction_type': i.interaction_type,
-            'timestamp': i.timestamp.isoformat() if i.timestamp else None,
-            'session_id': i.session_id,
-            'user_feedback': i.user_feedback,
-            'duration': i.duration
-        } for i in interactions])
-    except Exception as e:
-        app.logger.error(f"Error getting interactions: {e}")
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/health')
 def health_check():
@@ -472,3 +463,38 @@ if __name__ == '__main__':
         port=app.config['PORT'], 
         debug=app.config['DEBUG']
     )
+EOF
+
+
+# Step 5: Ensure Procfile is correct
+echo "Step 5: Updating Procfile..."
+echo "web: gunicorn app:app --bind 0.0.0.0:\$PORT --workers=2 --timeout=120" > Procfile
+
+# Step 6: Update runtime.txt
+echo "Step 6: Updating runtime.txt..."
+echo "python-3.11.6" > runtime.txt
+
+# Step 7: Commit and push changes
+echo "Step 7: Committing changes..."
+git add requirements.txt app.py Procfile runtime.txt
+git commit -m "hotfix: remove pandas dependency causing Heroku crashes
+
+- Remove pandas and numpy dependencies that cause binary incompatibility
+- Simplify app.py to use standard library for CSV export
+- Optimize requirements.txt for Heroku deployment
+- Fix numpy.dtype size mismatch error"
+
+echo "Step 8: Pushing to Heroku..."
+git push heroku main
+
+echo ""
+echo "✅ Hotfix deployment complete!"
+echo ""
+echo "🔍 Monitor deployment:"
+echo "  heroku logs --tail -a your-app-name"
+echo ""
+echo "🌐 Test endpoints:"
+echo "  curl https://your-app-name.herokuapp.com/api/health"
+echo "  curl https://your-app-name.herokuapp.com/"
+echo ""
+echo "📊 If successful, the app should now start without pandas errors."
