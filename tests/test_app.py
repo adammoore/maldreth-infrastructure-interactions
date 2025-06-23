@@ -1,4 +1,4 @@
-    """
+"""
 Test suite for the MaLDReTH Infrastructure Interactions application.
 
 This module contains comprehensive tests for all application functionality
