@@ -7,10 +7,6 @@ tools, interactions, and visualization data with advanced filtering and search c
 
 from flask import Blueprint, jsonify, request, current_app
 from sqlalchemy import or_, and_, func
-from models_phase2 import (
-    db, LifecycleStage, LifecycleSubstage, ToolCategory,
-    Tool, Interaction, InteractionTool, StageConnection
-)
 import logging
 
 # Create blueprint for API v2
@@ -18,6 +14,32 @@ api_v2_bp = Blueprint('api_v2', __name__, url_prefix='/api/v2')
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+
+def get_models():
+    """
+    Lazy import models to avoid circular imports.
+    This function imports models only when needed.
+    """
+    from models_phase2 import (
+        LifecycleStage, LifecycleSubstage, ToolCategory,
+        Tool, Interaction, InteractionTool, StageConnection
+    )
+    return {
+        'LifecycleStage': LifecycleStage,
+        'LifecycleSubstage': LifecycleSubstage,
+        'ToolCategory': ToolCategory,
+        'Tool': Tool,
+        'Interaction': Interaction,
+        'InteractionTool': InteractionTool,
+        'StageConnection': StageConnection
+    }
+
+
+def get_db():
+    """Get database instance from current app context."""
+    from flask import current_app
+    return current_app.extensions['sqlalchemy']
 
 
 @api_v2_bp.route('/stages', methods=['GET'])
@@ -34,6 +56,11 @@ def get_enhanced_stages():
         JSON array of stage objects with requested information
     """
     try:
+        models = get_models()
+        LifecycleStage = models['LifecycleStage']
+        LifecycleSubstage = models['LifecycleSubstage']
+        Tool = models['Tool']
+        
         include_substages = request.args.get('include_substages', 'true').lower() == 'true'
         include_tools = request.args.get('include_tools', 'true').lower() == 'true'
         include_interactions = request.args.get('include_interactions', 'false').lower() == 'true'
@@ -112,6 +139,10 @@ def get_stage_tools(stage_id):
         JSON object with tools and pagination information
     """
     try:
+        models = get_models()
+        LifecycleStage = models['LifecycleStage']
+        Tool = models['Tool']
+        
         # Verify stage exists
         stage = LifecycleStage.query.get_or_404(stage_id)
         
@@ -217,6 +248,11 @@ def search_tools():
         JSON object with search results and pagination
     """
     try:
+        models = get_models()
+        Tool = models['Tool']
+        LifecycleStage = models['LifecycleStage']
+        db = get_db()
+        
         # Base query
         query = Tool.query
         
@@ -384,6 +420,9 @@ def recommend_tools():
         JSON object with recommended tools for the interaction
     """
     try:
+        models = get_models()
+        Tool = models['Tool']
+        
         data = request.get_json()
         
         if not data:
@@ -479,6 +518,12 @@ def get_network_data():
         JSON object with nodes and edges for network visualization
     """
     try:
+        models = get_models()
+        LifecycleStage = models['LifecycleStage']
+        Tool = models['Tool']
+        StageConnection = models['StageConnection']
+        Interaction = models['Interaction']
+        
         include_tools = request.args.get('include_tools', 'false').lower() == 'true'
         include_interactions = request.args.get('include_interactions', 'true').lower() == 'true'
         stage_ids = request.args.get('stage_ids')
@@ -631,6 +676,15 @@ def get_dashboard_stats():
         JSON object with various statistics and metrics
     """
     try:
+        models = get_models()
+        db = get_db()
+        
+        LifecycleStage = models['LifecycleStage']
+        LifecycleSubstage = models['LifecycleSubstage']
+        Tool = models['Tool']
+        Interaction = models['Interaction']
+        ToolCategory = models['ToolCategory']
+        
         stats = {
             'total_stages': LifecycleStage.query.count(),
             'total_substages': LifecycleSubstage.query.count(),
