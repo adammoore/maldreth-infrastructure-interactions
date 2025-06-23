@@ -19,6 +19,7 @@ import logging
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
+from api_v2 import api_v2_bp
 from flask_migrate import Migrate
 import csv
 import io
@@ -105,6 +106,18 @@ def create_app():
             logger.error(f"Error viewing interactions: {e}")
             return render_template('interactions.html', interactions=None)
     
+    @app.route('/tools/explorer')
+    def tools_explorer():
+        return render_template('tools/explorer.html')
+
+    @app.route('/dashboard/visualization')
+    def visualization_dashboard():
+        return render_template('dashboard/visualization.html')
+
+    @app.route('/interactions/builder')
+    def interaction_builder():
+        return render_template('interactions/builder.html')
+
     @app.route('/export')
     def export_csv():
         """Export interactions as CSV."""
@@ -321,6 +334,8 @@ def create_app():
 
 # Create the application instance
 app = create_app()
+
+app.register_blueprint(api_v2_bp)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

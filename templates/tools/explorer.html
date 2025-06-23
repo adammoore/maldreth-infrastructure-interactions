@@ -1,0 +1,660 @@
+{% extends "base.html" %}
+
+{% block title %}Tool Explorer - MaLDReTH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tool-explorer {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 2rem;
+        min-height: calc(100vh - 200px);
+    }
+
+    .filter-sidebar {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        height: fit-content;
+        position: sticky;
+        top: 20px;
+    }
+
+    .filter-section {
+        margin-bottom: 2rem;
+    }
+
+    .filter-section h4 {
+        margin-bottom: 1rem;
+        color: #333;
+        font-size: 1.1rem;
+    }
+
+    .filter-checkbox {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+    }
+
+    .filter-checkbox input {
+        margin-right: 0.5rem;
+    }
+
+    .filter-badge {
+        margin-left: auto;
+        background: #e9ecef;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+    }
+
+    .tool-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .tool-card {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tool-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .tool-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+
+    .tool-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+
+    .tool-provider {
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+
+    .tool-badges {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .tool-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .badge-open {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .badge-closed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .badge-interoperable {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .tool-description {
+        color: #555;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .tool-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .stage-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stage-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+
+    .tool-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .tool-action-btn {
+        padding: 0.25rem 0.5rem;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .tool-action-btn:hover {
+        background: #f8f9fa;
+        border-color: #aaa;
+    }
+
+    .search-section {
+        margin-bottom: 2rem;
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+    }
+
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .results-count {
+        color: #666;
+    }
+
+    .sort-dropdown {
+        padding: 0.5rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 3rem;
+    }
+
+    .page-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .page-btn:hover:not(.active):not(:disabled) {
+        background: #f8f9fa;
+        border-color: #aaa;
+    }
+
+    .page-btn.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+
+    .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 768px) {
+        .tool-explorer {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-sidebar {
+            position: static;
+            margin-bottom: 2rem;
+        }
+
+        .tool-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="page-header mb-4">
+        <h1>Tool Explorer</h1>
+        <p class="text-muted">Browse and discover research tools across the MaLDReTH lifecycle</p>
+    </div>
+
+    <div class="tool-explorer">
+        <!-- Filter Sidebar -->
+        <div class="filter-sidebar">
+            <div class="search-section">
+                <h4>Search Tools</h4>
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search tools...">
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h4>Lifecycle Stages</h4>
+                <div id="stageFilters">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h4>Source Type</h4>
+                <div id="sourceTypeFilters">
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="open"> Open Source
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="closed"> Closed Source
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="freemium"> Freemium
+                    </label>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h4>Scope</h4>
+                <div id="scopeFilters">
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="Generic"> Generic
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="Disciplinary"> Disciplinary
+                    </label>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h4>Features</h4>
+                <div id="featureFilters">
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="interoperable"> Interoperable
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary btn-sm w-100 mt-3" onclick="clearFilters()">
+                Clear All Filters
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="results-header">
+                <span class="results-count" id="resultsCount">Loading...</span>
+                <select class="sort-dropdown" id="sortDropdown">
+                    <option value="name_asc">Name (A-Z)</option>
+                    <option value="name_desc">Name (Z-A)</option>
+                    <option value="provider_asc">Provider (A-Z)</option>
+                    <option value="stage">By Stage</option>
+                </select>
+            </div>
+
+            <div class="tool-grid" id="toolGrid">
+                <!-- Tools populated by JavaScript -->
+            </div>
+
+            <div class="pagination" id="pagination">
+                <!-- Pagination populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tool Detail Modal -->
+<div class="modal fade" id="toolModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalToolName"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalToolContent">
+                    <!-- Content populated by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" target="_blank" class="btn btn-primary" id="modalToolLink">
+                    Visit Tool Website <i class="fas fa-external-link-alt"></i>
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let currentPage = 1;
+let currentFilters = {
+    q: '',
+    stage_ids: [],
+    source_types: [],
+    scopes: [],
+    is_interoperable: null
+};
+let currentSort = 'name_asc';
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadStageFilters();
+    loadTools();
+    setupEventListeners();
+});
+
+// Setup event listeners
+function setupEventListeners() {
+    // Search input
+    document.getElementById('searchInput').addEventListener('input', debounce(function(e) {
+        currentFilters.q = e.target.value;
+        currentPage = 1;
+        loadTools();
+    }, 500));
+
+    // Sort dropdown
+    document.getElementById('sortDropdown').addEventListener('change', function(e) {
+        currentSort = e.target.value;
+        const [sortBy, sortOrder] = currentSort.split('_');
+        loadTools();
+    });
+
+    // Filter checkboxes
+    document.querySelectorAll('.filter-checkbox input').forEach(checkbox => {
+        checkbox.addEventListener('change', updateFilters);
+    });
+}
+
+// Load stage filters dynamically
+async function loadStageFilters() {
+    try {
+        const response = await fetch('/api/v2/stages?include_substages=false&include_tools=true');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            const stageFilters = document.getElementById('stageFilters');
+            stageFilters.innerHTML = '';
+            
+            data.data.forEach(stage => {
+                const label = document.createElement('label');
+                label.className = 'filter-checkbox';
+                label.innerHTML = `
+                    <input type="checkbox" value="${stage.id}" data-stage-name="${stage.name}">
+                    ${stage.name}
+                    <span class="filter-badge">${stage.tool_count}</span>
+                `;
+                stageFilters.appendChild(label);
+                
+                // Add event listener
+                label.querySelector('input').addEventListener('change', updateFilters);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading stage filters:', error);
+    }
+}
+
+// Update filters when checkboxes change
+function updateFilters() {
+    // Stage filters
+    const stageCheckboxes = document.querySelectorAll('#stageFilters input:checked');
+    currentFilters.stage_ids = Array.from(stageCheckboxes).map(cb => cb.value);
+
+    // Source type filters
+    const sourceTypeCheckboxes = document.querySelectorAll('#sourceTypeFilters input:checked');
+    currentFilters.source_types = Array.from(sourceTypeCheckboxes).map(cb => cb.value);
+
+    // Scope filters
+    const scopeCheckboxes = document.querySelectorAll('#scopeFilters input:checked');
+    currentFilters.scopes = Array.from(scopeCheckboxes).map(cb => cb.value);
+
+    // Feature filters
+    const interoperableCheckbox = document.querySelector('#featureFilters input[value="interoperable"]');
+    currentFilters.is_interoperable = interoperableCheckbox.checked ? true : null;
+
+    currentPage = 1;
+    loadTools();
+}
+
+// Load tools with current filters
+async function loadTools() {
+    try {
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (currentFilters.q) params.append('q', currentFilters.q);
+        if (currentFilters.stage_ids.length > 0) params.append('stage_ids', currentFilters.stage_ids.join(','));
+        if (currentFilters.source_types.length > 0) params.append('source_types', currentFilters.source_types.join(','));
+        if (currentFilters.scopes.length > 0) params.append('scopes', currentFilters.scopes.join(','));
+        if (currentFilters.is_interoperable !== null) params.append('is_interoperable', currentFilters.is_interoperable);
+        
+        // Sorting
+        const [sortBy, sortOrder] = currentSort.split('_');
+        params.append('sort_by', sortBy);
+        if (sortOrder) params.append('sort_order', sortOrder);
+        
+        // Pagination
+        params.append('page', currentPage);
+        params.append('per_page', 12);
+
+        const response = await fetch(`/api/v2/tools/search?${params}`);
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            displayTools(data.data.tools);
+            updateResultsCount(data.data.pagination.total);
+            displayPagination(data.data.pagination);
+        }
+    } catch (error) {
+        console.error('Error loading tools:', error);
+        document.getElementById('toolGrid').innerHTML = '<p class="text-danger">Error loading tools. Please try again.</p>';
+    }
+}
+
+// Display tools in the grid
+function displayTools(tools) {
+    const toolGrid = document.getElementById('toolGrid');
+    
+    if (tools.length === 0) {
+        toolGrid.innerHTML = '<p class="text-muted text-center">No tools found matching your criteria.</p>';
+        return;
+    }
+
+    toolGrid.innerHTML = tools.map(tool => `
+        <div class="tool-card" onclick="showToolDetail(${tool.id})">
+            <div class="tool-card-header">
+                <div>
+                    <h3 class="tool-name">${escapeHtml(tool.name)}</h3>
+                    <p class="tool-provider">${escapeHtml(tool.provider || 'Unknown Provider')}</p>
+                </div>
+            </div>
+            
+            <div class="tool-badges">
+                ${tool.source_type ? `<span class="tool-badge badge-${tool.source_type}">${tool.source_type}</span>` : ''}
+                ${tool.is_interoperable ? '<span class="tool-badge badge-interoperable">Interoperable</span>' : ''}
+                ${tool.scope ? `<span class="tool-badge">${tool.scope}</span>` : ''}
+            </div>
+            
+            <p class="tool-description">${escapeHtml(tool.description || 'No description available.')}</p>
+            
+            <div class="tool-meta">
+                <div class="stage-indicator">
+                    <span class="stage-dot" style="background-color: ${tool.stage?.color_code || '#999'}"></span>
+                    <span>${tool.stage?.name || 'Unknown Stage'}</span>
+                </div>
+                <div class="tool-actions">
+                    ${tool.url ? `<a href="${tool.url}" target="_blank" class="tool-action-btn" onclick="event.stopPropagation()">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Update results count
+function updateResultsCount(total) {
+    const resultsCount = document.getElementById('resultsCount');
+    resultsCount.textContent = `${total} tool${total !== 1 ? 's' : ''} found`;
+}
+
+// Display pagination
+function displayPagination(pagination) {
+    const paginationEl = document.getElementById('pagination');
+    
+    if (pagination.pages <= 1) {
+        paginationEl.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    
+    // Previous button
+    html += `<button class="page-btn" ${!pagination.has_prev ? 'disabled' : ''} onclick="goToPage(${pagination.page - 1})">
+        <i class="fas fa-chevron-left"></i>
+    </button>`;
+
+    // Page numbers
+    const startPage = Math.max(1, pagination.page - 2);
+    const endPage = Math.min(pagination.pages, pagination.page + 2);
+
+    if (startPage > 1) {
+        html += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+        if (startPage > 2) html += '<span>...</span>';
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="page-btn ${i === pagination.page ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+    }
+
+    if (endPage < pagination.pages) {
+        if (endPage < pagination.pages - 1) html += '<span>...</span>';
+        html += `<button class="page-btn" onclick="goToPage(${pagination.pages})">${pagination.pages}</button>`;
+    }
+
+    // Next button
+    html += `<button class="page-btn" ${!pagination.has_next ? 'disabled' : ''} onclick="goToPage(${pagination.page + 1})">
+        <i class="fas fa-chevron-right"></i>
+    </button>`;
+
+    paginationEl.innerHTML = html;
+}
+
+// Navigate to page
+function goToPage(page) {
+    currentPage = page;
+    loadTools();
+    window.scrollTo(0, 0);
+}
+
+// Show tool detail modal
+async function showToolDetail(toolId) {
+    // For now, just show basic info from the tool card
+    // In a full implementation, this would fetch detailed tool info
+    const modal = new bootstrap.Modal(document.getElementById('toolModal'));
+    
+    // You could fetch more details here
+    // const response = await fetch(`/api/v2/tools/${toolId}`);
+    // const data = await response.json();
+    
+    modal.show();
+}
+
+// Clear all filters
+function clearFilters() {
+    // Clear checkboxes
+    document.querySelectorAll('.filter-checkbox input').forEach(cb => cb.checked = false);
+    
+    // Clear search
+    document.getElementById('searchInput').value = '';
+    
+    // Reset filters
+    currentFilters = {
+        q: '',
+        stage_ids: [],
+        source_types: [],
+        scopes: [],
+        is_interoperable: null
+    };
+    
+    currentPage = 1;
+    loadTools();
+}
+
+// Utility functions
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+</script>
+{% endblock %}

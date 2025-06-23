@@ -1,0 +1,947 @@
+{% extends "base.html" %}
+
+{% block title %}Visualization Dashboard - MaLDReTH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .viz-dashboard {
+        min-height: calc(100vh - 100px);
+    }
+
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .viz-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .viz-controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .viz-control-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    #lifecycle-diagram {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    #network-visualization {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 400px;
+        margin-bottom: 2rem;
+    }
+
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+    }
+
+    /* D3.js specific styles */
+    .node {
+        cursor: pointer;
+    }
+
+    .node:hover {
+        stroke-width: 3px;
+    }
+
+    .link {
+        fill: none;
+        stroke: #999;
+        stroke-opacity: 0.6;
+    }
+
+    .link.interaction {
+        stroke-dasharray: 5,5;
+    }
+
+    .node-label {
+        font-size: 12px;
+        pointer-events: none;
+    }
+
+    .tooltip {
+        position: absolute;
+        text-align: left;
+        padding: 12px;
+        font-size: 14px;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        border-radius: 4px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+        max-width: 300px;
+        z-index: 1000;
+    }
+
+    .tooltip.show {
+        opacity: 1;
+    }
+
+    /* Tab navigation */
+    .viz-tabs {
+        display: flex;
+        gap: 1rem;
+        border-bottom: 2px solid #e0e0e0;
+        margin-bottom: 2rem;
+    }
+
+    .viz-tab {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-weight: 500;
+        color: #666;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .viz-tab:hover {
+        color: #333;
+    }
+
+    .viz-tab.active {
+        color: #667eea;
+    }
+
+    .viz-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #667eea;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="dashboard-header">
+        <h1 class="mb-3">MaLDReTH Visualization Dashboard</h1>
+        <p class="mb-0">Explore the research data lifecycle, tools, and infrastructure interactions</p>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+            <div class="stat-value">
+                <i class="fas fa-spinner fa-pulse"></i>
+            </div>
+            <div class="stat-label">Lifecycle Stages</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">
+                <i class="fas fa-spinner fa-pulse"></i>
+            </div>
+            <div class="stat-label">Total Tools</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">
+                <i class="fas fa-spinner fa-pulse"></i>
+            </div>
+            <div class="stat-label">Tool Categories</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">
+                <i class="fas fa-spinner fa-pulse"></i>
+            </div>
+            <div class="stat-label">Interactions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">
+                <i class="fas fa-spinner fa-pulse"></i>
+            </div>
+            <div class="stat-label">Interoperable Tools</div>
+        </div>
+    </div>
+
+    <!-- Visualization Tabs -->
+    <div class="viz-tabs">
+        <button class="viz-tab active" data-tab="lifecycle">Lifecycle Diagram</button>
+        <button class="viz-tab" data-tab="network">Network View</button>
+        <button class="viz-tab" data-tab="analytics">Analytics</button>
+        <button class="viz-tab" data-tab="flow">Interaction Flow</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content active" id="lifecycle-tab">
+        <div class="viz-section">
+            <h2 class="mb-3">Research Data Lifecycle</h2>
+            <div class="viz-controls">
+                <div class="viz-control-group">
+                    <label for="viewMode">View Mode:</label>
+                    <select id="viewMode" class="form-select form-select-sm">
+                        <option value="circular">Circular</option>
+                        <option value="linear">Linear</option>
+                        <option value="hierarchical">Hierarchical</option>
+                    </select>
+                </div>
+                <div class="viz-control-group">
+                    <label for="detailLevel">Detail Level:</label>
+                    <select id="detailLevel" class="form-select form-select-sm">
+                        <option value="stages">Stages Only</option>
+                        <option value="substages">Include Substages</option>
+                        <option value="tools">Include Tools</option>
+                    </select>
+                </div>
+                <button class="btn btn-sm btn-primary" onclick="resetLifecycleView()">
+                    <i class="fas fa-sync"></i> Reset View
+                </button>
+            </div>
+            <div id="lifecycle-diagram">
+                <div class="loading-overlay">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="legend" id="lifecycle-legend">
+                <!-- Legend populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="network-tab">
+        <div class="viz-section">
+            <h2 class="mb-3">Tool & Interaction Network</h2>
+            <div class="viz-controls">
+                <div class="viz-control-group">
+                    <input type="checkbox" id="showTools" checked>
+                    <label for="showTools">Show Tools</label>
+                </div>
+                <div class="viz-control-group">
+                    <input type="checkbox" id="showInteractions" checked>
+                    <label for="showInteractions">Show Interactions</label>
+                </div>
+                <div class="viz-control-group">
+                    <label for="stageFilter">Filter by Stage:</label>
+                    <select id="stageFilter" class="form-select form-select-sm">
+                        <option value="">All Stages</option>
+                    </select>
+                </div>
+                <button class="btn btn-sm btn-primary" onclick="updateNetwork()">
+                    <i class="fas fa-sync"></i> Update
+                </button>
+            </div>
+            <div id="network-visualization">
+                <div class="loading-overlay">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="analytics-tab">
+        <div class="viz-section">
+            <h2 class="mb-3">Analytics & Insights</h2>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Tools by Source Type</h4>
+                    <div class="chart-container">
+                        <canvas id="sourceTypeChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h4>Tools by Scope</h4>
+                    <div class="chart-container">
+                        <canvas id="scopeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Interactions by Priority</h4>
+                    <div class="chart-container">
+                        <canvas id="priorityChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h4>Top Tool Providers</h4>
+                    <div class="chart-container">
+                        <canvas id="providerChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="flow-tab">
+        <div class="viz-section">
+            <h2 class="mb-3">Infrastructure Interaction Flow</h2>
+            <div class="viz-controls">
+                <div class="viz-control-group">
+                    <label for="flowType">Flow Type:</label>
+                    <select id="flowType" class="form-select form-select-sm">
+                        <option value="sankey">Sankey Diagram</option>
+                        <option value="chord">Chord Diagram</option>
+                        <option value="force">Force-Directed</option>
+                    </select>
+                </div>
+                <div class="viz-control-group">
+                    <label for="flowMetric">Metric:</label>
+                    <select id="flowMetric" class="form-select form-select-sm">
+                        <option value="count">Interaction Count</option>
+                        <option value="complexity">Complexity Score</option>
+                        <option value="priority">Priority Weight</option>
+                    </select>
+                </div>
+            </div>
+            <div id="flow-diagram" style="height: 600px;">
+                <div class="loading-overlay">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tooltip div -->
+<div class="tooltip" id="tooltip"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+// Global variables
+let lifecycleData = null;
+let networkData = null;
+let statsData = null;
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDashboard();
+    setupTabNavigation();
+    loadDashboardStats();
+});
+
+// Setup tab navigation
+function setupTabNavigation() {
+    const tabs = document.querySelectorAll('.viz-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Update active tab
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show corresponding content
+            const tabName = this.dataset.tab;
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Initialize visualization if needed
+            switch(tabName) {
+                case 'lifecycle':
+                    if (!lifecycleData) loadLifecycleData();
+                    break;
+                case 'network':
+                    if (!networkData) loadNetworkData();
+                    break;
+                case 'analytics':
+                    if (!statsData) loadAnalyticsData();
+                    break;
+                case 'flow':
+                    loadFlowData();
+                    break;
+            }
+        });
+    });
+}
+
+// Initialize dashboard
+async function initializeDashboard() {
+    await loadStageOptions();
+    loadLifecycleData();
+}
+
+// Load dashboard statistics
+async function loadDashboardStats() {
+    try {
+        const response = await fetch('/api/v2/stats/dashboard');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            statsData = data.data;
+            updateStatsDisplay();
+        }
+    } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+    }
+}
+
+// Update statistics display
+function updateStatsDisplay() {
+    const statsGrid = document.getElementById('statsGrid');
+    statsGrid.innerHTML = `
+        <div class="stat-card">
+            <div class="stat-value">${statsData.totals.stages}</div>
+            <div class="stat-label">Lifecycle Stages</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${statsData.totals.tools}</div>
+            <div class="stat-label">Total Tools</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${statsData.totals.categories}</div>
+            <div class="stat-label">Tool Categories</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${statsData.totals.interactions}</div>
+            <div class="stat-label">Interactions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${statsData.totals.interoperable_tools}</div>
+            <div class="stat-label">Interoperable Tools</div>
+        </div>
+    `;
+}
+
+// Load stage options for filters
+async function loadStageOptions() {
+    try {
+        const response = await fetch('/api/v2/stages?include_substages=false');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            const stageFilter = document.getElementById('stageFilter');
+            data.data.forEach(stage => {
+                const option = document.createElement('option');
+                option.value = stage.id;
+                option.textContent = stage.name;
+                stageFilter.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading stage options:', error);
+    }
+}
+
+// Load lifecycle data and create visualization
+async function loadLifecycleData() {
+    try {
+        const response = await fetch('/api/v2/stages?include_substages=true&include_tools=true');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            lifecycleData = data.data;
+            createLifecycleDiagram();
+        }
+    } catch (error) {
+        console.error('Error loading lifecycle data:', error);
+    }
+}
+
+// Create lifecycle diagram using D3.js
+function createLifecycleDiagram() {
+    const container = d3.select('#lifecycle-diagram');
+    container.selectAll('*').remove();
+    
+    const width = container.node().getBoundingClientRect().width;
+    const height = 600;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(width, height) / 3;
+    
+    const svg = container.append('svg')
+        .attr('width', width)
+        .attr('height', height);
+    
+    const g = svg.append('g')
+        .attr('transform', `translate(${centerX},${centerY})`);
+    
+    // Calculate positions for stages
+    const angleStep = (2 * Math.PI) / lifecycleData.length;
+    
+    lifecycleData.forEach((stage, i) => {
+        const angle = i * angleStep - Math.PI / 2;
+        stage.x = Math.cos(angle) * radius;
+        stage.y = Math.sin(angle) * radius;
+    });
+    
+    // Create connections
+    const connections = g.append('g').attr('class', 'connections');
+    
+    for (let i = 0; i < lifecycleData.length; i++) {
+        const source = lifecycleData[i];
+        const target = lifecycleData[(i + 1) % lifecycleData.length];
+        
+        connections.append('path')
+            .attr('d', `M ${source.x} ${source.y} Q 0 0 ${target.x} ${target.y}`)
+            .attr('class', 'link')
+            .attr('stroke', '#999')
+            .attr('stroke-width', 2)
+            .attr('fill', 'none')
+            .attr('opacity', 0.6);
+    }
+    
+    // Create stage nodes
+    const stages = g.append('g').attr('class', 'stages');
+    
+    const stageGroups = stages.selectAll('.stage')
+        .data(lifecycleData)
+        .enter().append('g')
+        .attr('class', 'stage')
+        .attr('transform', d => `translate(${d.x},${d.y})`);
+    
+    // Add circles for stages
+    stageGroups.append('circle')
+        .attr('r', 40)
+        .attr('fill', d => d.color_code || '#667eea')
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 3)
+        .attr('class', 'node')
+        .on('mouseover', function(event, d) {
+            showTooltip(event, d);
+            d3.select(this).attr('r', 45);
+        })
+        .on('mouseout', function() {
+            hideTooltip();
+            d3.select(this).attr('r', 40);
+        })
+        .on('click', function(event, d) {
+            showStageDetails(d);
+        });
+    
+    // Add text labels
+    stageGroups.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '0.35em')
+        .attr('class', 'node-label')
+        .style('fill', 'white')
+        .style('font-weight', 'bold')
+        .text(d => d.name);
+    
+    // Create legend
+    createLifecycleLegend();
+}
+
+// Create legend for lifecycle diagram
+function createLifecycleLegend() {
+    const legend = document.getElementById('lifecycle-legend');
+    legend.innerHTML = '<strong>Legend:</strong>';
+    
+    lifecycleData.forEach(stage => {
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        item.innerHTML = `
+            <div class="legend-color" style="background-color: ${stage.color_code || '#667eea'}"></div>
+            <span>${stage.name} (${stage.tool_count} tools)</span>
+        `;
+        legend.appendChild(item);
+    });
+}
+
+// Show tooltip
+function showTooltip(event, data) {
+    const tooltip = d3.select('#tooltip');
+    
+    let content = `<strong>${data.name}</strong><br/>`;
+    if (data.description) {
+        content += `${data.description.substring(0, 150)}...<br/>`;
+    }
+    if (data.tool_count !== undefined) {
+        content += `<br/>Tools: ${data.tool_count}`;
+    }
+    if (data.substages) {
+        content += `<br/>Substages: ${data.substages.length}`;
+    }
+    
+    tooltip.html(content)
+        .style('left', (event.pageX + 10) + 'px')
+        .style('top', (event.pageY - 10) + 'px')
+        .classed('show', true);
+}
+
+// Hide tooltip
+function hideTooltip() {
+    d3.select('#tooltip').classed('show', false);
+}
+
+// Show stage details modal
+function showStageDetails(stage) {
+    // This would open a modal with detailed stage information
+    console.log('Show details for stage:', stage);
+    // Implementation would include showing substages, tools, etc.
+}
+
+// Load network data
+async function loadNetworkData() {
+    try {
+        const showTools = document.getElementById('showTools').checked;
+        const showInteractions = document.getElementById('showInteractions').checked;
+        const stageFilter = document.getElementById('stageFilter').value;
+        
+        const params = new URLSearchParams({
+            include_tools: showTools,
+            include_interactions: showInteractions
+        });
+        
+        if (stageFilter) {
+            params.append('stage_ids', stageFilter);
+        }
+        
+        const response = await fetch(`/api/v2/visualization/network?${params}`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            networkData = data.data;
+            createNetworkVisualization();
+        }
+    } catch (error) {
+        console.error('Error loading network data:', error);
+    }
+}
+
+// Create network visualization
+function createNetworkVisualization() {
+    const container = d3.select('#network-visualization');
+    container.selectAll('*').remove();
+    
+    const width = container.node().getBoundingClientRect().width;
+    const height = 600;
+    
+    const svg = container.append('svg')
+        .attr('width', width)
+        .attr('height', height);
+    
+    // Create force simulation
+    const simulation = d3.forceSimulation(networkData.nodes)
+        .force('link', d3.forceLink(networkData.edges).id(d => d.id).distance(100))
+        .force('charge', d3.forceManyBody().strength(-300))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('collision', d3.forceCollide().radius(30));
+    
+    // Create links
+    const link = svg.append('g')
+        .selectAll('line')
+        .data(networkData.edges)
+        .enter().append('line')
+        .attr('class', d => `link ${d.type}`)
+        .attr('stroke-width', 2);
+    
+    // Create nodes
+    const node = svg.append('g')
+        .selectAll('circle')
+        .data(networkData.nodes)
+        .enter().append('circle')
+        .attr('r', d => d.type === 'stage' ? 20 : 10)
+        .attr('fill', d => d.color || '#999')
+        .attr('class', 'node')
+        .call(d3.drag()
+            .on('start', dragstarted)
+            .on('drag', dragged)
+            .on('end', dragended));
+    
+    // Add labels
+    const label = svg.append('g')
+        .selectAll('text')
+        .data(networkData.nodes)
+        .enter().append('text')
+        .text(d => d.label)
+        .attr('font-size', 10)
+        .attr('dx', 15)
+        .attr('dy', 4);
+    
+    // Add tooltips
+    node.on('mouseover', function(event, d) {
+        showTooltip(event, d.data || d);
+    })
+    .on('mouseout', hideTooltip);
+    
+    // Update positions on tick
+    simulation.on('tick', () => {
+        link
+            .attr('x1', d => d.source.x)
+            .attr('y1', d => d.source.y)
+            .attr('x2', d => d.target.x)
+            .attr('y2', d => d.target.y);
+        
+        node
+            .attr('cx', d => d.x)
+            .attr('cy', d => d.y);
+        
+        label
+            .attr('x', d => d.x)
+            .attr('y', d => d.y);
+    });
+    
+    // Drag functions
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+    
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+    
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
+}
+
+// Update network visualization
+function updateNetwork() {
+    loadNetworkData();
+}
+
+// Load analytics data
+async function loadAnalyticsData() {
+    if (!statsData) return;
+    
+    // Create charts using Chart.js
+    createSourceTypeChart();
+    createScopeChart();
+    createPriorityChart();
+    createProviderChart();
+}
+
+// Create source type chart
+function createSourceTypeChart() {
+    const ctx = document.getElementById('sourceTypeChart').getContext('2d');
+    const data = statsData.distributions.tools_by_source_type;
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.map(d => d.type || 'Unknown'),
+            datasets: [{
+                data: data.map(d => d.count),
+                backgroundColor: ['#4CAF50', '#F44336', '#2196F3', '#FF9800']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// Create scope chart
+function createScopeChart() {
+    const ctx = document.getElementById('scopeChart').getContext('2d');
+    const data = statsData.distributions.tools_by_scope;
+    
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: data.map(d => d.scope || 'Unknown'),
+            datasets: [{
+                data: data.map(d => d.count),
+                backgroundColor: ['#9C27B0', '#00BCD4', '#CDDC39', '#795548']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// Create priority chart
+function createPriorityChart() {
+    const ctx = document.getElementById('priorityChart').getContext('2d');
+    const data = statsData.distributions.interactions_by_priority;
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.map(d => d.priority),
+            datasets: [{
+                label: 'Interactions',
+                data: data.map(d => d.count),
+                backgroundColor: '#667eea'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// Create provider chart
+function createProviderChart() {
+    const ctx = document.getElementById('providerChart').getContext('2d');
+    const data = statsData.top_providers.slice(0, 10);
+    
+    new Chart(ctx, {
+        type: 'horizontalBar',
+        data: {
+            labels: data.map(d => d.provider),
+            datasets: [{
+                label: 'Number of Tools',
+                data: data.map(d => d.tool_count),
+                backgroundColor: '#764ba2'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// Load flow data
+async function loadFlowData() {
+    // This would load interaction flow data
+    // Implementation depends on the specific visualization library used
+    console.log('Loading flow data...');
+}
+
+// Reset lifecycle view
+function resetLifecycleView() {
+    if (lifecycleData) {
+        createLifecycleDiagram();
+    }
+}
+
+// View mode change handler
+document.getElementById('viewMode')?.addEventListener('change', function() {
+    // Handle view mode changes
+    console.log('View mode changed to:', this.value);
+});
+
+// Detail level change handler
+document.getElementById('detailLevel')?.addEventListener('change', function() {
+    // Handle detail level changes
+    console.log('Detail level changed to:', this.value);
+});
+</script>
+{% endblock %}
