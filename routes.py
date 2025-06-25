@@ -135,7 +135,7 @@ def get_categories(stage_id):
         flask.Response: JSON response with tool categories
     """
     try:
-        stage = LifecycleStage.query.get_or_404(stage_id)
+        LifecycleStage.query.get_or_404(stage_id)
         categories = ToolCategory.query.filter_by(stage_id=stage_id).all()
         
         return jsonify([{
@@ -160,7 +160,7 @@ def get_tools(category_id):
         flask.Response: JSON response with tools
     """
     try:
-        category = ToolCategory.query.get_or_404(category_id)
+        ToolCategory.query.get_or_404(category_id)
         tools = Tool.query.filter_by(category_id=category_id).all()
         
         return jsonify([tool.to_dict() for tool in tools])

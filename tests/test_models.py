@@ -11,7 +11,6 @@ Date: 2024
 """
 
 import pytest
-from datetime import datetime
 from app import create_app, db
 from app.models import Stage, ToolCategory, Tool, Connection
 

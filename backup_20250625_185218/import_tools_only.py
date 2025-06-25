@@ -9,7 +9,6 @@ import logging
 from pathlib import Path
 from datetime import datetime
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
 
 # Configure logging
 logging.basicConfig(
@@ -173,7 +172,7 @@ def import_tools_from_csv(csv_file):
                     logger.error(f"Error processing row {idx}: {str(e)}")
                     continue
             
-            logger.info(f"\nImport Summary:")
+            logger.info("\nImport Summary:")
             logger.info(f"  - New Categories: {imported_categories}")
             logger.info(f"  - New Tools: {imported_tools}")
         
@@ -226,7 +225,7 @@ def main():
         result = conn.execute(text("SELECT COUNT(*) FROM tools"))
         tool_count = result.scalar()
         
-        logger.info(f"\nFinal Database Status:")
+        logger.info("\nFinal Database Status:")
         logger.info(f"  - Total Categories: {category_count}")
         logger.info(f"  - Total Tools: {tool_count}")
 

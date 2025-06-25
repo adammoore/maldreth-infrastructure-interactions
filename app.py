@@ -17,7 +17,7 @@ This application provides:
 import os
 import logging
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from api_v2 import api_v2_bp
 from flask_migrate import Migrate

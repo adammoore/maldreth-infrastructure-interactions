@@ -1,10 +1,8 @@
 """
 Script to create database tables on Heroku
 """
-import os
-import sys
 from app import create_app, db
-from models import LifecycleStage, ToolCategory, Tool, UserInteraction
+from models import LifecycleStage
 
 def create_tables():
     """Create all database tables"""

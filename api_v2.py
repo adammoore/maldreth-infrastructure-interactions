@@ -6,7 +6,7 @@ tools, interactions, and visualization data with advanced filtering and search c
 """
 
 from flask import Blueprint, jsonify, request, current_app
-from sqlalchemy import or_, and_, func
+from sqlalchemy import or_, func
 import logging
 
 # Create blueprint for API v2
@@ -38,7 +38,6 @@ def get_models():
 
 def get_db():
     """Get database instance from current app context."""
-    from flask import current_app
     return current_app.extensions['sqlalchemy']
 
 

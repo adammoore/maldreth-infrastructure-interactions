@@ -7,10 +7,8 @@ Run this script on Heroku to completely reset the database:
     heroku run python reset_heroku_db.py --confirm
 """
 
-import os
 import sys
 import logging
-from datetime import datetime
 
 # Configure logging
 logging.basicConfig(
@@ -47,7 +45,6 @@ def reset_database():
         
         # Now run the initialization
         logger.info("Running database initialization...")
-        from init_heroku_db import init_database
         
         # Import models after tables are created
         from models import Interaction

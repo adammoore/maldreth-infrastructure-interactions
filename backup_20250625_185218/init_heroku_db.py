@@ -5,10 +5,7 @@ Run this script on Heroku to set up the database:
     heroku run python init_heroku_db.py
 """
 
-import os
-import sys
 import logging
-from datetime import datetime
 
 # Configure logging
 logging.basicConfig(
@@ -20,7 +17,7 @@ logger = logging.getLogger(__name__)
 # Import Flask app and models
 from app import create_app, db
 from models import Interaction
-from models_phase2 import LifecycleStage, ToolCategory, Tool, StageConnection, LifecycleSubstage
+from models_phase2 import LifecycleStage, ToolCategory, Tool, StageConnection
 
 # MaLDReTH stages data
 MALDRETH_STAGES = [

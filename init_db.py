@@ -3,9 +3,8 @@
 """
 Simple database initialization script
 """
-import os
 from app import app, db
-from models import LifecycleStage, ToolCategory, Tool
+from models import LifecycleStage
 from initialize_db import initialize_database
 
 def init_db():

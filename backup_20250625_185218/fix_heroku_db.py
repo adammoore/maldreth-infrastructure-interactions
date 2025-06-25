@@ -5,10 +5,7 @@ Run this script on Heroku to fix database schema:
     heroku run python fix_heroku_db.py
 """
 
-import os
-import sys
 import logging
-from datetime import datetime
 from sqlalchemy import text, inspect
 
 # Configure logging

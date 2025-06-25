@@ -220,7 +220,7 @@ def main():
             tool_count = Tool.query.count()
             connection_count = StageConnection.query.count()
             
-            logger.info(f"\nMigration Summary:")
+            logger.info("\nMigration Summary:")
             logger.info(f"  - Stages: {stage_count}")
             logger.info(f"  - Tool Categories: {category_count}")
             logger.info(f"  - Tools: {tool_count}")
