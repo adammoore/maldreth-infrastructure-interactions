@@ -24,16 +24,14 @@ class LifecycleStage(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
-    description = db.Column(db.Text)
-    order = db.Column(db.Integer, nullable=False, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # MaLDReTH specific fields
+    description = db.Column(db.Text, nullable=False)
     maldreth_description = db.Column(db.Text)
-    color_code = db.Column(db.String(7))  # Hex color code
-    icon = db.Column(db.String(50))
-    is_active = db.Column(db.Boolean, default=True)
+    order = db.Column(db.Integer, nullable=False, unique=True)
+    color_code = db.Column(db.String(7), default='#007bff')
+    icon = db.Column(db.String(50), default='bi-circle')
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     tool_categories = db.relationship('ToolCategory', backref='stage', lazy='dynamic', cascade='all, delete-orphan')
@@ -106,7 +104,7 @@ class LifecycleSubstage(db.Model):
     stage_id = db.Column(db.Integer, db.ForeignKey('lifecycle_stages.id'), nullable=False)
     order = db.Column(db.Integer, default=0)
     is_exemplar = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
     # Relationships
     tools = db.relationship('Tool', backref='substage', lazy='dynamic')
@@ -146,8 +144,8 @@ class ToolCategory(db.Model):
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     stage_id = db.Column(db.Integer, db.ForeignKey('lifecycle_stages.id'), nullable=False)
-    order = db.Column(db.Integer, default=0)  # Made optional with default
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+order = db.Column(db.Integer, default=0)  # Made optional with default
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
@@ -209,7 +207,7 @@ class Tool(db.Model):
     order = db.Column(db.Integer, default=0)  # Added order field for consistency
     
     # Timestamps
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Add index for performance
@@ -263,7 +261,7 @@ class StageConnection(db.Model):
     description = db.Column(db.Text)
     weight = db.Column(db.Float, default=1.0)  # For visualization purposes
     is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
     # Add index for performance
     __table_args__ = (
@@ -306,7 +304,7 @@ class InfrastructureInteraction(db.Model):
     description = db.Column(db.Text)
     status = db.Column(db.String(50), default='active')  # 'active', 'planned', 'deprecated'
     lifecycle_stage_id = db.Column(db.Integer, db.ForeignKey('lifecycle_stages.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Add index for performance
@@ -354,7 +352,7 @@ class ResearchTool(db.Model):
     interoperable = db.Column(db.String(50))  # 'yes', 'no', 'partial'
     characteristics = db.Column(db.Text)
     category_id = db.Column(db.Integer, db.ForeignKey('tool_categories.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
     # Add index for performance
     __table_args__ = (
@@ -410,7 +408,7 @@ class Interaction(db.Model):
     priority = db.Column(db.String(20), default='medium')  # 'high', 'medium', 'low'
     complexity = db.Column(db.String(20), default='medium')  # 'high', 'medium', 'low'
     status = db.Column(db.String(20), default='active')  # 'active', 'planned', 'completed', 'cancelled'
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Add index for performance

@@ -1,14 +1,356 @@
-"""
-Initialize MaLDReTH tools database with tool categories and examples.
+# Check if tool already exists
+                existing_tool = Tool.query.filter_by(
+                    name=tool_name, category_id=category.id
+                ).first()
+                
+                if existing_tool:
+                    logger.debug(f"Tool already exists: {tool_name}")
+                    continue
+                    
+                # Create new tool
+                tool = Tool(
+                    name=tool_name,
+                    category_id=category.id,
+                    stage_id=stage.id
+                )
+                
+                # Add optional fields
+                if desc_col and not pd.isna(row[desc_col]):
+                    tool.description = str(row[desc_col]).strip()
+                    
+                if link_col and not pd.isna(row[link_col]):
+                    tool.link = str(row[link_col]).strip()
+                    
+                if provider_col and not pd.isna(row[provider_col]):
+                    tool.provider = str(row[provider_col]).strip()
+                    
+                db.session.add(tool)
+                logger.debug(f"Added tool: {tool_name}")
+                
+            except Exception as e:
+                logger.error(f"Error processing tool at row {idx}: {e}")
+                continue
+                
+        db.session.commit()
+        
+    def initialize_connections(self) -> bool:
+        """
+        Initialize default connections between stages.
+        
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            # Define the standard lifecycle connections
+            connections = [
+                ("Conceptualise", "Plan", "solid"),
+                ("Plan", "Fund", "solid"),
+                ("Fund", "Collect", "solid"),
+                ("Collect", "Process", "solid"),
+                ("Process", "Analyse", "solid"),
+                ("Analyse", "Store", "solid"),
+                ("Store", "Publish", "solid"),
+                ("Publish", "Preserve", "solid"),
+                ("Preserve", "Share", "solid"),
+                ("Share", "Access", "solid"),
+                ("Access", "Transform", "solid"),
+                ("Transform", "Conceptualise", "solid"),
+                # Alternative paths
+                ("Collect", "Analyse", "dashed"),
+                ("Store", "Process", "dashed"),
+                ("Analyse", "Collect", "dashed")
+            ]
+            
+            for from_name, to_name, conn_type in connections:
+                # Check if connection already exists
+                existing = Connection.query.join(
+                    Stage, Connection.from_stage_id == Stage.id
+                ).filter(
+                    Stage.name == from_name
+                ).first()
+                
+                if existing:
+                    continue
+                    
+                # Find stages
+                from_stage = self.stages_map.get(from_name)
+                to_stage = self.stages_map.get(to_name)
+                
+                if from_stage and to_stage:
+                    connection = Connection(
+                        from_stage_id=from_stage.id,
+                        to_stage_id=to_stage.id,
+                        type=conn_type
+                    )
+                    db.session.add(connection)
+                    logger.info(f"Created connection: {from_name} -> {to_name}")
+                else:
+                    logger.warning(f"Stages not found for connection: {from_name} -> {to_name}")
+                    
+            db.session.commit()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error initializing connections: {e}")
+            return False
+            
+    def run(self) -> bool:
+        """
+        Run the complete initialization process.
+        
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        logger.info("Starting MaLDReTH tools initialization...")
+        
+        # Validate Excel file
+        if not self.validate_excel_file():
+            return False
+            
+        # Load stages and categories
+        logger.info("Loading stages and categories...")
+        if not self.load_stages_and_categories():
+            return False
+            
+        # Load detailed tools
+        logger.info("Loading tools from individual sheets...")
+        if not self.load_tools_from_sheets():
+            return False
+            
+        # Initialize connections
+        logger.info("Initializing stage connections...")
+        if not self.initialize_connections():
+            return False
+            
+        logger.info("MaLDReTH tools initialization completed successfully!")
+        return True
 
-This script populates the database with the tool categories and example tools
-from the MaLDReTH Deliverable 2 categorization schema.
+
+def main():
+    """Main entry point for the script."""
+    parser = argparse.ArgumentParser(
+        description="Initialize MaLDReTH tools data from Excel file"
+    )
+    parser.add_argument(
+        "--file",
+        type=str,
+        default="data/research_data_lifecycle.xlsx",
+        help="Path to the Excel file containing tools data"
+    )
+    parser.add_argument(
+        "--clear",
+        action="store_true",
+        help="Clear existing data before initialization"
+    )
+    
+    args = parser.parse_args()
+    
+    # Create Flask app context
+    app = create_app()
+    
+    with app.app_context():
+        try:
+            # Clear existing data if requested
+            if args.clear:
+                logger.info("Clearing existing data...")
+                Tool.query.delete()
+                ToolCategory.query.delete()
+                Connection.query.delete()
+                Stage.query.delete()
+                db.session.commit()
+                logger.info("Existing data cleared")
+                
+            # Run initialization
+            initializer = MaLDReTHToolsInitializer(args.file)
+            success = initializer.run()
+            
+            if success:
+                # Print summary
+                stage_count = Stage.query.count()
+                category_count = ToolCategory.query.count()
+                tool_count = Tool.query.count()
+                connection_count = Connection.query.count()
+                
+                print("\nInitialization Summary:")
+                print(f"  Stages: {stage_count}")
+                print(f"  Categories: {category_count}")
+                print(f"  Tools: {tool_count}")
+                print(f"  Connections: {connection_count}")
+                
+                sys.exit(0)
+            else:
+                logger.error("Initialization failed")
+                sys.exit(1)
+                
+        except Exception as e:
+            logger.error(f"Fatal error: {e}")
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()        link_col = self._find_column(df.columns, ['LINK TO TOOL', 'URL', 'LINK'])
+        provider_col = self._find_column(df.columns, ['TOOL PROVIDER', 'PROVIDER'])
+        
+        if not name_col:
+            logger.warning(f"Tool name column not found in sheet for stage: {stage.name}")
+            return
+            
+        # Process each tool
+        for idx, row in df.iterrows():
+            try:
+                tool_name = str(row[name_col]).strip() if not pd.isna(row[name_col]) else None
+                
+                if not tool_name or tool_name == 'nan':
+                    continue
+                    
+                # Get or create category
+                category_name = str(row[category_col]).strip() if category_col and not pd.isna(row[category_col]) else "Uncategorized"
+                category = self._get_or_create_category(category_name, "", stage)
+                
+                # Check if tool already exists
+                existing_tool = Tool.query.filter_by(
+                    name=tool    def _find_column(self, columns: List[str], possible_names: List[str]) -> Optional[str]:
+        """
+        Find a column name from a list of possibilities.
+        
+        Args:
+            columns: List of column names in the DataFrame
+            possible_names: List of possible column names to search for
+            
+        Returns:
+            The matching column name or None if not found
+        """
+        for col in columns:
+            for possible in possible_names:
+                if possible.upper() in col.upper():
+                    return col
+        return None
+        
+    def _get_or_create_stage(self, name: str, description: str) -> Stage:
+        """
+        Get existing stage or create a new one.
+        
+        Args:
+            name: Stage name
+            description: Stage description
+            
+        Returns:
+            Stage object
+        """
+        if name in self.stages_map:
+            return self.stages_map[name]
+            
+        stage = Stage.query.filter_by(name=name).first()
+        if not stage:
+            stage = Stage(name=name, description=description)
+            db.session.add(stage)
+            db.session.commit()
+            logger.info(f"Created stage: {name}")
+        else:
+            logger.info(f"Found existing stage: {name}")
+            
+        self.stages_map[name] = stage
+        return stage
+        
+    def _get_or_create_category(self, name: str, description: str, stage: Stage) -> ToolCategory:
+        """
+        Get existing category or create a new one.
+        
+        Args:
+            name: Category name
+            description: Category description
+            stage: Parent stage
+            
+        Returns:
+            ToolCategory object
+        """
+        key = (stage.name, name)
+        if key in self.categories_map:
+            return self.categories_map[key]
+            
+        category = ToolCategory.query.filter_by(
+            category=name, stage_id=stage.id
+        ).first()
+        
+        if not category:
+            category = ToolCategory(
+                category=name,
+                description=description,
+                stage_id=stage.id
+            )
+            db.session.add(category)
+            db.session.commit()
+            logger.info(f"Created category: {name} for stage: {stage.name}")
+        else:
+            logger.info(f"Found existing category: {name}")
+            
+        self.categories_map[key] = category
+        return category
+        
+    def _add_example_tools(self, examples_str: str, category: ToolCategory) -> None:
+        """
+        Add example tools from a comma-separated string.
+        
+        Args:
+            examples_str: Comma-separated string of tool names
+            category: Parent category
+        """
+        tool_names = [name.strip() for name in examples_str.split(',') if name.strip()]
+        
+        for tool_name in tool_names:
+            # Check if tool already exists
+            existing_tool = Tool.query.filter_by(
+                name=tool_name, category_id=category.id
+            ).first()
+            
+            if not existing_tool:
+                tool = Tool(
+                    name=tool_name,
+                    category_id=category.id,
+                    stage_id=category.stage_id
+                )
+                db.session.add(tool)
+                logger.debug(f"Added example tool: {tool_name}")
+                
+        db.session.commit()
+        
+    def _process_tools_dataframe(self, df: pd.DataFrame, stage: Stage) -> None:
+        """
+        Process tools from a DataFrame.
+        
+        Args:
+            df: DataFrame containing tools data
+            stage: Stage to associate tools with
+        """
+        # Find relevant columns
+        name_col = self._find_column(df.columns, ['TOOL NAME', 'NAME'])
+        category_col = self._find_column(df.columns, ['TOOL TYPE', 'TOOL CATEGORY TYPE', 'TYPE'])
+        desc_col = self._find_column(df.columns, ['TOOL CHARACTERISTICS', 'DESCRIPTION'])
+        link_col = self._find_column(df.columns, ['LINK TO#!/usr/bin/env python3
+"""
+init_maldreth_tools.py
+
+Initialize MaLDReTH tools data from Excel file.
+
+This script loads research data lifecycle stages, tool categories, and tools
+from an Excel file and populates the database with this information.
+
+Usage:
+    python init_maldreth_tools.py [--file path/to/excel/file.xlsx]
+
+Author: MaLDReTH Development Team
+Date: 2024
 """
 
 import os
+import sys
+import argparse
 import logging
-from datetime import datetime
-from sqlalchemy import create_engine, text
+import pandas as pd
+from typing import Dict, List, Optional, Tuple
+from sqlalchemy.exc import IntegrityError
+from app import create_app, db
+from app.models import Stage, ToolCategory, Tool, Connection
 
 # Configure logging
 logging.basicConfig(
@@ -18,332 +360,162 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def get_database_url():
-    """Get database URL from environment or use default SQLite."""
-    database_url = os.environ.get('DATABASE_URL')
-    if database_url:
-        if database_url.startswith('postgres://'):
-            database_url = database_url.replace('postgres://', 'postgresql://')
-        return database_url
-    else:
-        return 'sqlite:///interactions.db'
-
-
-# MaLDReTH tool data from Deliverable 2
-MALDRETH_TOOLS_DATA = {
-    'CONCEPTUALISE': [
-        {
-            'category': 'Mind mapping, concept mapping and knowledge modelling',
-            'description': 'Tools that define the entities of research and their relationships',
-            'tools': ['Miro', 'Meister Labs (MindMeister + MeisterTask)', 'XMind']
-        },
-        {
-            'category': 'Diagramming and flowchart',
-            'description': 'Tools that detail the research workflow',
-            'tools': ['Lucidchart', 'Draw.io (now Diagrams.net)', 'Creately']
-        },
-        {
-            'category': 'Wireframing and prototyping',
-            'description': 'Tools that visualise and demonstrate the research workflow',
-            'tools': ['Balsamiq', 'Figma']
-        }
-    ],
-    'PLAN': [
-        {
-            'category': 'Data management planning (DMP)',
-            'description': 'Tools focused on enabling preparation and submission of data management plans',
-            'tools': ['DMP Tool', 'DMP Online', 'RDMO']
-        },
-        {
-            'category': 'Project planning',
-            'description': 'Tools designed to enable project planning',
-            'tools': ['Trello', 'Asana', 'Microsoft Project']
-        },
-        {
-            'category': 'Combined DMP/project',
-            'description': 'Tools which combine project planning with the ability to prepare data management plans',
-            'tools': ['Data Stewardship Wizard', 'Redbox research data', 'Argos']
-        }
-    ],
-    'COLLECT': [
-        {
-            'category': 'Quantitative data collection tool',
-            'description': 'Tools that collect quantitative data',
-            'tools': ['Open Data Kit', 'GBIF', 'Cedar WorkBench']
-        },
-        {
-            'category': 'Qualitative data collection (e.g. Survey tool)',
-            'description': 'Tools that collect qualitative data',
-            'tools': ['Survey Monkey', 'Online Surveys', 'Zooniverse']
-        },
-        {
-            'category': 'Harvesting tool (e.g. WebScrapers)',
-            'description': 'Tools that harvest data from various sources',
-            'tools': ['Netlytic', 'IRODS', 'DROID']
-        }
-    ],
-    'PROCESS': [
-        {
-            'category': 'Electronic laboratory notebooks (ELNs)',
-            'description': 'Tools that enable aggregation, management, and organization of experimental and physical sample data',
-            'tools': ['elabnext', 'E-lab FTW (Open source)', 'RSpace (Open Source)', 'Lab Archives']
-        },
-        {
-            'category': 'Scientific computing across all programming languages',
-            'description': 'Tools that enable creation and sharing of computational documents',
-            'tools': ['Jupyter', 'Mathematica', 'WebAssembly']
-        },
-        {
-            'category': 'Metadata Tool',
-            'description': 'Tools that enable creation, application, and management of metadata, and embedding of metadata in other kinds of tools',
-            'tools': ['CEDAR Workbench (biomedical data)']
-        }
-    ],
-    'ANALYSE': [
-        {
-            'category': 'Remediation (e.g. motion capture for gait analysis)',
-            'description': 'Tools that capture transformation of data observations',
-            'tools': ['Track3D']
-        },
-        {
-            'category': 'Computational methods (e.g. Statistical software)',
-            'description': 'Tools that provide computational methods for analysis',
-            'tools': ['SPSS', 'Matlab']
-        },
-        {
-            'category': 'Computational tools',
-            'description': 'Tools that provide computational frameworks for processing and analysis',
-            'tools': ['Jupyter', 'RStudio', 'Eclipse']
-        }
-    ],
-    'STORE': [
-        {
-            'category': 'Data Repository',
-            'description': 'Tools that structure and provide a framework to organise information',
-            'tools': ['Figshare', 'Zenodo', 'Dataverse']
-        },
-        {
-            'category': 'Archive',
-            'description': 'Tools that facilitate the long-term storage of data',
-            'tools': ['Libsafe']
-        },
-        {
-            'category': 'Management tool',
-            'description': 'Tools that facilitate the organisation of data',
-            'tools': ['iRODS', 'GLOBUS', 'Mediaflux']
-        }
-    ],
-    'PUBLISH': [
-        {
-            'category': 'Discipline-specific data repository',
-            'description': 'Tools that enable storage and public sharing of data for specific disciplines',
-            'tools': ['NOMAD-OASIS', 'Global Biodiversity Information Facility (GBIF)', 'Data Station Social Sciences and Humanities']
-        },
-        {
-            'category': 'Generalist data repository',
-            'description': 'Tools that enable storage and public sharing of generalist data',
-            'tools': ['Figshare', 'Zenodo', 'Dataverse', 'CKAN']
-        },
-        {
-            'category': 'Metadata repository',
-            'description': 'Tools that enable the storage and public sharing of metadata',
-            'tools': ['DataCite Commons', 'IBM Infosphere']
-        }
-    ],
-    'PRESERVE': [
-        {
-            'category': 'Data repository',
-            'description': 'Tools that enable storage and public sharing of data',
-            'tools': ['Dataverse', 'Invenio', 'UKDS (National/Regional/Disciplinary Archive)']
-        },
-        {
-            'category': 'Archive',
-            'description': 'Tools that facilitate the long-term preservation of data',
-            'tools': ['Archivematica']
-        },
-        {
-            'category': 'Containers',
-            'description': 'Tools that create an environment in which data can be seen in its original environment',
-            'tools': ['Preservica', 'Docker', 'Archive-it.org']
-        }
-    ],
-    'SHARE': [
-        {
-            'category': 'Data repository',
-            'description': 'Tools that enable storage and public sharing of data',
-            'tools': ['Dataverse', 'Zenodo', 'Figshare']
-        },
-        {
-            'category': 'Electronic laboratory notebooks (ELNs)',
-            'description': 'Tools that enable aggregation, organization and management of experimental and physical sample data',
-            'tools': ['elabftw', 'RSpace', 'elabnext', 'lab archives']
-        },
-        {
-            'category': 'Scientific computing across all programming languages',
-            'description': 'Tools that enable creation and sharing of computational documents',
-            'tools': ['Eclipse', 'Jupyter', 'Wolfram Alpha']
-        }
-    ],
-    'ACCESS': [
-        {
-            'category': 'Data repository',
-            'description': 'Tools that store data so that it can be publicly accessed',
-            'tools': ['CKAN', 'Dataverse', 'DRYAD']
-        },
-        {
-            'category': 'Database',
-            'description': 'Tools that structure and provide a framework to access information',
-            'tools': ['Oracle', 'MySQL / sqlLite', 'Postgres']
-        },
-        {
-            'category': 'Authorisation/Authentication Infrastructure',
-            'description': 'Tools that enable scalable authorised and authenticated access to data via storage infrastructure',
-            'tools': ['LDAP', 'SAML2', 'AD']
-        }
-    ],
-    'TRANSFORM': [
-        {
-            'category': 'Electronic laboratory notebooks (ELNs)',
-            'description': 'Tools that enable aggregation, management, and organization of experimental and physical sample data',
-            'tools': ['elabftw', 'RSpace', 'elabnext', 'Lab archive']
-        },
-        {
-            'category': 'Programming languages',
-            'description': 'Tools and platforms infrastructure used to transform data',
-            'tools': ['Python (Interpreted language)', 'Perl (4GL)', 'Fortran (Compiled language)']
-        },
-        {
-            'category': 'Extract, Transform, Load (ETL) tools',
-            'description': 'Tools that enable extract, transform, load—a data integration process used to combine data from multiple sources',
-            'tools': ['OCI (Cloud Infrastructure Provider)', 'Apache Spark', 'Snowflake (Commercial)']
-        }
-    ]
-}
-
-
-def init_tools_data():
-    """Initialize the database with MaLDReTH tool categories and examples."""
-    engine = create_engine(get_database_url())
+class MaLDReTHToolsInitializer:
+    """Handler for initializing MaLDReTH tools data from Excel files."""
     
-    with engine.connect() as conn:
-        # Get all stages for mapping
-        result = conn.execute(text("SELECT id, name FROM lifecycle_stages"))
-        stages = {row.name.upper(): row.id for row in result}
-        logger.info(f"Found {len(stages)} lifecycle stages in database")
+    def __init__(self, excel_path: str):
+        """
+        Initialize the tools initializer.
         
-        # Counter for tracking imports
-        imported_categories = 0
-        imported_tools = 0
+        Args:
+            excel_path: Path to the Excel file containing tools data
+        """
+        self.excel_path = excel_path
+        self.stages_map: Dict[str, Stage] = {}
+        self.categories_map: Dict[Tuple[str, str], ToolCategory] = {}
         
-        # Process each stage's tools
-        for stage_name, categories_data in MALDRETH_TOOLS_DATA.items():
-            stage_id = stages.get(stage_name.upper())
+    def validate_excel_file(self) -> bool:
+        """
+        Validate that the Excel file exists and is readable.
+        
+        Returns:
+            bool: True if file is valid, False otherwise
+        """
+        if not os.path.exists(self.excel_path):
+            logger.error(f"Excel file not found: {self.excel_path}")
+            return False
             
-            if not stage_id:
-                logger.warning(f"Stage '{stage_name}' not found in database, skipping")
-                continue
+        if not os.path.isfile(self.excel_path):
+            logger.error(f"Path is not a file: {self.excel_path}")
+            return False
             
-            logger.info(f"\nProcessing stage: {stage_name}")
+        try:
+            # Try to read the file to ensure it's a valid Excel file
+            pd.ExcelFile(self.excel_path)
+            return True
+        except Exception as e:
+            logger.error(f"Invalid Excel file: {e}")
+            return False
             
-            for category_data in categories_data:
-                category_name = category_data['category']
-                category_desc = category_data['description']
+    def clean_column_names(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Clean column names by removing extra spaces and newlines.
+        
+        Args:
+            df: DataFrame with potentially messy column names
+            
+        Returns:
+            DataFrame with cleaned column names
+        """
+        df.columns = df.columns.str.strip().str.replace('\n', ' ').str.replace('  ', ' ')
+        return df
+        
+    def load_stages_and_categories(self) -> bool:
+        """
+        Load lifecycle stages and tool categories from the first sheet.
+        
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            # Read the first sheet
+            df = pd.read_excel(self.excel_path, sheet_name=0)
+            df = self.clean_column_names(df)
+            
+            logger.info(f"Loading stages from sheet with columns: {list(df.columns)}")
+            
+            # Expected column names (with variations)
+            stage_col = self._find_column(df.columns, ['RESEARCH DATA LIFECYCLE STAGE', 'LIFECYCLE STAGE'])
+            category_col = self._find_column(df.columns, ['TOOL CATEGORY TYPE', 'CATEGORY TYPE'])
+            desc_col = self._find_column(df.columns, ['DESCRIPTION', 'DESCRIPTION (1 SENTENCE)'])
+            examples_col = self._find_column(df.columns, ['EXAMPLES', 'EXAMPLE TOOLS'])
+            
+            if not all([stage_col, category_col, desc_col]):
+                logger.error("Required columns not found in Excel file")
+                return False
                 
-                # Check if category exists
-                result = conn.execute(
-                    text("SELECT id FROM tool_categories WHERE stage_id = :stage_id AND name = :name"),
-                    {"stage_id": stage_id, "name": category_name}
-                )
-                category_row = result.first()
-                
-                if not category_row:
-                    # Create category
-                    conn.execute(
-                        text("""
-                            INSERT INTO tool_categories (name, description, stage_id, "order", created_at)
-                            VALUES (:name, :description, :stage_id, :order, :created_at)
-                        """),
-                        {
-                            "name": category_name,
-                            "description": category_desc,
-                            "stage_id": stage_id,
-                            "order": imported_categories,
-                            "created_at": datetime.utcnow()
-                        }
-                    )
-                    conn.commit()
+            # Process each row
+            for idx, row in df.iterrows():
+                try:
+                    stage_name = str(row[stage_col]).strip()
+                    category_name = str(row[category_col]).strip()
+                    description = str(row[desc_col]).strip()
                     
-                    # Get the new category ID
-                    result = conn.execute(
-                        text("SELECT id FROM tool_categories WHERE stage_id = :stage_id AND name = :name"),
-                        {"stage_id": stage_id, "name": category_name}
-                    )
-                    category_row = result.first()
-                    imported_categories += 1
-                    logger.info(f"  Created category: {category_name}")
-                
-                category_id = category_row.id
-                
-                # Import tools
-                for tool_name in category_data['tools']:
-                    if tool_name:  # Skip empty tools
-                        # Check if tool already exists
-                        result = conn.execute(
-                            text("SELECT id FROM tools WHERE name = :name AND stage_id = :stage_id"),
-                            {"name": tool_name, "stage_id": stage_id}
+                    # Skip empty rows
+                    if pd.isna(stage_name) or stage_name == 'nan':
+                        continue
+                        
+                    # Create or get stage
+                    stage = self._get_or_create_stage(stage_name, description)
+                    
+                    # Create or get category
+                    if not pd.isna(category_name) and category_name != 'nan':
+                        category = self._get_or_create_category(
+                            category_name, description, stage
                         )
                         
-                        if not result.first():
-                            # Create tool
-                            conn.execute(
-                                text("""
-                                    INSERT INTO tools (
-                                        name, description, stage_id, category_id, 
-                                        tool_type, source_type, scope, is_interoperable,
-                                        is_featured, usage_count, created_at
-                                    )
-                                    VALUES (
-                                        :name, :description, :stage_id, :category_id,
-                                        :tool_type, 'unknown', 'generic', 0,
-                                        0, 0, :created_at
-                                    )
-                                """),
-                                {
-                                    "name": tool_name,
-                                    "description": f"{category_desc} - Example tool",
-                                    "stage_id": stage_id,
-                                    "category_id": category_id,
-                                    "tool_type": category_name,
-                                    "created_at": datetime.utcnow()
-                                }
-                            )
-                            conn.commit()
-                            imported_tools += 1
-                            logger.info(f"    Added tool: {tool_name}")
+                        # Add example tools if present
+                        if examples_col and not pd.isna(row[examples_col]):
+                            self._add_example_tools(str(row[examples_col]), category)
+                            
+                except Exception as e:
+                    logger.error(f"Error processing row {idx}: {e}")
+                    continue
+                    
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error loading stages and categories: {e}")
+            return False
+            
+    def load_tools_from_sheets(self) -> bool:
+        """
+        Load detailed tools information from individual stage sheets.
         
-        logger.info(f"\n{'='*50}")
-        logger.info(f"Import Summary:")
-        logger.info(f"  - New Categories: {imported_categories}")
-        logger.info(f"  - New Tools: {imported_tools}")
-        
-        # Show final counts
-        result = conn.execute(text("SELECT COUNT(*) FROM tool_categories"))
-        total_categories = result.scalar()
-        
-        result = conn.execute(text("SELECT COUNT(*) FROM tools"))
-        total_tools = result.scalar()
-        
-        logger.info(f"\nTotal Database Contents:")
-        logger.info(f"  - Total Categories: {total_categories}")
-        logger.info(f"  - Total Tools: {total_tools}")
-
-
-def main():
-    """Main function."""
-    logger.info("Initializing MaLDReTH tools data...")
-    init_tools_data()
-    logger.info("\nMaLDReTH tools initialization complete!")
-
-
-if __name__ == "__main__":
-    main()
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            excel_file = pd.ExcelFile(self.excel_path)
+            
+            # Skip the first sheet (already processed)
+            for sheet_name in excel_file.sheet_names[1:]:
+                # Skip sheets that don't match stage names
+                if sheet_name.upper() not in [s.upper() for s in self.stages_map.keys()]:
+                    logger.info(f"Skipping sheet '{sheet_name}' - not a recognized stage")
+                    continue
+                    
+                logger.info(f"Processing tools sheet: {sheet_name}")
+                
+                try:
+                    # Read sheet with header at row 6 (0-indexed)
+                    df = pd.read_excel(self.excel_path, sheet_name=sheet_name, header=6)
+                    df = self.clean_column_names(df)
+                    
+                    # Find the stage
+                    stage = None
+                    for stage_name, stage_obj in self.stages_map.items():
+                        if stage_name.upper() == sheet_name.upper():
+                            stage = stage_obj
+                            break
+                            
+                    if not stage:
+                        logger.warning(f"Stage not found for sheet: {sheet_name}")
+                        continue
+                        
+                    # Process tools
+                    self._process_tools_dataframe(df, stage)
+                    
+                except Exception as e:
+                    logger.error(f"Error processing sheet '{sheet_name}': {e}")
+                    continue
+                    
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error loading tools from sheets: {e}")
+            return False
+            
+    def _find_column(self, columns: List[str], possible_names: List[str]) -> Optional[str]:
+        """
+        Find a

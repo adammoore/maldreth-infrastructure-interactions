@@ -86,7 +86,7 @@ def get_enhanced_stages():
                         'name': substage.name,
                         'description': substage.description,
                         'order': substage.order,
-                        'is_exemplar': substage.is_exemplar,
+'is_exemplar': substage.is_exemplar,
                         'tool_count': substage.tools.count()
                     }
                     for substage in stage.substages.order_by(LifecycleSubstage.order)
@@ -519,7 +519,7 @@ def get_network_data():
     """
     try:
         models = get_models()
-        LifecycleStage = models['LifecycleStage']
+LifecycleStage = models['LifecycleStage']
         Tool = models['Tool']
         StageConnection = models['StageConnection']
         Interaction = models['Interaction']

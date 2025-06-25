@@ -1,348 +1,448 @@
 # MaLDReTH Infrastructure Interactions
 
-A Flask web application for collecting and managing potential infrastructure interactions for the MaLDReTH 2 Working Group meeting.
+[![CI/CD Pipeline](https://github.com/yourusername/maldreth-infrastructure/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/maldreth-infrastructure/actions/workflows/ci.yml)
+[![Coverage Status](https://codecov.io/gh/yourusername/maldreth-infrastructure/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/maldreth-infrastructure)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-[![CI/CD Pipeline](https://github.com/adammoore/maldreth-infrastructure-interactions/actions/workflows/ci.yml/badge.svg)](https://github.com/adammoore/maldreth-infrastructure-interactions/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/adammoore/maldreth-infrastructure-interactions/branch/main/graph/badge.svg)](https://codecov.io/gh/adammoore/maldreth-infrastructure-interactions)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+## Overview
 
-## 🚀 Features
+The MaLDReTH (Mapping the Landscape of Digital Research Tools Harmonised) Infrastructure Interactions project is a Flask-based web application that visualizes and manages the research data lifecycle. It provides an interactive interface for exploring research tools categorized by lifecycle stages, tool categories, and their interconnections.
 
-- **Web Interface**: Easy-to-use forms for data collection
-- **RESTful API**: Programmatic access for automation and integration
-- **Data Export**: CSV export for analysis and sharing
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-- **PostgreSQL Support**: Production-ready database for Heroku deployment
-- **Health Monitoring**: Built-in health check endpoints
-- **Comprehensive Testing**: Full test suite with CI/CD integration
+## Features
 
-## 📋 Prerequisites
+- 🔄 **Interactive Lifecycle Visualization**: Explore the research data lifecycle with an interactive circular diagram
+- 🛠️ **Comprehensive Tool Database**: Browse and search research tools organized by stages and categories
+- 📊 **Dynamic Data Management**: Add, update, and delete tools through a RESTful API
+- 🔍 **Advanced Search**: Find tools quickly with full-text search capabilities
+- 📱 **Responsive Design**: Works seamlessly on desktop and mobile devices
+- 🚀 **CI/CD Pipeline**: Automated testing and deployment with GitHub Actions
 
-- **Git** installed
-- **Python 3.11+** installed
-- **Heroku CLI** installed (for deployment): `brew install heroku/brew/heroku` on macOS
-- **Docker** (optional, for containerized development)
+## Table of Contents
 
-## 🔧 Local Development Setup
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [API Documentation](#api-documentation)
+- [Development](#development)
+- [Testing](#testing)
+- [CI/CD Pipeline](#cicd-pipeline)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
 
-### 1. Clone the Repository
+## Installation
+
+### Prerequisites
+
+- Python 3.9 or higher
+- PostgreSQL 12+ (for production)
+- Git
+- Virtual environment tool (venv, virtualenv, or conda)
+
+### Local Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/maldreth-infrastructure.git
+   cd maldreth-infrastructure
+   ```
+
+2. **Create and activate a virtual environment**
+   ```bash
+   python -m venv venv
+   
+   # On Windows
+   venv\Scripts\activate
+   
+   # On macOS/Linux
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   pip install -r requirements-dev.txt  # For development
+   ```
+
+4. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+5. **Initialize the database**
+   ```bash
+   flask db init
+   flask db migrate -m "Initial migration"
+   flask db upgrade
+   ```
+
+6. **Load initial data**
+   ```bash
+   # From Excel file
+   python init_maldreth_tools.py --file data/research_data_lifecycle.xlsx
+   
+   # Or from CSV files
+   python migrate_maldreth_data_standalone.py --csv-dir data/csv
+   ```
+
+7. **Run the application**
+   ```bash
+   flask run
+   ```
+
+   The application will be available at `http://localhost:5000`
+
+## Configuration
+
+The application uses environment variables for configuration. Create a `.env` file in the project root:
+
+```env
+# Flask Configuration
+FLASK_APP=app.py
+FLASK_ENV=development
+SECRET_KEY=your-secret-key-here
+
+# Database Configuration
+DATABASE_URL=postgresql://username:password@localhost:5432/maldreth_db
+# For development, you can use SQLite
+# DATABASE_URL=sqlite:///maldreth.db
+
+# Security
+CORS_ORIGINS=http://localhost:3000,http://localhost:5000
+
+# External Services (Optional)
+SENTRY_DSN=your-sentry-dsn
+REDIS_URL=redis://localhost:6379
+
+# Feature Flags
+ENABLE_CACHE=true
+ENABLE_RATE_LIMITING=true
+```
+
+## Usage
+
+### Web Interface
+
+1. **Homepage**: View the research data lifecycle overview
+2. **Visualization**: Interactive circular diagram showing all stages and connections
+3. **Tools Browser**: Browse and search tools by stage or category
+4. **API Explorer**: Interactive API documentation at `/api/docs`
+
+### Command Line Tools
 
 ```bash
-git clone https://github.com/adammoore/maldreth-infrastructure-interactions.git
-cd maldreth-infrastructure-interactions
+# Initialize database with sample data
+python init_maldreth_tools.py --file data/research_data_lifecycle.xlsx
+
+# Migrate data from CSV files
+python migrate_maldreth_data_standalone.py --csv-dir data/csv --clear
+
+# Export data to JSON
+flask export-data --output data/export.json
+
+# Run database migrations
+flask db upgrade
 ```
 
-### 2. Set Up Python Environment
+## API Documentation
+
+### Authentication
+
+The API uses token-based authentication for write operations. Include the token in the Authorization header:
+
+```
+Authorization: Bearer YOUR_API_TOKEN
+```
+
+### Endpoints
+
+#### Lifecycle Stages
+
+- `GET /api/lifecycle` - Get all lifecycle stages with connections
+- `GET /api/stages/:id` - Get specific stage details
+- `POST /api/stages` - Create new stage (requires auth)
+- `PUT /api/stages/:id` - Update stage (requires auth)
+- `DELETE /api/stages/:id` - Delete stage (requires auth)
+
+#### Tools
+
+- `GET /api/tools` - List all tools with filtering
+- `GET /api/tools/:id` - Get specific tool details
+- `POST /api/tools` - Create new tool (requires auth)
+- `PUT /api/tools/:id` - Update tool (requires auth)
+- `DELETE /api/tools/:id` - Delete tool (requires auth)
+- `GET /api/search?q=query` - Search tools
+
+#### Categories
+
+- `GET /api/categories` - List all categories
+- `GET /api/substages/:stage` - Get categories for a stage
+
+### Example Requests
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements-dev.txt
-```
+# Get all lifecycle stages
+curl http://localhost:5000/api/lifecycle
 
-### 3. Environment Configuration
+# Search for tools
+curl http://localhost:5000/api/search?q=miro
 
-```bash
-cp .env.example .env
-# Edit .env with your local settings
-```
-
-### 4. Initialize Database
-
-```bash
-flask init-db
-```
-
-### 5. Run the Application
-
-```bash
-python app.py
-```
-
-Visit [http://localhost:5000](http://localhost:5000) to access the application.
-
-## 🐳 Docker Development
-
-For containerized development:
-
-```bash
-# Build and run with Docker Compose
-docker-compose up --build
-
-# Run in detached mode
-docker-compose up -d
-
-# View logs
-docker-compose logs -f web
-
-# Stop services
-docker-compose down
-```
-
-## ☁️ Heroku Deployment
-
-### Quick Deploy
-
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/adammoore/maldreth-infrastructure-interactions)
-
-### Manual Deployment
-
-```bash
-# Login to Heroku
-heroku login
-
-# Create Heroku application
-heroku create your-app-name
-
-# Add PostgreSQL addon
-heroku addons:create heroku-postgresql:mini
-
-# Set environment variables
-heroku config:set SECRET_KEY="your-production-secret-key"
-heroku config:set FLASK_ENV=production
-
-# Deploy
-git push heroku main
-
-# Initialize database
-heroku run flask init-db
-
-# Open application
-heroku open
-```
-
-## 🔄 CI/CD Pipeline
-
-The application includes a comprehensive CI/CD pipeline using GitHub Actions:
-
-### Pipeline Stages
-
-1. **Testing**: Runs pytest with coverage reporting
-2. **Linting**: Code quality checks with Black, Flake8, isort, Bandit
-3. **Security**: Vulnerability scanning with Trivy
-4. **Build**: Application build verification
-5. **Deploy**: Automatic deployment to staging/production
-
-### GitHub Secrets Required
-
-Set these secrets in your GitHub repository:
-
-```
-HEROKU_API_KEY=your-heroku-api-key
-HEROKU_EMAIL=your-heroku-email
-HEROKU_STAGING_APP_NAME=your-staging-app-name
-HEROKU_PRODUCTION_APP_NAME=your-production-app-name
-SLACK_WEBHOOK_URL=your-slack-webhook-url (optional)
-```
-
-### Branch Strategy
-
-- `main`: Production deployments
-- `develop`: Staging deployments
-- Feature branches: Create PR to `main`
-
-## 📊 Data Collection
-
-The application collects the following information about infrastructure interactions:
-
-### Core Information
-- **Interaction Type**: data_flow, api_call, file_transfer, etc.
-- **Source Infrastructure**: The initiating component
-- **Target Infrastructure**: The receiving component
-- **Lifecycle Stage**: Which stage in the research data lifecycle
-- **Description**: Detailed description of the interaction
-
-### Technical Details
-- **Implementation**: Technical standards, protocols
-- **Benefits**: Advantages of this interaction
-- **Challenges**: Limitations or difficulties
-- **Examples**: Real-world use cases
-
-### Contact Information
-- **Contact Person**: Responsible individual
-- **Organization**: Associated organization
-- **Email**: Contact email address
-
-### Classification
-- **Priority**: High, Medium, Low
-- **Complexity**: Simple, Moderate, Complex
-- **Status**: Proposed, Implemented, Deprecated
-
-## 🔌 API Documentation
-
-### Get All Interactions
-```bash
-curl https://your-app.herokuapp.com/api/interactions
-```
-
-### Create New Interaction
-```bash
-curl -X POST https://your-app.herokuapp.com/api/interactions \
+# Create a new tool (requires authentication)
+curl -X POST http://localhost:5000/api/tools \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
-    "interaction_type": "data_flow",
-    "source_infrastructure": "Research Repository",
-    "target_infrastructure": "Analysis Platform",
-    "lifecycle_stage": "analyse",
-    "description": "Automated data transfer...",
-    "priority": "high"
+    "name": "New Tool",
+    "description": "Tool description",
+    "category_id": 1,
+    "stage_id": 1
   }'
 ```
 
-### Get Specific Interaction
-```bash
-curl https://your-app.herokuapp.com/api/interactions/1
+## Development
+
+### Project Structure
+
+```
+maldreth-infrastructure/
+├── app/
+│   ├── __init__.py        # Application factory
+│   ├── models.py          # Database models
+│   ├── routes.py          # API routes
+│   ├── utils.py           # Utility functions
+│   └── templates/         # HTML templates
+├── static/
+│   ├── css/              # Stylesheets
+│   ├── js/               # JavaScript files
+│   └── data/             # Static data files
+├── tests/
+│   ├── test_app.py       # Application tests
+│   ├── test_models.py    # Model tests
+│   └── test_utils.py     # Utility tests
+├── data/
+│   ├── csv/              # CSV data files
+│   └── *.xlsx            # Excel data files
+├── scripts/
+│   ├── init_maldreth_tools.py
+│   └── migrate_maldreth_data_standalone.py
+├── .github/
+│   └── workflows/
+│       └── ci.yml        # CI/CD pipeline
+├── requirements.txt      # Production dependencies
+├── requirements-dev.txt  # Development dependencies
+├── Procfile             # Heroku deployment
+├── runtime.txt          # Python version
+└── README.md            # This file
 ```
 
-### Health Check
+### Code Style
+
+The project follows PEP 8 guidelines with the following tools:
+
+- **Black**: Code formatting
+- **isort**: Import sorting
+- **flake8**: Linting
+- **mypy**: Type checking
+
+Run all checks:
 ```bash
-curl https://your-app.herokuapp.com/health
+make lint  # or
+black . && isort . && flake8 . && mypy .
 ```
 
-## 🧪 Testing
+### Adding New Features
 
-### Run Tests Locally
+1. Create a feature branch
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. Make your changes following the code style
+
+3. Add tests for new functionality
+
+4. Update documentation
+
+5. Submit a pull request
+
+## Testing
+
+### Running Tests
 
 ```bash
-# Install test dependencies
-pip install -r requirements-dev.txt
-
 # Run all tests
 pytest
 
 # Run with coverage
-pytest --cov=. --cov-report=html
+pytest --cov=app --cov-report=html
 
 # Run specific test file
-pytest tests/test_app.py -v
+pytest tests/test_models.py
 
-# Run with output
-pytest -s
+# Run with verbose output
+pytest -v
+
+# Run only marked tests
+pytest -m "not slow"
 ```
 
-### Test Categories
+### Test Structure
 
-- **Unit Tests**: Model and utility function testing
-- **Integration Tests**: Route and API endpoint testing
-- **Functional Tests**: End-to-end workflow testing
-- **API Tests**: REST API functionality testing
+- **Unit Tests**: Test individual components in isolation
+- **Integration Tests**: Test component interactions
+- **API Tests**: Test REST endpoints
+- **UI Tests**: Test user interface (if applicable)
 
-## 📈 Monitoring and Maintenance
+### Writing Tests
 
-### Health Checks
+```python
+# Example test
+def test_create_tool(client, sample_data):
+    """Test creating a new tool."""
+    response = client.post('/api/tools', json={
+        'name': 'Test Tool',
+        'category_id': 1,
+        'stage_id': 1
+    })
+    assert response.status_code == 201
+    assert response.json['name'] == 'Test Tool'
+```
 
-The application provides health check endpoints:
+## CI/CD Pipeline
 
-- `/health`: Basic health and database connectivity
-- Automatic health checks in Docker and Heroku
+The project uses GitHub Actions for continuous integration and deployment.
 
-### Logging
+### Pipeline Stages
 
-- Application logs are sent to stdout/stderr
-- Heroku logs: `heroku logs --tail --app your-app-name`
-- Docker logs: `docker-compose logs -f web`
+1. **Lint**: Code quality checks
+   - flake8 for Python linting
+   - black for code formatting
+   - isort for import sorting
 
-### Database Maintenance
+2. **Test**: Automated testing
+   - Unit tests with pytest
+   - Coverage reporting with codecov
+   - Database tests with PostgreSQL
+
+3. **Security**: Security scanning
+   - Safety check for vulnerable dependencies
+   - Bandit for security issues in code
+
+4. **Build**: Application packaging
+   - Collect static files
+   - Create deployment artifact
+
+5. **Deploy**: Automatic deployment
+   - Deploy to Heroku on main branch
+   - Run database migrations
+   - Send notifications
+
+### Setting up CI/CD
+
+1. **GitHub Secrets**: Add the following secrets to your repository
+   - `HEROKU_API_KEY`: Your Heroku API key
+   - `HEROKU_APP_NAME`: Your Heroku app name
+   - `HEROKU_EMAIL`: Your Heroku account email
+   - `SECRET_KEY`: Flask secret key
+   - `SLACK_WEBHOOK`: (Optional) Slack webhook for notifications
+
+2. **Branch Protection**: Enable branch protection rules for `main`
+   - Require pull request reviews
+   - Require status checks to pass
+   - Include administrators
+
+3. **Deployment**: Pushes to `main` trigger automatic deployment
+
+## Deployment
+
+### Heroku Deployment
+
+1. **Create Heroku app**
+   ```bash
+   heroku create your-app-name
+   ```
+
+2. **Add PostgreSQL addon**
+   ```bash
+   heroku addons:create heroku-postgresql:hobby-dev
+   ```
+
+3. **Set environment variables**
+   ```bash
+   heroku config:set FLASK_ENV=production
+   heroku config:set SECRET_KEY=your-secret-key
+   ```
+
+4. **Deploy**
+   ```bash
+   git push heroku main
+   ```
+
+5. **Run migrations**
+   ```bash
+   heroku run flask db upgrade
+   ```
+
+6. **Load initial data**
+   ```bash
+   heroku run python init_maldreth_tools.py
+   ```
+
+### Docker Deployment
 
 ```bash
-# Backup database (Heroku)
-heroku pg:backups:capture --app your-app-name
+# Build image
+docker build -t maldreth-app .
 
-# Reset database
-heroku run flask reset-db --app your-app-name
-
-# Database console
-heroku pg:psql --app your-app-name
+# Run container
+docker run -p 5000:5000 -e DATABASE_URL=your-db-url maldreth-app
 ```
 
-## 💰 Cost Considerations
+### Production Considerations
 
-### Heroku Free Tier
-- **Hobby Dyno**: Free for 550 hours/month
-- **PostgreSQL Mini**: Free up to 10,000 rows
-- **Sufficient for workshops and small deployments**
+- Use a production WSGI server (gunicorn)
+- Enable SSL/TLS
+- Set up monitoring (Sentry, New Relic)
+- Configure backups for the database
+- Use a CDN for static files
+- Implement rate limiting
+- Set up logging aggregation
 
-### Scaling Options
-- Upgrade to Hobby ($7/month) for 24/7 availability
-- Professional dynos for production workloads
-- Dedicated PostgreSQL for larger datasets
+## Contributing
 
-## 🔍 Troubleshooting
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
-### Common Issues
+### How to Contribute
 
-**App won't start**
-```bash
-heroku logs --tail --app your-app-name
-# Check for missing environment variables or dependency issues
-```
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Update documentation
+6. Submit a pull request
 
-**Database errors**
-```bash
-# Ensure PostgreSQL addon is added
-heroku addons --app your-app-name
+### Code of Conduct
 
-# Check database connectivity
-heroku run python -c "from app import db; print('DB connected')" --app your-app-name
-```
+This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
 
-**Form validation errors**
-- Check browser console for JavaScript errors
-- Verify all required fields are filled
-- Ensure proper field formats (email, etc.)
+## License
 
-### Getting Help
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-1. **Check Issues**: Search existing GitHub issues
-2. **Create Issue**: Report bugs or request features
-3. **Contact Team**: Reach out to MaLDReTH working group
-4. **Documentation**: Review Heroku and Flask documentation
+## Acknowledgments
 
-## 🔄 Updating the Application
+- The MaLDReTH Working Group for the research data lifecycle model
+- All contributors who have helped shape this project
+- The Flask and Python communities for excellent tools and libraries
 
-### Local Updates
-```bash
-git pull origin main
-pip install -r requirements.txt
-flask db upgrade  # If using migrations
-```
+## Support
 
-### Production Updates
-```bash
-git push heroku main
-heroku run flask db upgrade --app your-app-name  # If using migrations
-```
-
-## 🤝 Contributing
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Make** your changes
-4. **Test** thoroughly (`pytest`)
-5. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-6. **Push** to the branch (`git push origin feature/amazing-feature`)
-7. **Create** a Pull Request
-
-### Development Guidelines
-
-- Follow PEP 8 style guidelines
-- Write tests for new functionality
-- Update documentation as needed
-- Use meaningful commit messages
-- Ensure CI/CD pipeline passes
-
-## 📄 License
-
-This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-This tool supports the **MaLDReTH 2 Working Group meeting** for collecting infrastructure interaction data across the research data lifecycle.
-
-- **Working Group**: [RDA MaLDReTH](https://www.rd-alliance.org/groups/rda-ofr-mapping-landscape-digital-research-tools-wg/)
-- **Documentation**: See project deliverables for context
-- **Support**: Contact working group coordinators
+- **Documentation**: [https://maldreth-docs.readthedocs.io](https://maldreth-docs.readthedocs.io)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/maldreth-infrastructure/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/maldreth-infrastructure/discussions)
+- **Email**: support@maldreth.org
 
 ---
 
-**Built with ❤️ for the research data community**
+Made with ❤️ by the MaLDReTH Development Team

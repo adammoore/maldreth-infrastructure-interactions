@@ -1,26 +1,394 @@
-"""
-Standalone migration script to import MaLDReTH research data lifecycle data from CSV files.
+# Map possible column names
+                column_mappings = {
+                    'stage': ['RESEARCH DATA LIFECYCLE STAGE', 'stage', 'Stage'],
+                    'category': ['TOOL CATEGORY TYPE', 'category', 'Category'],
+                    'description': ['DESCRIPTION', 'description', 'Description'],
+                    'examples': ['EXAMPLES', 'examples', 'Tools']
+                }
+                
+                # Get actual column names
+                headers = reader.fieldnames or []
+                actual_columns = {}
+                for key, possible_names in column_mappings.items():
+                    for header in headers:
+                        if any(name in header for name in possible_names):
+                            actual_columns[key] = header
+                            break
+                
+                if not all(k in actual_columns for k in ['stage', 'category']):
+                    logger.error(f"Required columns not found. Headers: {headers}")
+                    return False
+                
+                for row in reader:
+                    try:
+                        stage_name = self.clean_value(row.get(actual_columns['stage'], ''))
+                        category_name = self.clean_value(row.get(actual_columns['category'], ''))
+                        
+                        if not stage_name:
+                            continue
+                            
+                        # Find or create stage
+                        stage = self.stages_map.get(stage_name)
+                        if not stage:
+                            stage = Stage.query.filter_by(name=stage_name).first()
+                            if not stage:
+                                # Create stage if it doesn't exist
+                                stage = Stage(name=stage_name, description="")
+                                db.session.add(stage)
+                                db.session.flush()
+                                self.stages_map[stage_name] = stage
+                                self.migration_stats['stages_created'] += 1
+                        
+                        # Find or create category
+                        category_key = (stage_name, category_name)
+                        category = self.categories_map.get(category_key)
+                        if not category:
+                            category = ToolCategory.query.filter_by(
+                                category=category_name, stage_id=stage.id
+                            ).first()
+                            if not category:
+                                desc = self.clean_value(row.get(actual_columns.get('description', ''), ''))
+                                category = ToolCategory(
+                                    category=category_name,
+                                    description=desc,
+                                    stage_id=stage.id
+                                )
+                                db.session.add(category)
+                                db.session.flush()
+                                self.categories_map[category_key] = category
+                                self.migration_stats['categories_created'] += 1
+                        
+                        # Process tools/examples
+                        if 'examples' in actual_columns:
+                            examples = self.clean_value(row.get(actual_columns['examples'], ''))
+                            if examples:
+                                tool_names = [name.strip() for name in examples.split(',') if name.strip()]
+                                for tool_name in tool_names:
+                                    # Check if tool exists
+                                    existing_tool = Tool.query.filter_by(
+                                        name=tool_name, category_id=category.id
+                                    ).first()
+                                    
+                                    if not existing_tool:
+                                        tool = Tool(
+                                            name=tool_name,
+                                            category_id=category.id,
+                                            stage_id=stage.id
+                                        )
+                                        db.session.add(tool)
+                                        self.migration_stats['tools_created'] += 1
+                                        
+                    except Exception as e:
+                        logger.error(f"Error processing tool row: {e}")
+                        self.migration_stats['errors'] += 1
+                        continue
+                        
+                db.session.commit()
+                return True
+                
+        except Exception as e:
+            logger.error(f"Error migrating tools: {e}")
+            self.migration_stats['errors'] += 1
+            return False
+            
+    def migrate_connections(self, filename: str = "connections.csv") -> bool:
+        """
+        Migrate stage connections from CSV file.
+        
+        Args:
+            filename: Name of the connections CSV file
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        # First try to load from CSV file
+        filepath = os.path.join(self.csv_directory, filename)
+        
+        if os.path.exists(filepath):
+            try:
+                with open(filepath, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f)
+                    
+                    for row in reader:
+                        try:
+                            from_stage = self.clean_value(row.get('from', ''))
+                            to_stage = self.clean_value(row.get('to', ''))
+                            conn_type = self.clean_value(row.get('type', 'solid'))
+                            
+                            if not from_stage or not to_stage:
+                                continue
+                                
+                            self._create_connection(from_stage, to_stage, conn_type)
+                            
+                        except Exception as e:
+                            logger.error(f"Error processing connection row: {e}")
+                            self.migration_stats['errors'] += 1
+                            continue
+                            
+                db.session.commit()
+                return True
+                
+            except Exception as e:
+                logger.error(f"Error reading connections file: {e}")
+                
+        # If no file or error, create default connections
+        logger.info("Creating default stage connections...")
+        return self._create_default_connections()
+        
+    def _create_connection(self, from_name: str, to_name: str, conn_type: str = "solid") -> bool:
+        """
+        Create a connection between two stages.
+        
+        Args:
+            from_name: Name of the source stage
+            to_name: Name of the target stage
+            conn_type: Type of connection (solid or dashed)
+            
+        Returns:
+            bool: True if created, False if already exists or error
+        """
+        try:
+            # Find stages
+            from_stage = Stage.query.filter_by(name=from_name).first()
+            to_stage = Stage.query.filter_by(name=to_name).first()
+            
+            if not from_stage or not to_stage:
+                logger.warning(f"Stages not found for connection: {from_name} -> {to_name}")
+                return False
+                
+            # Check if connection exists
+            existing = Connection.query.filter_by(
+                from_stage_id=from_stage.id,
+                to_stage_id=to_stage.id
+            ).first()
+            
+            if existing:
+                return False
+                
+            # Create connection
+            connection = Connection(
+                from_stage_id=from_stage.id,
+                to_stage_id=to_stage.id,
+                type=conn_type
+            )
+            db.session.add(connection)
+            self.migration_stats['connections_created'] += 1
+            logger.info(f"Created connection: {from_name} -> {to_name}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error creating connection: {e}")
+            return False
+            
+    def _create_default_connections(self) -> bool:
+        """
+        Create default connections between stages.
+        
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        default_connections = [
+            ("CONCEPTUALISE", "PLAN", "solid"),
+            ("PLAN", "FUND", "solid"),
+            ("FUND", "COLLECT", "solid"),
+            ("COLLECT", "PROCESS", "solid"),
+            ("PROCESS", "ANALYSE", "solid"),
+            ("ANALYSE", "STORE", "solid"),
+            ("STORE", "PUBLISH", "solid"),
+            ("PUBLISH", "PRESERVE", "solid"),
+            ("PRESERVE", "SHARE", "solid"),
+            ("SHARE", "ACCESS", "solid"),
+            ("ACCESS", "TRANSFORM", "solid"),
+            ("TRANSFORM", "CONCEPTUALISE", "solid"),
+            # Alternative paths
+            ("COLLECT", "ANALYSE", "dashed"),
+            ("STORE", "PROCESS", "dashed"),
+            ("ANALYSE", "COLLECT", "dashed")
+        ]
+        
+        for from_name, to_name, conn_type in default_connections:
+            self._create_connection(from_name, to_name, conn_type)
+            
+        db.session.commit()
+        return True
+        
+    def generate_migration_report(self) -> str:
+        """
+        Generate a summary report of the migration.
+        
+        Returns:
+            str: Migration report
+        """
+        report = [
+            "\n" + "=" * 50,
+            "Migration Summary Report",
+            "=" * 50,
+            f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            f"CSV Directory: {self.csv_directory}",
+            "",
+            "Results:",
+            f"  Stages Created: {self.migration_stats['stages_created']}",
+            f"  Stages Updated: {self.migration_stats['stages_updated']}",
+            f"  Categories Created: {self.migration_stats['categories_created']}",
+            f"  Tools Created: {self.migration_stats['tools_created']}",
+            f"  Tools Updated: {self.migration_stats['tools_updated']}",
+            f"  Connections Created: {self.migration_stats['connections_created']}",
+            f"  Errors: {self.migration_stats['errors']}",
+            "",
+            "Database Totals:",
+            f"  Total Stages: {Stage.query.count()}",
+            f"  Total Categories: {ToolCategory.query.count()}",
+            f"  Total Tools: {Tool.query.count()}",
+            f"  Total Connections: {Connection.query.count()}",
+            "=" * 50
+        ]
+        
+        return "\n".join(report)
+        
+    def run(self) -> bool:
+        """
+        Run the complete migration process.
+        
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        logger.info("Starting CSV data migration...")
+        
+        # Validate CSV directory
+        if not self.validate_csv_directory():
+            return False
+            
+        # Migrate data in order
+        steps = [
+            ("stages", self.migrate_stages),
+            ("categories", self.migrate_categories),
+            ("tools", self.migrate_tools),
+            ("connections", self.migrate_connections)
+        ]
+        
+        for step_name, step_func in steps:
+            logger.info(f"Migrating {step_name}...")
+            if not step_func():
+                logger.error(f"Failed to migrate {step_name}")
+                # Continue with other steps even if one fails
+                
+        # Generate and display report
+        report = self.generate_migration_report()
+        print(report)
+        
+        # Save report to file
+        report_file = os.path.join(self.csv_directory, f"migration_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
+        try:
+            with open(report_file, 'w') as f:
+                f.write(report)
+            logger.info(f"Migration report saved to: {report_file}")
+        except Exception as e:
+            logger.error(f"Failed to save report: {e}")
+            
+        return self.migration_stats['errors'] == 0
 
-This script reads data from CSV files and populates the database with:
-- Lifecycle stages
-- Tool categories
-- Individual tools
-- Stage connections
+
+def main():
+    """Main entry point for the script."""
+    parser = argparse.ArgumentParser(
+        description="Migrate MaLDReTH data from CSV files"
+    )
+    parser.add_argument(
+        "--csv-dir",
+        type=str,
+        default="data/csv",
+        help="Directory containing CSV files"
+    )
+    parser.add_argument(
+        "--clear",
+        action="store_true",
+        help="Clear existing data before migration"
+    )
+    
+    args = parser.parse_args()
+    
+    # Create Flask app context
+    app = create_app()
+    
+    with app.app_context():
+        try:
+            # Clear existing data if requested
+            if args.clear:
+                logger.info("Clearing existing data...")
+                Tool.query.delete()
+                ToolCategory.query.delete()
+                Connection.query.delete()
+                Stage.query.delete()
+                db.session.commit()
+                logger.info("Existing data cleared")
+                
+            # Run migration
+            migrator = CSVDataMigrator(args.csv_dir)
+            success = migrator.run()
+            
+            sys.exit(0 if success else 1)
+            
+        except Exception as e:
+            logger.error(f"Fatal error: {e}")
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()            # Try alternative filename
+            alt_filename = "research_data_lifecycle.csv"
+            filepath = os.path.join(self.csv_directory, alt_filename)
+            if not os.path.exists(filepath):
+                logger.warning(f"Tools file not found: {filename} or {alt_filename}")
+                return True
+                
+        try:
+            with open(filepath, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f)
+                
+                # Map possible column names
+                column_mappings = {
+                    'stage        except Exception as e:
+            logger.error(f"Error migrating categories: {e}")
+            self.migration_stats['errors'] += 1
+            return False
+            
+    def migrate_tools(self, filename: str = "tools.csv") -> bool:
+        """
+        Migrate tools data from CSV file.
+        
+        Args:
+            filename: Name of the tools CSV file
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        filepath = os.path.join(self.csv_directory, filename)
+        if not os.path.exists(filepath):
+            ##!/usr/bin/env python3
+"""
+migrate_maldreth_data_standalone.py
+
+Migrate MaLDReTH data from CSV files to the database.
+
+This script handles migration of research data lifecycle information from
+CSV files, with robust error handling and data validation.
 
 Usage:
-    python migrate_maldreth_data_standalone.py
+    python migrate_maldreth_data_standalone.py [--csv-dir path/to/csv/files]
+
+Author: MaLDReTH Development Team
+Date: 2024
 """
 
 import os
 import sys
-import pandas as pd
+import csv
+import argparse
 import logging
-from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy.exc import IntegrityError
+from app import create_app, db
+from app.models import Stage, ToolCategory, Tool, Connection
 
 # Configure logging
 logging.basicConfig(
@@ -29,411 +397,185 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Create base class for models
-Base = declarative_base()
 
-# Define minimal models needed for migration
-class LifecycleStage(Base):
-    __tablename__ = 'lifecycle_stages'
+class CSVDataMigrator:
+    """Handler for migrating MaLDReTH data from CSV files."""
     
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), nullable=False, unique=True)
-    description = Column(Text, nullable=False)
-    maldreth_description = Column(Text)
-    order = Column(Integer, nullable=False, unique=True)
-    color_code = Column(String(7), default='#007bff')
-    icon = Column(String(50), default='bi-circle')
-    is_active = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-class ToolCategory(Base):
-    __tablename__ = 'tool_categories'
-    
-    id = Column(Integer, primary_key=True)
-    name = Column(String(200), nullable=False)
-    description = Column(Text)
-    stage_id = Column(Integer, ForeignKey('lifecycle_stages.id'), nullable=False)
-    order = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-class Tool(Base):
-    __tablename__ = 'tools'
-    
-    id = Column(Integer, primary_key=True)
-    name = Column(String(200), nullable=False)
-    description = Column(Text)
-    url = Column(String(500))
-    provider = Column(String(200))
-    tool_type = Column(String(200))
-    source_type = Column(String(20), default='unknown')
-    scope = Column(String(100), default='generic')
-    is_interoperable = Column(Boolean, default=False)
-    characteristics = Column(Text)
-    stage_id = Column(Integer, ForeignKey('lifecycle_stages.id'), nullable=False)
-    category_id = Column(Integer, ForeignKey('tool_categories.id'))
-    is_featured = Column(Boolean, default=False)
-    usage_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-class StageConnection(Base):
-    __tablename__ = 'stage_connections'
-    
-    id = Column(Integer, primary_key=True)
-    from_stage_id = Column(Integer, ForeignKey('lifecycle_stages.id'), nullable=False)
-    to_stage_id = Column(Integer, ForeignKey('lifecycle_stages.id'), nullable=False)
-    connection_type = Column(String(50), default='normal')
-    description = Column(Text)
-    weight = Column(Float, default=1.0)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-
-def get_database_url():
-    """Get database URL from environment or use default SQLite."""
-    database_url = os.environ.get('DATABASE_URL')
-    if database_url:
-        # Fix for Heroku Postgres URL format
-        if database_url.startswith('postgres://'):
-            database_url = database_url.replace('postgres://', 'postgresql://')
-        return database_url
-    else:
-        # Local development
-        return 'sqlite:///interactions.db'
-
-
-def init_maldreth_stages(session):
-    """Initialize database with MaLDReTH lifecycle stages."""
-    
-    # Official MaLDReTH lifecycle stages
-    stages_data = [
-        {
-            'name': 'Conceptualise',
-            'description': 'Formulate research ideas and define data requirements',
-            'maldreth_description': 'To formulate the initial research idea or hypothesis, and define the scope of the research project and the data component/requirements of that project.',
-            'order': 1,
-            'color_code': '#e74c3c',
-            'icon': 'bi-lightbulb'
-        },
-        {
-            'name': 'Plan',
-            'description': 'Create structured frameworks for research management',
-            'maldreth_description': 'To establish a structured strategic framework for management of the research project, outlining aims, objectives, methodologies, and resources required for data collection, management and analysis.',
-            'order': 2,
-            'color_code': '#3498db',
-            'icon': 'bi-clipboard-data'
-        },
-        {
-            'name': 'Fund',
-            'description': 'Acquire financial resources for research',
-            'maldreth_description': 'To identify and acquire financial resources to support the research project, including data collection, management, analysis, sharing, publishing and preservation.',
-            'order': 3,
-            'color_code': '#f39c12',
-            'icon': 'bi-currency-dollar'
-        },
-        {
-            'name': 'Collect',
-            'description': 'Gather reliable, high-quality data',
-            'maldreth_description': 'To use predefined procedures, methodologies and instruments to acquire and store data that is reliable, fit for purpose and of sufficient quality to test the research hypothesis.',
-            'order': 4,
-            'color_code': '#27ae60',
-            'icon': 'bi-collection'
-        },
-        {
-            'name': 'Process',
-            'description': 'Prepare data for analysis',
-            'maldreth_description': 'To make new and existing data analysis-ready. This may involve standardised pre-processing, cleaning, reformatting, structuring, filtering, and performing quality control checks on data.',
-            'order': 5,
-            'color_code': '#9b59b6',
-            'icon': 'bi-gear'
-        },
-        {
-            'name': 'Analyse',
-            'description': 'Derive insights from processed data',
-            'maldreth_description': 'To derive insights, knowledge, and understanding from processed data. Data analysis involves iterative exploration and interpretation of experimental or computational results.',
-            'order': 6,
-            'color_code': '#e67e22',
-            'icon': 'bi-graph-up'
-        },
-        {
-            'name': 'Store',
-            'description': 'Securely record data',
-            'maldreth_description': 'To record data using technological media appropriate for processing and analysis whilst maintaining data integrity and security.',
-            'order': 7,
-            'color_code': '#34495e',
-            'icon': 'bi-server'
-        },
-        {
-            'name': 'Publish',
-            'description': 'Release research data for others',
-            'maldreth_description': 'To release research data in published form for use by others with appropriate metadata for citation (including a unique persistent identifier) based on FAIR principles.',
-            'order': 8,
-            'color_code': '#1abc9c',
-            'icon': 'bi-journal-text'
-        },
-        {
-            'name': 'Preserve',
-            'description': 'Ensure long-term data accessibility',
-            'maldreth_description': 'To ensure the safety, integrity, and accessibility of data for as long as necessary so that data is as FAIR as possible.',
-            'order': 9,
-            'color_code': '#8e44ad',
-            'icon': 'bi-shield-check'
-        },
-        {
-            'name': 'Share',
-            'description': 'Make data available to humans and machines',
-            'maldreth_description': 'To make data available and accessible to humans and/or machines. Data may be shared with project collaborators or published to share it with the wider research community.',
-            'order': 10,
-            'color_code': '#2ecc71',
-            'icon': 'bi-share'
-        },
-        {
-            'name': 'Access',
-            'description': 'Control and manage data access',
-            'maldreth_description': 'To control and manage data access by designated users and reusers. This may be in the form of publicly available published information.',
-            'order': 11,
-            'color_code': '#f1c40f',
-            'icon': 'bi-key'
-        },
-        {
-            'name': 'Transform',
-            'description': 'Create new data from original sources',
-            'maldreth_description': 'To create new data from the original, for example: (i) by migration into a different format; (ii) by creating a subset, by selection or query, to create newly derived results.',
-            'order': 12,
-            'color_code': '#e74c3c',
-            'icon': 'bi-arrow-repeat'
+    def __init__(self, csv_directory: str):
+        """
+        Initialize the CSV data migrator.
+        
+        Args:
+            csv_directory: Directory containing CSV files
+        """
+        self.csv_directory = csv_directory
+        self.stages_map: Dict[str, Stage] = {}
+        self.categories_map: Dict[Tuple[str, str], ToolCategory] = {}
+        self.migration_stats = {
+            'stages_created': 0,
+            'stages_updated': 0,
+            'categories_created': 0,
+            'tools_created': 0,
+            'tools_updated': 0,
+            'connections_created': 0,
+            'errors': 0
         }
-    ]
-    
-    # Create stages
-    created_stages = {}
-    for stage_data in stages_data:
-        existing = session.query(LifecycleStage).filter_by(name=stage_data['name']).first()
-        if not existing:
-            stage = LifecycleStage(**stage_data)
-            session.add(stage)
-            session.flush()
-            created_stages[stage.name] = stage
-            logger.info(f"Created stage: {stage.name}")
-        else:
-            created_stages[existing.name] = existing
-            logger.info(f"Stage already exists: {existing.name}")
-    
-    session.commit()
-    return created_stages
-
-
-def create_stage_connections(session, stages):
-    """Create standard stage connections."""
-    connections_data = [
-        ('Conceptualise', 'Plan', 'normal'),
-        ('Plan', 'Fund', 'normal'),
-        ('Fund', 'Collect', 'normal'),
-        ('Collect', 'Process', 'normal'),
-        ('Process', 'Analyse', 'normal'),
-        ('Analyse', 'Store', 'normal'),
-        ('Store', 'Publish', 'normal'),
-        ('Publish', 'Preserve', 'normal'),
-        ('Preserve', 'Share', 'normal'),
-        ('Share', 'Access', 'normal'),
-        ('Access', 'Transform', 'normal'),
-        ('Transform', 'Conceptualise', 'feedback'),
-    ]
-    
-    for from_name, to_name, conn_type in connections_data:
-        if from_name in stages and to_name in stages:
-            existing = session.query(StageConnection).filter_by(
-                from_stage_id=stages[from_name].id,
-                to_stage_id=stages[to_name].id
-            ).first()
+        
+    def validate_csv_directory(self) -> bool:
+        """
+        Validate that the CSV directory exists and contains CSV files.
+        
+        Returns:
+            bool: True if valid, False otherwise
+        """
+        if not os.path.exists(self.csv_directory):
+            logger.error(f"CSV directory not found: {self.csv_directory}")
+            return False
             
-            if not existing:
-                connection = StageConnection(
-                    from_stage_id=stages[from_name].id,
-                    to_stage_id=stages[to_name].id,
-                    connection_type=conn_type
-                )
-                session.add(connection)
-                logger.info(f"Created connection: {from_name} -> {to_name}")
-    
-    session.commit()
-
-
-def clean_text(text):
-    """Clean text by removing extra whitespace and handling None values."""
-    if pd.isna(text) or text is None:
-        return ""
-    return str(text).strip()
-
-
-def migrate_tools_from_csv(session, csv_file, stages):
-    """Migrate tools from CSV file."""
-    logger.info(f"Reading data from {csv_file}")
-    
-    try:
-        # Read CSV file
-        df = pd.read_csv(csv_file)
-        logger.info(f"Successfully read {len(df)} rows from CSV")
+        if not os.path.isdir(self.csv_directory):
+            logger.error(f"Path is not a directory: {self.csv_directory}")
+            return False
+            
+        csv_files = [f for f in os.listdir(self.csv_directory) if f.endswith('.csv')]
+        if not csv_files:
+            logger.error(f"No CSV files found in directory: {self.csv_directory}")
+            return False
+            
+        logger.info(f"Found {len(csv_files)} CSV files to process")
+        return True
         
-        # Clean column names
-        df.columns = df.columns.str.strip()
+    def clean_value(self, value: str) -> str:
+        """
+        Clean a CSV value by stripping whitespace and handling encoding.
         
-        # Process each row
-        for idx, row in df.iterrows():
-            try:
-                # Extract stage name
-                stage_name = clean_text(row.get('RESEARCH DATA LIFECYCLE STAGE', ''))
-                if not stage_name:
-                    logger.warning(f"Row {idx}: Missing stage name, skipping")
-                    continue
+        Args:
+            value: Raw value from CSV
+            
+        Returns:
+            Cleaned string value
+        """
+        if not value:
+            return ""
+        return value.strip().replace('\ufeff', '')  # Remove BOM if present
+        
+    def migrate_stages(self, filename: str = "stages.csv") -> bool:
+        """
+        Migrate stages data from CSV file.
+        
+        Args:
+            filename: Name of the stages CSV file
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        filepath = os.path.join(self.csv_directory, filename)
+        if not os.path.exists(filepath):
+            logger.warning(f"Stages file not found: {filepath}")
+            return True  # Not critical if missing
+            
+        try:
+            with open(filepath, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f)
                 
-                # Find matching stage
-                stage = None
-                for s_name, s_obj in stages.items():
-                    if stage_name.upper() == s_name.upper():
-                        stage = s_obj
-                        break
-                
-                if not stage:
-                    logger.warning(f"Row {idx}: Stage '{stage_name}' not found in MaLDReTH stages, skipping")
-                    continue
-                
-                # Extract tool category
-                category_name = clean_text(row.get('TOOL CATEGORY TYPE', ''))
-                if not category_name:
-                    logger.warning(f"Row {idx}: Missing category name, skipping")
-                    continue
-                
-                # Create or get tool category
-                tool_category = session.query(ToolCategory).filter_by(
-                    stage_id=stage.id,
-                    name=category_name
-                ).first()
-                
-                if not tool_category:
-                    description = clean_text(row.get('DESCRIPTION', '') or row.get('DESCRIPTION (1 SENTENCE)', ''))
-                    tool_category = ToolCategory(
-                        stage_id=stage.id,
-                        name=category_name,
-                        description=description
-                    )
-                    session.add(tool_category)
-                    session.flush()
-                    logger.info(f"Created category: {category_name} for stage: {stage.name}")
-                
-                # Extract and create tools
-                tools_str = clean_text(row.get('EXAMPLES', ''))
-                if tools_str:
-                    # Split tools by comma and clean each one
-                    tools = [clean_text(tool) for tool in tools_str.split(',')]
-                    for tool_name in tools:
-                        if tool_name and tool_name != '':
-                            # Check if tool already exists
-                            existing_tool = session.query(Tool).filter_by(
-                                name=tool_name,
-                                stage_id=stage.id
-                            ).first()
+                for row in reader:
+                    try:
+                        stage_name = self.clean_value(row.get('stage', ''))
+                        description = self.clean_value(row.get('description', ''))
+                        
+                        if not stage_name:
+                            logger.warning("Skipping row with empty stage name")
+                            continue
                             
-                            if not existing_tool:
-                                tool = Tool(
-                                    name=tool_name,
-                                    description=f"Tool for {category_name}",
-                                    stage_id=stage.id,
-                                    category_id=tool_category.id,
-                                    tool_type=category_name,
-                                    source_type='unknown',
-                                    scope='generic'
-                                )
-                                session.add(tool)
-                                logger.info(f"Created tool: {tool_name}")
+                        # Check if stage exists
+                        stage = Stage.query.filter_by(name=stage_name).first()
+                        
+                        if stage:
+                            # Update existing stage
+                            stage.description = description
+                            self.migration_stats['stages_updated'] += 1
+                            logger.info(f"Updated stage: {stage_name}")
+                        else:
+                            # Create new stage
+                            stage = Stage(name=stage_name, description=description)
+                            db.session.add(stage)
+                            self.migration_stats['stages_created'] += 1
+                            logger.info(f"Created stage: {stage_name}")
+                            
+                        self.stages_map[stage_name] = stage
+                        
+                    except Exception as e:
+                        logger.error(f"Error processing stage row: {e}")
+                        self.migration_stats['errors'] += 1
+                        continue
+                        
+                db.session.commit()
+                return True
                 
-            except Exception as e:
-                logger.error(f"Error processing row {idx}: {str(e)}")
-                continue
+        except Exception as e:
+            logger.error(f"Error migrating stages: {e}")
+            self.migration_stats['errors'] += 1
+            return False
+            
+    def migrate_categories(self, filename: str = "categories.csv") -> bool:
+        """
+        Migrate tool categories from CSV file.
         
-        # Commit all changes
-        session.commit()
-        logger.info("Successfully committed all changes to database")
-        
-    except Exception as e:
-        logger.error(f"Error during migration: {str(e)}")
-        session.rollback()
-        raise
-
-
-def main():
-    """Main migration function."""
-    # Create database engine
-    engine = create_engine(get_database_url())
-    
-    # Create tables if they don't exist
-    Base.metadata.create_all(engine)
-    logger.info("Database tables created/verified")
-    
-    # Create session
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    
-    try:
-        # Initialize MaLDReTH stages
-        logger.info("Initializing MaLDReTH lifecycle stages...")
-        stages = init_maldreth_stages(session)
-        
-        # Create stage connections
-        logger.info("Creating stage connections...")
-        create_stage_connections(session, stages)
-        
-        # Find CSV file
-        csv_file = None
-        possible_names = [
-            'v0.3_ Landscape Review of Research Tools   - Tool categories and descriptions (1).csv',
-            'tools.csv',
-            'research_data_lifecycle.csv',
-            'Tool categories and descriptions.csv',
-            'maldreth_tools.csv'
-        ]
-        
-        for name in possible_names:
-            if os.path.exists(name):
-                csv_file = name
-                break
-        
-        if not csv_file:
-            # Look for any CSV file
-            csv_files = list(Path('.').glob('*.csv'))
-            if csv_files:
-                csv_file = str(csv_files[0])
-                logger.info(f"Using CSV file: {csv_file}")
-        
-        if csv_file and os.path.exists(csv_file):
-            # Migrate tools from CSV
-            logger.info("Migrating tools from CSV...")
-            migrate_tools_from_csv(session, csv_file, stages)
-        else:
-            logger.warning("No CSV file found for tool migration")
-        
-        # Print summary
-        stage_count = session.query(LifecycleStage).count()
-        category_count = session.query(ToolCategory).count()
-        tool_count = session.query(Tool).count()
-        connection_count = session.query(StageConnection).count()
-        
-        logger.info(f"\nMigration Summary:")
-        logger.info(f"  - Stages: {stage_count}")
-        logger.info(f"  - Tool Categories: {category_count}")
-        logger.info(f"  - Tools: {tool_count}")
-        logger.info(f"  - Connections: {connection_count}")
-        
-        logger.info("Migration completed successfully!")
-        
-    except Exception as e:
-        logger.error(f"Migration failed: {str(e)}")
-        session.rollback()
-        sys.exit(1)
-    finally:
-        session.close()
-
-
-if __name__ == "__main__":
-    main()
+        Args:
+            filename: Name of the categories CSV file
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        filepath = os.path.join(self.csv_directory, filename)
+        if not os.path.exists(filepath):
+            logger.warning(f"Categories file not found: {filepath}")
+            return True  # Not critical if missing
+            
+        try:
+            with open(filepath, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f)
+                
+                for row in reader:
+                    try:
+                        stage_name = self.clean_value(row.get('stage', ''))
+                        category_name = self.clean_value(row.get('category', ''))
+                        description = self.clean_value(row.get('description', ''))
+                        
+                        if not stage_name or not category_name:
+                            logger.warning("Skipping row with empty stage or category")
+                            continue
+                            
+                        # Find stage
+                        stage = self.stages_map.get(stage_name) or Stage.query.filter_by(name=stage_name).first()
+                        if not stage:
+                            logger.warning(f"Stage not found: {stage_name}")
+                            continue
+                            
+                        # Check if category exists
+                        category = ToolCategory.query.filter_by(
+                            category=category_name, stage_id=stage.id
+                        ).first()
+                        
+                        if not category:
+                            # Create new category
+                            category = ToolCategory(
+                                category=category_name,
+                                description=description,
+                                stage_id=stage.id
+                            )
+                            db.session.add(category)
+                            self.migration_stats['categories_created'] += 1
+                            logger.info(f"Created category: {category_name} for stage: {stage_name}")
+                            
+                        self.categories_map[(stage_name, category_name)] = category
+                        
+                    except Exception as e:
+                        logger.error(f"Error processing category row: {e}")
+                        self.migration_stats['errors'] += 1
+                        continue
+                        
+                db.session.commit()
+                return True
+                
+        except Exception as e:
+            logger.error(f
