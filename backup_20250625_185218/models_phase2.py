@@ -6,8 +6,9 @@ including lifecycle stages, substages, tools, and their relationships.
 """
 
 from datetime import datetime
-from sqlalchemy.ext.hybrid import hybrid_property
+
 from sqlalchemy import or_
+from sqlalchemy.ext.hybrid import hybrid_property
 
 # Import db from app context, but check if models already has db defined
 try:

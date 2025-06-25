@@ -11,11 +11,12 @@ Usage:
     python migrate_maldreth_data.py
 """
 
+import logging
 import os
 import sys
-import pandas as pd
-import logging
 from pathlib import Path
+
+import pandas as pd
 
 # Add the parent directory to the Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -26,15 +27,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+from models_phase2 import (LifecycleStage, StageConnection, Tool, ToolCategory,
+                           init_maldreth_data)
+
 # Import app components after path is set
 from app import create_app, db
-from models_phase2 import (
-    LifecycleStage,
-    ToolCategory,
-    Tool,
-    StageConnection,
-    init_maldreth_data,
-)
 
 
 def clean_text(text):

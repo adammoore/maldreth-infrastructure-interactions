@@ -7,8 +7,8 @@ Run this script on Heroku to completely reset the database:
     heroku run python reset_heroku_db.py --confirm
 """
 
-import sys
 import logging
+import sys
 
 # Configure logging
 logging.basicConfig(
@@ -46,11 +46,12 @@ def reset_database():
         logger.info("Running database initialization...")
 
         # Import models after tables are created
-        from models import Interaction
-        from models_phase2 import LifecycleStage, ToolCategory, Tool, StageConnection
-
         # Run the init but skip the db.create_all() part
         from init_heroku_db import MALDRETH_STAGES, STAGE_CONNECTIONS
+        from models_phase2 import (LifecycleStage, StageConnection, Tool,
+                                   ToolCategory)
+
+        from models import Interaction
 
         # Initialize MaLDReTH stages
         logger.info("Initializing MaLDReTH lifecycle stages...")

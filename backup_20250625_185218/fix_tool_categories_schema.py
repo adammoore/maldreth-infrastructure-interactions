@@ -7,16 +7,16 @@ This script fixes the database schema mismatch where the ToolCategory model
 expects an 'order' column that doesn't exist in the database.
 """
 
+import logging
 import os
 import sys
-import logging
 from datetime import datetime
 
 # Add the project root directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import create_app, db
-from app.models import LifecycleStage, ToolCategory, Tool
+from app.models import LifecycleStage, Tool, ToolCategory
 
 # Configure logging
 logging.basicConfig(

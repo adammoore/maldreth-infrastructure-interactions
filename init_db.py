@@ -2,9 +2,10 @@
 """
 Simple database initialization script
 """
+from initialize_db import initialize_database
+
 from app import app, db
 from models import LifecycleStage
-from initialize_db import initialize_database
 
 
 def init_db():

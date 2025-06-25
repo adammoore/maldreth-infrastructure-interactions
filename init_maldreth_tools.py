@@ -14,15 +14,17 @@ Author: MaLDReTH Development Team
 Date: 2024
 """
 
-import os
-import sys
 import argparse
 import logging
-import pandas as pd
-from typing import Dict, Optional, Tuple, Any
+import os
+import sys
 from datetime import datetime
+from typing import Any, Dict, Optional, Tuple
+
+import pandas as pd
+
 from app import create_app, db
-from app.models import Stage, ToolCategory, Tool, Connection
+from app.models import Connection, Stage, Tool, ToolCategory
 
 # Configure logging
 logging.basicConfig(

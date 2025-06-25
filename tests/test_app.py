@@ -11,9 +11,11 @@ Date: 2024
 """
 
 import json
+
 import pytest
+
 from app import create_app, db
-from app.models import Stage, ToolCategory, Tool, Connection
+from app.models import Connection, Stage, Tool, ToolCategory
 
 
 class TestConfig:

@@ -6,7 +6,8 @@ Run this script on Heroku to fix database schema:
 """
 
 import logging
-from sqlalchemy import text, inspect
+
+from sqlalchemy import inspect, text
 
 # Configure logging
 logging.basicConfig(
@@ -14,16 +15,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+from models_phase2 import (LifecycleStage, LifecycleSubstage, StageConnection,
+                           Tool, ToolCategory)
+
 # Import Flask app and models
 from app import create_app, db
 from models import Interaction
-from models_phase2 import (
-    LifecycleStage,
-    ToolCategory,
-    Tool,
-    StageConnection,
-    LifecycleSubstage,
-)
 
 
 def check_and_update_schema():

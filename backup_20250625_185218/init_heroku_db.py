@@ -13,10 +13,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+from models_phase2 import LifecycleStage, StageConnection, Tool, ToolCategory
+
 # Import Flask app and models
 from app import create_app, db
 from models import Interaction
-from models_phase2 import LifecycleStage, ToolCategory, Tool, StageConnection
 
 # MaLDReTH stages data
 MALDRETH_STAGES = [

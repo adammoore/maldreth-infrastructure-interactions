@@ -6,11 +6,11 @@ This script handles the deployment process for fixing the database schema
 on Heroku by running the schema fix script remotely.
 """
 
-import os
-import sys
-import subprocess
 import logging
-from typing import Optional, List
+import os
+import subprocess
+import sys
+from typing import List, Optional
 
 # Configure logging
 logging.basicConfig(

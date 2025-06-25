@@ -5,9 +5,10 @@ This module provides RESTful API endpoints for accessing lifecycle stages,
 tools, interactions, and visualization data with advanced filtering and search capabilities.
 """
 
-from flask import Blueprint, jsonify, request, current_app
-from sqlalchemy import or_, func
 import logging
+
+from flask import Blueprint, current_app, jsonify, request
+from sqlalchemy import func, or_
 
 # Create blueprint for API v2
 api_v2_bp = Blueprint("api_v2", __name__, url_prefix="/api/v2")
@@ -21,15 +22,9 @@ def get_models():
     Lazy import models to avoid circular imports.
     This function imports models only when needed.
     """
-    from models_phase2 import (
-        LifecycleStage,
-        LifecycleSubstage,
-        ToolCategory,
-        Tool,
-        Interaction,
-        InteractionTool,
-        StageConnection,
-    )
+    from models_phase2 import (Interaction, InteractionTool, LifecycleStage,
+                               LifecycleSubstage, StageConnection, Tool,
+                               ToolCategory)
 
     return {
         "LifecycleStage": LifecycleStage,

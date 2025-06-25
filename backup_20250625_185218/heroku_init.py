@@ -4,9 +4,10 @@ os.environ["DATABASE_URL"] = os.environ.get("DATABASE_URL", "").replace(
     "postgres://", "postgresql://"
 )
 
-from app import app, db
-from models import LifecycleStage, ToolCategory, Tool
 from initialize_db import initialize_database
+
+from app import app, db
+from models import LifecycleStage, Tool, ToolCategory
 
 print("Starting database initialization...")
 

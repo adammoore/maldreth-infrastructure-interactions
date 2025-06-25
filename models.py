@@ -6,8 +6,9 @@ tools, and infrastructure interactions in the research data lifecycle.
 """
 
 from datetime import datetime
+
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Index, CheckConstraint
+from sqlalchemy import CheckConstraint, Index
 
 db = SQLAlchemy()
 

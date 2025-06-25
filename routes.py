@@ -6,9 +6,12 @@ including API endpoints for data retrieval and web routes for serving the visual
 """
 
 import logging
-from flask import Blueprint, render_template, jsonify, request, send_from_directory
-from models import LifecycleStage, ToolCategory, Tool, LifecycleConnection
+
+from flask import (Blueprint, jsonify, render_template, request,
+                   send_from_directory)
+
 from app import db
+from models import LifecycleConnection, LifecycleStage, Tool, ToolCategory
 
 # Configure logging
 logger = logging.getLogger(__name__)

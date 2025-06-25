@@ -3,6 +3,7 @@ Inspect the current database to see what tables and data exist.
 """
 
 import os
+
 from sqlalchemy import create_engine, inspect, text
 
 
