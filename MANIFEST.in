@@ -1,0 +1,40 @@
+# MANIFEST.in - Specify additional files to include in the package
+
+# Include documentation
+include README.md
+include LICENSE
+include CHANGELOG.md
+include CONTRIBUTING.md
+include CODE_OF_CONDUCT.md
+
+# Include requirements files
+include requirements.txt
+include requirements-dev.txt
+
+# Include configuration files
+include .env.example
+include pytest.ini
+include runtime.txt
+include Procfile
+include app.json
+
+# Include templates and static files
+recursive-include templates *.html
+recursive-include static *.css *.js *.png *.jpg *.ico *.svg
+recursive-include data *.json *.csv *.xlsx
+
+# Include scripts
+recursive-include scripts *.py *.sh
+
+# Exclude unnecessary files
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude *.so
+global-exclude .DS_Store
+global-exclude .git*
+global-exclude *.log
+global-exclude *.db
+global-exclude backup_*
+recursive-exclude tests *
+recursive-exclude venv *
+recursive-exclude instance *
