@@ -519,7 +519,7 @@ def get_network_data():
     """
     try:
         models = get_models()
-LifecycleStage = models['LifecycleStage']
+        LifecycleStage = models['LifecycleStage']
         Tool = models['Tool']
         StageConnection = models['StageConnection']
         Interaction = models['Interaction']

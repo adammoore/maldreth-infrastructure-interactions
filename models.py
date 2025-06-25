@@ -144,7 +144,7 @@ class ToolCategory(db.Model):
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     stage_id = db.Column(db.Integer, db.ForeignKey('lifecycle_stages.id'), nullable=False)
-order = db.Column(db.Integer, default=0)  # Made optional with default
+    order = db.Column(db.Integer, default=0)  # Made optional with default
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
