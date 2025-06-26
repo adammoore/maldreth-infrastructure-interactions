@@ -351,6 +351,9 @@ def help():
     """)
 
 
+# Create a global app instance for Gunicorn
+app = create_app()
+
 # CLI Interface
 if __name__ == '__main__':
     if len(sys.argv) > 1:

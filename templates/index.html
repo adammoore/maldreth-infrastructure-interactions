@@ -1,206 +1,268 @@
 {% extends "base.html" %}
 
-{% block title %}Home - MaLDReTH Infrastructure Interactions{% endblock %}
+{% block title %}MaLDReTH Infrastructure Interactions - Home{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <!-- Hero Section -->
-        <div class="bg-primary text-white rounded p-5 mb-5">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="display-4 fw-bold mb-3">
-                        <i class="bi bi-diagram-3 me-3"></i>
-                        Infrastructure Interactions
-                    </h1>
-                    <p class="lead mb-4">
-                        Collecting and managing potential infrastructure interactions 
-                        for the MaLDReTH 2 Working Group meeting. Help us understand 
-                        how research infrastructure components interact throughout 
-                        the data lifecycle.
-                    </p>
-                    <div class="d-flex gap-3">
-                        <a href="{{ url_for('add_interaction') }}" class="btn btn-light btn-lg">
-                            <i class="bi bi-plus-circle me-2"></i>
-                            Add Interaction
-                        </a>
-                        <a href="{{ url_for('view_interactions') }}" class="btn btn-outline-light btn-lg">
-                            <i class="bi bi-list-ul me-2"></i>
-                            View All ({{ interaction_count }})
-                        </a>
-                    </div>
-                </div>
-                <div class="col-md-4 text-center">
-                    <i class="bi bi-arrow-left-right display-1 opacity-75"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mb-5">
-    <!-- Statistics Cards -->
-    <div class="col-md-3 mb-4">
-        <div class="card border-primary">
-            <div class="card-body text-center">
-                <i class="bi bi-collection text-primary fs-1 mb-3"></i>
-                <h3 class="card-title text-primary">{{ interaction_count }}</h3>
-                <p class="card-text">Total Interactions</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-4">
-        <div class="card border-success">
-            <div class="card-body text-center">
-                <i class="bi bi-arrow-repeat text-success fs-1 mb-3"></i>
-                <h3 class="card-title text-success">12</h3>
-                <p class="card-text">Lifecycle Stages</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-4">
-        <div class="card border-info">
-            <div class="card-body text-center">
-                <i class="bi bi-diagram-2 text-info fs-1 mb-3"></i>
-                <h3 class="card-title text-info">CSV</h3>
-                <p class="card-text">
-                    <a href="{{ url_for('export_csv') }}" class="btn btn-info btn-sm">
-                        <i class="bi bi-download me-1"></i>Export Data
-                    </a>
-                </p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-4">
-        <div class="card border-warning">
-            <div class="card-body text-center">
-                <i class="bi bi-api text-warning fs-1 mb-3"></i>
-                <h3 class="card-title text-warning">API</h3>
-                <p class="card-text">
-                    <a href="/api/interactions" class="btn btn-warning btn-sm" target="_blank">
-                        <i class="bi bi-code me-1"></i>View API
-                    </a>
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Interactions -->
-{% if recent_interactions %}
-<div class="row">
-    <div class="col-12">
-        <h2 class="mb-4">
-            <i class="bi bi-clock-history me-2"></i>
-            Recent Interactions
-        </h2>
-        
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
         <div class="row">
-            {% for interaction in recent_interactions %}
-            <div class="col-lg-6 mb-3">
-                <div class="card interaction-card h-100 
-                    {% if interaction.priority == 'high' %}priority-high
-                    {% elif interaction.priority == 'medium' %}priority-medium
-                    {% else %}priority-low{% endif %}">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title mb-0">
-                                {{ interaction.interaction_type.replace('_', ' ').title() }}
-                            </h5>
-                            <span class="badge bg-secondary status-badge">
-                                {{ interaction.status.title() }}
-                            </span>
-                        </div>
-                        
-                        <p class="card-text text-muted small mb-2">
-                            <i class="bi bi-arrow-right me-1"></i>
-                            <strong>{{ interaction.source_infrastructure }}</strong>
-                            →
-                            <strong>{{ interaction.target_infrastructure }}</strong>
-                        </p>
-                        
-                        <p class="card-text">
-                            {{ interaction.description[:100] }}
-                            {% if interaction.description|length > 100 %}...{% endif %}
-                        </p>
-                        
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">
-                                <i class="bi bi-calendar3 me-1"></i>
-                                {{ interaction.created_at.strftime('%Y-%m-%d') if interaction.created_at }}
-                            </small>
-                            
-                            <span class="badge bg-primary">
-                                {{ interaction.lifecycle_stage.title() }}
-                            </span>
-                        </div>
-                    </div>
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold mb-4">
+                    <i class="fas fa-project-diagram me-3"></i>
+                    MaLDReTH Infrastructure Interactions
+                </h1>
+                <p class="lead mb-4">
+                    Mapping and collecting potential infrastructure interactions across the research data lifecycle.
+                    Supporting the MaLDReTH 2 Working Group meeting with comprehensive data collection and analysis.
+                </p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="{{ url_for('main.add_interaction') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-plus me-2"></i>Add New Interaction
+                    </a>
+                    <a href="{{ url_for('main.view_all') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-list me-2"></i>View All Interactions
+                    </a>
                 </div>
             </div>
-            {% endfor %}
-        </div>
-        
-        <div class="text-center mt-4">
-            <a href="{{ url_for('view_interactions') }}" class="btn btn-outline-primary">
-                <i class="bi bi-arrow-right me-2"></i>
-                View All Interactions
-            </a>
         </div>
     </div>
 </div>
-{% else %}
-<!-- Empty State -->
-<div class="row">
-    <div class="col-12">
-        <div class="text-center py-5">
-            <i class="bi bi-inbox display-1 text-muted mb-4"></i>
-            <h3 class="text-muted mb-3">No Interactions Yet</h3>
-            <p class="text-muted mb-4">
-                Get started by adding your first infrastructure interaction.
-            </p>
-            <a href="{{ url_for('add_interaction') }}" class="btn btn-primary btn-lg">
-                <i class="bi bi-plus-circle me-2"></i>
-                Add First Interaction
-            </a>
+
+<!-- Statistics Section -->
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card text-center card-hover h-100">
+                <div class="card-body">
+                    <i class="fas fa-database fa-3x text-primary mb-3"></i>
+                    <h3 class="fw-bold text-primary">{{ total_interactions or 0 }}</h3>
+                    <p class="text-muted mb-0">Total Interactions</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card text-center card-hover h-100">
+                <div class="card-body">
+                    <i class="fas fa-cogs fa-3x text-success mb-3"></i>
+                    <h3 class="fw-bold text-success">{{ interaction_types|length or 0 }}</h3>
+                    <p class="text-muted mb-0">Interaction Types</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card text-center card-hover h-100">
+                <div class="card-body">
+                    <i class="fas fa-sitemap fa-3x text-info mb-3"></i>
+                    <h3 class="fw-bold text-info">{{ lifecycle_stages|length or 0 }}</h3>
+                    <p class="text-muted mb-0">Lifecycle Stages</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card text-center card-hover h-100">
+                <div class="card-body">
+                    <i class="fas fa-download fa-3x text-warning mb-3"></i>
+                    <h3 class="fw-bold text-warning">CSV</h3>
+                    <p class="text-muted mb-0">
+                        <a href="{{ url_for('main.export_csv') }}" class="text-decoration-none">
+                            Export Data
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Interactions Section -->
+{% if recent_interactions %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-clock me-2"></i>Recent Interactions
+            </h2>
+            <div class="row">
+                {% for interaction in recent_interactions %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card card-hover h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0">
+                                    {{ interaction.interaction_type.replace('_', ' ').title() }}
+                                </h5>
+                                <span class="badge bg-primary">{{ interaction.lifecycle_stage.title() }}</span>
+                            </div>
+                            <p class="text-muted small mb-2">
+                                <i class="fas fa-arrow-right me-1"></i>
+                                {{ interaction.source_infrastructure }} 
+                                → {{ interaction.target_infrastructure }}
+                            </p>
+                            <p class="card-text">
+                                {{ interaction.description[:100] }}{% if interaction.description|length > 100 %}...{% endif %}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ interaction.created_at.strftime('%Y-%m-%d') if interaction.created_at else 'N/A' }}
+                                </small>
+                                <a href="{{ url_for('main.view_interaction', id=interaction.id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="text-center mt-4">
+                <a href="{{ url_for('main.view_all') }}" class="btn btn-primary">
+                    <i class="fas fa-list me-2"></i>View All Interactions
+                </a>
+            </div>
         </div>
     </div>
 </div>
 {% endif %}
 
-<!-- Information Section -->
-<div class="row mt-5">
-    <div class="col-12">
-        <div class="card bg-light">
-            <div class="card-body">
-                <h3 class="card-title">
-                    <i class="bi bi-info-circle me-2"></i>
-                    About This Tool
-                </h3>
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>Purpose</h5>
-                        <p>
-                            This application supports the MaLDReTH 2 Working Group meeting 
-                            by collecting infrastructure interaction data across the research 
-                            data lifecycle. The goal is to better understand how different 
-                            pieces of research infrastructure interact with each other.
-                        </p>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>Features</h5>
-                        <ul class="list-unstyled">
-                            <li><i class="bi bi-check-circle text-success me-2"></i>Easy-to-use forms for data collection</li>
-                            <li><i class="bi bi-check-circle text-success me-2"></i>CSV export for analysis and sharing</li>
-                            <li><i class="bi bi-check-circle text-success me-2"></i>RESTful API for programmatic access</li>
-                            <li><i class="bi bi-check-circle text-success me-2"></i>Responsive design for all devices</li>
-                        </ul>
+<!-- Getting Started Section -->
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="card-title">
+                        <i class="fas fa-rocket me-2"></i>Getting Started
+                    </h3>
+                    <p class="card-text">
+                        This application helps collect and manage infrastructure interactions across the research data lifecycle.
+                        Use the tools below to contribute to the MaLDReTH 2 Working Group data collection effort.
+                    </p>
+                    <div class="row mt-4">
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-plus-circle fa-2x text-success mb-2"></i>
+                                <h6>Add Interaction</h6>
+                                <p class="small text-muted">Submit new infrastructure interaction data</p>
+                                <a href="{{ url_for('main.add_interaction') }}" class="btn btn-sm btn-success">
+                                    Add Now
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-search fa-2x text-info mb-2"></i>
+                                <h6>Browse Data</h6>
+                                <p class="small text-muted">Explore existing interactions and filter by criteria</p>
+                                <a href="{{ url_for('main.view_all') }}" class="btn btn-sm btn-info">
+                                    Browse Now
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-code fa-2x text-warning mb-2"></i>
+                                <h6>Use API</h6>
+                                <p class="small text-muted">Programmatic access via RESTful API</p>
+                                <a href="{{ url_for('main.api_docs') }}" class="btn btn-sm btn-warning">
+                                    View Docs
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Quick Stats Tables -->
+{% if interaction_types or lifecycle_stages %}
+<div class="container my-5">
+    <div class="row">
+        {% if interaction_types %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Interactions by Type
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for type, count in interaction_types %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ type.replace('_', ' ').title() }}</span>
+                        <span class="badge bg-secondary">{{ count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if lifecycle_stages %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Interactions by Lifecycle Stage
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for stage, count in lifecycle_stages %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ stage.title() }}</span>
+                        <span class="badge bg-secondary">{{ count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add some interactive elements
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to statistics cards
+    const cards = document.querySelectorAll('.card-hover');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.transition = 'transform 0.3s ease';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Add animation to statistics numbers
+    const numbers = document.querySelectorAll('.card-hover h3');
+    numbers.forEach(number => {
+        const finalValue = parseInt(number.textContent);
+        if (!isNaN(finalValue) && finalValue > 0) {
+            let currentValue = 0;
+            const increment = Math.ceil(finalValue / 20);
+            const timer = setInterval(() => {
+                currentValue += increment;
+                if (currentValue >= finalValue) {
+                    currentValue = finalValue;
+                    clearInterval(timer);
+                }
+                number.textContent = currentValue;
+            }, 50);
+        }
+    });
+});
+</script>
 {% endblock %}
