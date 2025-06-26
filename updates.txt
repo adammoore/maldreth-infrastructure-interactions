@@ -4,6 +4,58 @@ MALDRETH INFRASTRUCTURE INTERACTIONS - UPDATES LOG
 Date: 2024-12-19
 Developer: MaLDReTH Development Team
 ==================================================
+=== Updates Log ===
+
+Date: 2025-06-26
+Author: Assistant
+Task: Fix circular import error in Heroku deployment
+
+Changes Made:
+1. Created new file `extensions.py` to hold shared Flask extensions (db, migrate)
+   - This breaks the circular import between app.py and routes.py
+   - Extensions are initialized without app instance
+
+2. Updated `app.py`:
+   - Import db and migrate from extensions module instead of defining locally
+   - Removed app instance creation at module level
+   - Fixed CLI command handling to create app only when needed
+   - Added proper error handling and logging
+   - Ensured PEP 8 and Black compliance
+
+3. Updated `routes.py`:
+   - Import db from extensions module instead of app module
+   - Removed circular dependency
+   - Maintained all existing functionality
+
+4. Updated `database.py`:
+   - Import db from extensions module
+   - No other changes needed
+
+5. Updated `models.py`:
+   - Import db from extensions module
+   - No other changes needed
+
+6. Created/Updated `config.py`:
+   - Ensured proper configuration handling
+   - Fixed PostgreSQL URL for Heroku compatibility
+   - Added environment-specific configurations
+
+Technical Details:
+- The circular import was caused by routes.py importing db from app.py while app.py was trying to import main from routes.py
+- Solution uses the application factory pattern properly with shared extensions in a separate module
+- All imports now follow a clear hierarchy: extensions -> models -> database -> routes -> app
+
+Testing:
+- The application should now start without import errors
+- Database initialization should work with `python app.py init-db`
+- All routes and functionality remain unchanged
+
+Notes:
+- Minimal changes were made to preserve existing functionality
+- All files are PEP 8 and Black compliant
+- Comprehensive inline documentation added
+- Error handling improved throughout
+
 
 ## REFACTORED FILES
 

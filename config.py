@@ -1,108 +1,84 @@
 """
 config.py
+Application configuration settings.
 
-Configuration settings for the MaLDReTH Infrastructure Interactions application.
+This module contains configuration classes for different environments
+(development, testing, production).
 """
 
 import os
-from datetime import timedelta
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 
 class Config:
-    """Base configuration."""
-
-    # Flask
-    SECRET_KEY = os.environ.get("SECRET_KEY") or "dev-secret-key-change-in-production"
-    FLASK_ENV = os.environ.get("FLASK_ENV", "development")
+    """
+    Base configuration class with common settings.
+    
+    Attributes:
+        SECRET_KEY (str): Secret key for session management
+        SQLALCHEMY_DATABASE_URI (str): Database connection string
+        SQLALCHEMY_TRACK_MODIFICATIONS (bool): Track model changes
+    """
+    
+    # Security
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    
+    # Database
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        'DATABASE_URL',
+        'sqlite:///maldreth.db'
+    )
+    
+    # Fix for Heroku's postgres:// to postgresql://
+    if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
+        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace(
+            'postgres://', 'postgresql://', 1
+        )
+    
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Application settings
     DEBUG = False
     TESTING = False
-
-    # Database
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///maldreth.db")
-    # Fix for Heroku Postgres
-    if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
-        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace(
-            "postgres://", "postgresql://", 1
-        )
-
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = False
-
-    # Security
-    SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = "Lax"
-    PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
-
-    # CORS
-    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*").split(",")
-
-    # Pagination
-    ITEMS_PER_PAGE = 20
-    MAX_ITEMS_PER_PAGE = 100
-
-    # File uploads
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
-    UPLOAD_FOLDER = "uploads"
-    ALLOWED_EXTENSIONS = {"xlsx", "xls", "csv", "json", "xml"}
-
-    # API
-    API_RATE_LIMIT = os.environ.get("API_RATE_LIMIT", "100/hour")
-
-    # Caching
-    CACHE_TYPE = "simple"
-    CACHE_DEFAULT_TIMEOUT = 300
-
-    # Logging
-    LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
-    LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
-    # External services
-    SENTRY_DSN = os.environ.get("SENTRY_DSN")
-    REDIS_URL = os.environ.get("REDIS_URL")
-
-    # Feature flags
-    ENABLE_CACHE = os.environ.get("ENABLE_CACHE", "true").lower() == "true"
-    ENABLE_RATE_LIMITING = (
-        os.environ.get("ENABLE_RATE_LIMITING", "true").lower() == "true"
-    )
-    ENABLE_ANALYTICS = os.environ.get("ENABLE_ANALYTICS", "false").lower() == "true"
+    
+    # CORS settings
+    CORS_ORIGINS = ['*']
+    
+    # Session configuration
+    SESSION_TYPE = 'filesystem'
+    PERMANENT_SESSION_LIFETIME = 3600  # 1 hour
 
 
 class DevelopmentConfig(Config):
-    """Development configuration."""
-
+    """Development environment configuration."""
     DEBUG = True
     SQLALCHEMY_ECHO = True
-    SESSION_COOKIE_SECURE = False
-
-
-class TestingConfig(Config):
-    """Testing configuration."""
-
-    TESTING = True
-    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-    WTF_CSRF_ENABLED = False
-    SESSION_COOKIE_SECURE = False
 
 
 class ProductionConfig(Config):
-    """Production configuration."""
+    """Production environment configuration."""
+    DEBUG = False
+    SQLALCHEMY_ECHO = False
 
-    # Override any production-specific settings here
-    pass
+
+class TestingConfig(Config):
+    """Testing environment configuration."""
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    WTF_CSRF_ENABLED = False
 
 
 # Configuration dictionary
 config = {
-    "development": DevelopmentConfig,
-    "testing": TestingConfig,
-    "production": ProductionConfig,
-    "default": DevelopmentConfig,
+    'development': DevelopmentConfig,
+    'production': ProductionConfig,
+    'testing': TestingConfig,
+    'default': DevelopmentConfig
 }
 
-
-def get_config():
-    """Get configuration based on environment."""
-    env = os.environ.get("FLASK_ENV", "development")
-    return config.get(env, config["default"])
+# Select configuration based on environment
+env = os.environ.get('FLASK_ENV', 'production')
+Config = config.get(env, ProductionConfig)
