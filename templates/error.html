@@ -1,10 +1,143 @@
 {% extends "base.html" %}
 
+{% block title %}Error {{ error_code }} - MaLDReTH Infrastructure{% endblock %}
+
 {% block content %}
-<div class="text-center">
-    <h1 class="display-1">{{ error_code }}</h1>
-    <h2>{{ error_message }}</h2>
-    <p class="lead">Something went wrong. Please try again later.</p>
-    <a href="{{ url_for('index') }}" class="btn btn-primary">Go Home</a>
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center">
+                <div class="error-icon mb-4">
+                    {% if error_code == 404 %}
+                        <i class="fas fa-search fa-5x text-muted"></i>
+                    {% else %}
+                        <i class="fas fa-exclamation-triangle fa-5x text-warning"></i>
+                    {% endif %}
+                </div>
+                
+                <h1 class="display-1 fw-bold text-primary">{{ error_code }}</h1>
+                
+                <h2 class="mb-4">
+                    {% if error_code == 404 %}
+                        Page Not Found
+                    {% else %}
+                        Oops! Something went wrong
+                    {% endif %}
+                </h2>
+                
+                <p class="lead text-muted mb-4">
+                    {{ error_message or "We encountered an unexpected issue." }}
+                </p>
+                
+                <div class="row justify-content-center mb-5">
+                    <div class="col-md-8">
+                        <div class="card bg-light border-0">
+                            <div class="card-body">
+                                <h5 class="card-title">What can you do?</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <ul class="list-unstyled">
+                                            <li class="mb-2">
+                                                <i class="fas fa-home text-primary me-2"></i>
+                                                <a href="{{ url_for('main.index') }}" class="text-decoration-none">
+                                                    Go to Homepage
+                                                </a>
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-list text-success me-2"></i>
+                                                <a href="{{ url_for('main.view_all') }}" class="text-decoration-none">
+                                                    View All Interactions
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <ul class="list-unstyled">
+                                            <li class="mb-2">
+                                                <i class="fas fa-plus text-info me-2"></i>
+                                                <a href="{{ url_for('main.add_interaction') }}" class="text-decoration-none">
+                                                    Add New Interaction
+                                                </a>
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-code text-warning me-2"></i>
+                                                <a href="{{ url_for('main.api_docs') }}" class="text-decoration-none">
+                                                    API Documentation
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>Back to Home
+                    </a>
+                    <button onclick="history.back()" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Go Back
+                    </button>
+                    <button onclick="location.reload()" class="btn btn-outline-info">
+                        <i class="fas fa-redo me-2"></i>Try Again
+                    </button>
+                </div>
+                
+                {% if error_code != 404 %}
+                <div class="mt-5">
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Need help?</strong> If this error persists, please contact the 
+                        <a href="https://www.rd-alliance.org/groups/rda-ofr-mapping-landscape-digital-research-tools-wg/" 
+                           target="_blank" class="alert-link">MaLDReTH Working Group</a> 
+                        or create an issue on our 
+                        <a href="https://github.com/adammoore/maldreth-infrastructure-interactions" 
+                           target="_blank" class="alert-link">GitHub repository</a>.
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+.error-icon {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.3s ease;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh for 500 errors after 30 seconds
+{% if error_code == 500 %}
+setTimeout(function() {
+    if (confirm('Would you like to refresh the page and try again?')) {
+        location.reload();
+    }
+}, 30000);
+{% endif %}
+
+// Track error for analytics (if implemented)
+if (typeof gtag !== 'undefined') {
+    gtag('event', 'exception', {
+        'description': 'Error {{ error_code }}: {{ error_message|e }}',
+        'fatal': false
+    });
+}
+</script>
 {% endblock %}

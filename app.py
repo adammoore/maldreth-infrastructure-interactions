@@ -1,9 +1,8 @@
+#!/usr/bin/env python3
 """
 MaLDReTH Infrastructure Interactions Flask Application
-Author: Adam Vials Moore
-Date: 26 June 2025
 
-A Flask web application for collecting and managing potential infrastructure
+A web application for collecting and managing potential infrastructure
 interactions for the MaLDReTH 2 Working Group meeting.
 
 This application provides:
@@ -12,327 +11,359 @@ This application provides:
 - CSV export functionality
 - PostgreSQL database integration
 - Heroku deployment ready
+
+Author: Adam Vials Moore
+License: Apache 2.0
 """
 
-import csv
-import io
-import logging
 import os
+import sys
+import logging
 from datetime import datetime
+from typing import Optional
 
-from flask import Flask, jsonify, make_response
+from flask import Flask, render_template, g
+from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
 
-from models import db, Interaction, init_database
-from routes import main_bp
-from api_v2 import api_v2_bp
-
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, 
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Initialize Flask extensions
+# Initialize extensions
+db = SQLAlchemy()
 migrate = Migrate()
 
 
-def create_app():
+def create_app(config_name: Optional[str] = None) -> Flask:
     """
-    Application factory pattern for creating Flask app instances.
-
+    Create and configure the Flask application.
+    
+    Args:
+        config_name: Configuration environment name (development, production, testing)
+        
     Returns:
-        Flask: Configured Flask application instance
+        Configured Flask application instance
+        
+    Raises:
+        Exception: If configuration or initialization fails
     """
-    app = Flask(__name__)
+    try:
+        app = Flask(__name__)
+        
+        # Load configuration
+        configure_app(app, config_name)
+        
+        # Initialize extensions
+        initialize_extensions(app)
+        
+        # Register blueprints
+        register_blueprints(app)
+        
+        # Set up error handlers
+        setup_error_handlers(app)
+        
+        # Configure context processors
+        setup_context_processors(app)
+        
+        logger.info(f"Flask application created successfully in {app.config['ENV']} mode")
+        return app
+        
+    except Exception as e:
+        logger.error(f"Failed to create Flask application: {str(e)}")
+        raise
 
-    # Configuration
-    app.config["SECRET_KEY"] = os.environ.get(
-        "SECRET_KEY", "dev-key-change-in-production"
-    )
 
+def configure_app(app: Flask, config_name: Optional[str] = None) -> None:
+    """
+    Configure the Flask application with environment-specific settings.
+    
+    Args:
+        app: Flask application instance
+        config_name: Configuration environment name
+    """
+    # Determine configuration based on environment
+    if config_name is None:
+        config_name = os.environ.get('FLASK_ENV', 'production')
+    
+    # Base configuration
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['ITEMS_PER_PAGE'] = 20
+    app.config['VERSION'] = '1.0.0'
+    app.config['ENV'] = config_name
+    
     # Database configuration
-    database_url = os.environ.get("DATABASE_URL")
+    database_url = os.environ.get('DATABASE_URL')
     if database_url:
-        # Fix for Heroku Postgres URL format
-        if database_url.startswith("postgres://"):
-            database_url = database_url.replace("postgres://", "postgresql://")
-        app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+        # Fix for Heroku PostgreSQL URL format
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     else:
-        # Local development
-        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///interactions.db"
+        # Fallback to SQLite for development
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///maldreth_interactions.db'
+    
+    # Environment-specific configuration
+    if config_name == 'development':
+        app.config['DEBUG'] = True
+        app.config['TESTING'] = False
+        logging.getLogger().setLevel(logging.DEBUG)
+    elif config_name == 'testing':
+        app.config['DEBUG'] = False
+        app.config['TESTING'] = True
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        app.config['WTF_CSRF_ENABLED'] = False
+    else:  # production
+        app.config['DEBUG'] = False
+        app.config['TESTING'] = False
+        logging.getLogger().setLevel(logging.INFO)
+    
+    # Security headers for production
+    if config_name == 'production':
+        app.config['SESSION_COOKIE_SECURE'] = True
+        app.config['SESSION_COOKIE_HTTPONLY'] = True
+        app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    
+    logger.info(f"Application configured for {config_name} environment")
 
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # Initialize extensions with app
-    db.init_app(app)
-    migrate.init_app(app, db)
-    CORS(app)
+def initialize_extensions(app: Flask) -> None:
+    """
+    Initialize Flask extensions with the application.
+    
+    Args:
+        app: Flask application instance
+    """
+    try:
+        db.init_app(app)
+        migrate.init_app(app, db)
+        CORS(app, resources={r"/api/*": {"origins": "*"}})
+        
+        logger.info("Extensions initialized successfully")
+        
+    except Exception as e:
+        logger.error(f"Failed to initialize extensions: {str(e)}")
+        raise
 
-    # Register blueprints
-    app.register_blueprint(main_bp)
-    app.register_blueprint(api_v2_bp)
 
-    # API Routes
-    @app.route("/api/interactions", methods=["GET"])
-    def api_get_interactions():
-        """Get all interactions via API."""
-        try:
-            interactions = Interaction.query.all()
-            return jsonify({
-                "status": "success",
-                "data": [interaction.to_dict() for interaction in interactions],
-                "count": len(interactions)
-            })
-        except Exception as e:
-            logger.error(f"Error getting interactions via API: {e}")
-            return jsonify({"status": "error", "message": str(e)}), 500
+def register_blueprints(app: Flask) -> None:
+    """
+    Register application blueprints.
+    
+    Args:
+        app: Flask application instance
+    """
+    try:
+        # Import here to avoid circular imports
+        from routes import main
+        
+        app.register_blueprint(main)
+        
+        logger.info("Blueprints registered successfully")
+        
+    except Exception as e:
+        logger.error(f"Failed to register blueprints: {str(e)}")
+        raise
 
-    @app.route("/api/interactions", methods=["POST"])
-    def api_create_interaction():
-        """Create new interaction via API."""
-        try:
-            data = request.get_json()
 
-            if not data:
-                return jsonify({"status": "error", "message": "No data provided"}), 400
+def setup_error_handlers(app: Flask) -> None:
+    """
+    Set up global error handlers for the application.
+    
+    Args:
+        app: Flask application instance
+    """
+    @app.errorhandler(404)
+    def not_found_error(error):
+        """Handle 404 errors globally."""
+        return render_template('error.html', 
+                             error_code=404, 
+                             error_message="The page you're looking for doesn't exist."), 404
 
-            # Create interaction from data
-            interaction = Interaction.from_dict(data)
+    @app.errorhandler(500)
+    def internal_error(error):
+        """Handle 500 errors globally."""
+        db.session.rollback()
+        logger.error(f"Internal server error: {str(error)}")
+        return render_template('error.html',
+                             error_code=500,
+                             error_message="An internal server error occurred."), 500
+
+    @app.errorhandler(Exception)
+    def handle_exception(error):
+        """Handle all other exceptions globally."""
+        db.session.rollback()
+        logger.error(f"Unhandled exception: {str(error)}")
+        return render_template('error.html',
+                             error_code=500,
+                             error_message="An unexpected error occurred."), 500
+
+
+def setup_context_processors(app: Flask) -> None:
+    """
+    Set up template context processors.
+    
+    Args:
+        app: Flask application instance
+    """
+    @app.context_processor
+    def inject_global_vars():
+        """Inject global variables into all templates."""
+        return {
+            'current_year': datetime.now().year,
+            'app_version': app.config.get('VERSION', '1.0.0'),
+            'app_name': 'MaLDReTH Infrastructure Interactions'
+        }
+
+    @app.before_request
+    def load_logged_in_user():
+        """Load user information before each request if needed."""
+        g.user = None  # Placeholder for future authentication
+
+
+def init_database(app: Flask) -> None:
+    """
+    Initialize the database with required tables.
+    
+    Args:
+        app: Flask application instance
+    """
+    try:
+        with app.app_context():
+            # Import models to ensure they're registered
+            from models import Interaction
             
-            # Validate
-            is_valid, errors = interaction.validate()
-            if not is_valid:
-                return jsonify({
-                    "status": "error", 
-                    "message": "Validation failed",
-                    "errors": errors
-                }), 400
-
-            db.session.add(interaction)
-            db.session.commit()
-
-            logger.info(f"Created new interaction: {interaction.id}")
-            return jsonify({
-                "status": "success",
-                "data": interaction.to_dict()
-            }), 201
-
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Error creating interaction via API: {e}")
-            return jsonify({"status": "error", "message": str(e)}), 500
-
-    @app.route("/api/interactions/<int:interaction_id>", methods=["GET"])
-    def api_get_interaction(interaction_id):
-        """Get specific interaction via API."""
-        try:
-            interaction = Interaction.query.get_or_404(interaction_id)
-            return jsonify({
-                "status": "success",
-                "data": interaction.to_dict()
-            })
-        except Exception as e:
-            logger.error(f"Error getting interaction {interaction_id} via API: {e}")
-            return jsonify({"status": "error", "message": str(e)}), 500
-
-    @app.route("/api/interactions/<int:interaction_id>", methods=["PUT"])
-    def api_update_interaction(interaction_id):
-        """Update interaction via API."""
-        try:
-            interaction = Interaction.query.get_or_404(interaction_id)
-            data = request.get_json()
-
-            if not data:
-                return jsonify({"status": "error", "message": "No data provided"}), 400
-
-            # Update interaction
-            interaction.update_from_dict(data)
+            # Create all tables
+            db.create_all()
             
-            # Validate
-            is_valid, errors = interaction.validate()
-            if not is_valid:
-                return jsonify({
-                    "status": "error", 
-                    "message": "Validation failed",
-                    "errors": errors
-                }), 400
-
-            db.session.commit()
-
-            logger.info(f"Updated interaction: {interaction.id}")
-            return jsonify({
-                "status": "success",
-                "data": interaction.to_dict()
-            })
-
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Error updating interaction {interaction_id} via API: {e}")
-            return jsonify({"status": "error", "message": str(e)}), 500
-
-    @app.route("/api/interactions/<int:interaction_id>", methods=["DELETE"])
-    def api_delete_interaction(interaction_id):
-        """Delete interaction via API."""
-        try:
-            interaction = Interaction.query.get_or_404(interaction_id)
-            db.session.delete(interaction)
-            db.session.commit()
-
-            logger.info(f"Deleted interaction: {interaction_id}")
-            return jsonify({
-                "status": "success",
-                "message": "Interaction deleted successfully"
-            })
-
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Error deleting interaction {interaction_id} via API: {e}")
-            return jsonify({"status": "error", "message": str(e)}), 500
-
-    @app.route("/export")
-    def export_csv():
-        """Export interactions as CSV."""
-        try:
-            interactions = Interaction.query.all()
-
-            output = io.StringIO()
-            writer = csv.writer(output)
-
-            # Header row
-            writer.writerow([
-                "ID",
-                "Interaction Type",
-                "Source Infrastructure",
-                "Target Infrastructure",
-                "Lifecycle Stage",
-                "Description",
-                "Technical Details",
-                "Benefits",
-                "Challenges",
-                "Examples",
-                "Contact Person",
-                "Organization",
-                "Email",
-                "Priority",
-                "Complexity",
-                "Status",
-                "Created At",
-            ])
-
-            # Data rows
-            for interaction in interactions:
-                writer.writerow([
-                    interaction.id,
-                    interaction.interaction_type,
-                    interaction.source_infrastructure,
-                    interaction.target_infrastructure,
-                    interaction.lifecycle_stage,
-                    interaction.description,
-                    interaction.technical_details or "",
-                    interaction.benefits or "",
-                    interaction.challenges or "",
-                    interaction.examples or "",
-                    interaction.contact_person or "",
-                    interaction.organization or "",
-                    interaction.email or "",
-                    interaction.priority or "",
-                    interaction.complexity or "",
-                    interaction.status or "",
-                    (
-                        interaction.created_at.isoformat()
-                        if interaction.created_at
-                        else ""
-                    ),
-                ])
-
-            output.seek(0)
-
-            # Create response
-            response = make_response(output.getvalue())
-            response.headers["Content-Disposition"] = (
-                f'attachment; filename=maldreth_interactions_'
-                f'{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
-            )
-            response.headers["Content-Type"] = "text/csv"
-            return response
-
-        except Exception as e:
-            logger.error(f"Error exporting CSV: {e}")
-            return jsonify({"error": "Failed to export data"}), 500
-
-    @app.route("/health")
-    def health_check():
-        """Health check endpoint."""
-        try:
-            # Test database connection
-            interaction_count = Interaction.query.count()
-            return jsonify({
-                "status": "healthy",
-                "database": "connected",
-                "interactions_count": interaction_count,
-                "timestamp": datetime.utcnow().isoformat(),
-            })
-        except Exception as e:
-            logger.error(f"Health check failed: {e}")
-            return (
-                jsonify({
-                    "status": "unhealthy",
-                    "database": "disconnected",
-                    "error": str(e),
-                    "timestamp": datetime.utcnow().isoformat(),
-                }),
-                503,
-            )
-
-    @app.cli.command("init-db")
-    def init_db_command():
-        """Initialize database tables."""
-        try:
-            init_database(app)
-            print("Database initialized!")
-        except Exception as e:
-            logger.error(f"Error initializing database: {e}")
-            print(f"Error initializing database: {e}")
-
-    @app.cli.command("reset-db")
-    def reset_db_command():
-        """Reset database (drop and recreate all tables)."""
-        try:
-            db.drop_all()
-            db.create_all()
-            logger.info("Database reset successfully.")
-            print("Database reset!")
-        except Exception as e:
-            logger.error(f"Error resetting database: {e}")
-            print(f"Error resetting database: {e}")
-
-    # Create database tables on first run
-    with app.app_context():
-        try:
-            db.create_all()
-            logger.info("Database tables created/verified")
-        except Exception as e:
-            logger.error(f"Error creating database tables: {e}")
-
-    return app
+            logger.info("Database initialized successfully")
+            
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {str(e)}")
+        raise
 
 
-# Create the application instance for Heroku
-app = create_app()
+def cli_init_db():
+    """CLI command to initialize the database."""
+    app = create_app()
+    init_database(app)
+    print("Database initialized successfully!")
 
-# For Heroku compatibility - expose server variable
-server = app
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    debug = os.environ.get("FLASK_ENV") == "development"
+def cli_run_app():
+    """CLI command to run the application."""
+    app = create_app()
+    
+    # Initialize database if it doesn't exist
+    try:
+        init_database(app)
+    except Exception as e:
+        logger.warning(f"Database initialization warning: {str(e)}")
+    
+    # Run the application
+    port = int(os.environ.get('PORT', 5000))
+    host = os.environ.get('HOST', '127.0.0.1')
+    
+    logger.info(f"Starting application on {host}:{port}")
+    app.run(host=host, port=port, debug=app.config['DEBUG'])
 
-    if os.environ.get("DYNO"):  # Running on Heroku
-        logger.info("Starting application on Heroku...")
-        app.run(host="0.0.0.0", port=port)
+
+def help():
+    """
+    Display help information for the application.
+    
+    This function provides comprehensive information about the application,
+    its features, and usage examples.
+    """
+    print("""
+    MaLDReTH Infrastructure Interactions Application
+    ===============================================
+    
+    A Flask web application for collecting and managing potential infrastructure
+    interactions for the MaLDReTH 2 Working Group meeting.
+    
+    Features:
+    ---------
+    • Web Interface: Easy-to-use forms for data collection
+    • Data Export: CSV export for analysis and sharing
+    • API Access: RESTful API for programmatic access
+    • Responsive Design: Works on desktop and mobile
+    • PostgreSQL: Production-ready database on Heroku
+    
+    Usage:
+    ------
+    
+    Initialize Database:
+        python app.py init-db
+    
+    Run Application:
+        python app.py
+        # Application will be available at http://localhost:5000
+    
+    Environment Variables:
+    ----------------------
+    DATABASE_URL        - PostgreSQL connection string (required for production)
+    SECRET_KEY         - Flask secret key (required for production)
+    FLASK_ENV          - Environment: development, testing, production
+    PORT               - Port to run on (default: 5000)
+    HOST               - Host to bind to (default: 127.0.0.1)
+    
+    API Endpoints:
+    --------------
+    GET    /api/interactions       - List all interactions
+    POST   /api/interactions       - Create new interaction
+    GET    /api/interactions/<id>  - Get specific interaction
+    PUT    /api/interactions/<id>  - Update interaction
+    DELETE /api/interactions/<id>  - Delete interaction
+    GET    /api/stats              - Get statistics
+    
+    Example API Usage:
+    ------------------
+    # Get all interactions
+    curl https://your-app.herokuapp.com/api/interactions
+    
+    # Create new interaction
+    curl -X POST https://your-app.herokuapp.com/api/interactions \\
+         -H "Content-Type: application/json" \\
+         -d '{"interaction_type": "data_flow", 
+              "source_infrastructure": "Repository", 
+              "target_infrastructure": "Analysis Platform",
+              "lifecycle_stage": "Analyse",
+              "description": "Data transfer for analysis"}'
+    
+    Deployment:
+    -----------
+    This application is configured for Heroku deployment:
+    
+    1. Create Heroku app: heroku create your-app-name
+    2. Add PostgreSQL: heroku addons:create heroku-postgresql:mini
+    3. Set secret key: heroku config:set SECRET_KEY=your-secret-key
+    4. Deploy: git push heroku main
+    5. Initialize DB: heroku run python app.py init-db
+    
+    For more information, visit:
+    https://github.com/adammoore/maldreth-infrastructure-interactions
+    """)
+
+
+# CLI Interface
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        command = sys.argv[1]
+        
+        if command == 'init-db':
+            cli_init_db()
+        elif command == 'help' or command == '--help' or command == '-h':
+            help()
+        else:
+            print(f"Unknown command: {command}")
+            print("Available commands: init-db, help")
+            sys.exit(1)
     else:
-        logger.info("Starting application locally...")
-        app.run(debug=debug, port=port)
+        # Run the application
+        cli_run_app()
