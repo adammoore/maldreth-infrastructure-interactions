@@ -70,6 +70,17 @@ def create_app(config_name: Optional[str] = None) -> Flask:
         # Configure context processors
         setup_context_processors(app)
         
+        # Initialize database
+        with app.app_context():
+            try:
+                # Import models to ensure they're registered
+                from models import Interaction
+                # Create tables if they don't exist
+                db.create_all()
+                logger.info("Database tables created/verified successfully")
+            except Exception as e:
+                logger.warning(f"Database initialization warning: {str(e)}")
+        
         logger.info(f"Flask application created successfully in {app.config['ENV']} mode")
         return app
         
@@ -160,6 +171,8 @@ def register_blueprints(app: Flask) -> None:
     """
     try:
         # Import here to avoid circular imports
+        # Make sure models are imported first
+        from models import Interaction  # This ensures models are registered with SQLAlchemy
         from routes import main
         
         app.register_blueprint(main)
@@ -251,19 +264,14 @@ def init_database(app: Flask) -> None:
 def cli_init_db():
     """CLI command to initialize the database."""
     app = create_app()
-    init_database(app)
+    with app.app_context():
+        init_database(app)
     print("Database initialized successfully!")
 
 
 def cli_run_app():
     """CLI command to run the application."""
     app = create_app()
-    
-    # Initialize database if it doesn't exist
-    try:
-        init_database(app)
-    except Exception as e:
-        logger.warning(f"Database initialization warning: {str(e)}")
     
     # Run the application
     port = int(os.environ.get('PORT', 5000))
