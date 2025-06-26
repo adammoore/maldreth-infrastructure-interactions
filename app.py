@@ -55,38 +55,25 @@ def create_app(config_class=Config):
         # Initialize CORS
         CORS(app, resources={r"/api/*": {"origins": "*"}})
         
-        # Register blueprints
-        register_blueprints(app)
+        # Register blueprints within app context
+        with app.app_context():
+            # Import routes here to ensure app context is available
+            from routes import main
+            app.register_blueprint(main)
+            logger.info("Blueprints registered successfully")
+            
+            # Create database tables
+            db.create_all()
+            logger.info("Database tables created successfully")
         
         # Register error handlers
         register_error_handlers(app)
-        
-        # Create database tables within app context
-        with app.app_context():
-            db.create_all()
-            logger.info("Database tables created successfully")
         
         logger.info("Flask application created successfully")
         return app
         
     except Exception as e:
         logger.error(f"Failed to create Flask application: {e}")
-        raise
-
-
-def register_blueprints(app):
-    """
-    Register Flask blueprints with the application.
-    
-    Args:
-        app: Flask application instance
-    """
-    try:
-        from routes import main
-        app.register_blueprint(main)
-        logger.info("Blueprints registered successfully")
-    except Exception as e:
-        logger.error(f"Failed to register blueprints: {e}")
         raise
 
 
@@ -119,9 +106,7 @@ def register_error_handlers(app):
         return render_template('error.html', error=str(error)), 500
 
 
-# Create app instance for CLI commands
-app = None
-
+# Only create app instance when running as main or when imported by gunicorn
 if __name__ == '__main__':
     # Handle CLI commands
     if len(sys.argv) > 1 and sys.argv[1] == 'init-db':
@@ -142,3 +127,6 @@ if __name__ == '__main__':
         app = create_app()
         port = int(os.environ.get('PORT', 5000))
         app.run(host='0.0.0.0', port=port, debug=False)
+else:
+    # Create app instance for gunicorn
+    app = create_app()
