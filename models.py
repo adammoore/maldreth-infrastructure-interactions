@@ -1,91 +1,233 @@
 """
-models.py
+Database models for MaLDReTH Infrastructure Interactions application.
 
-Database models for the MaLDReTH Infrastructure Interactions application.
-Defines SQLAlchemy models for storing interaction data.
+This module defines the SQLAlchemy database models for storing and managing
+infrastructure interaction data. It includes proper validation, relationships,
+and serialization methods.
 """
 
 from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean
+from typing import Dict, Any, Optional
 
-# Initialize SQLAlchemy (will be configured by app factory)
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+
+# Initialize SQLAlchemy
 db = SQLAlchemy()
 
 
 class Interaction(db.Model):
     """
-    Model for storing infrastructure interaction data.
+    Model representing an infrastructure interaction in the research data lifecycle.
     
-    This model represents potential interactions between research infrastructure
-    components across the research data lifecycle.
+    This model stores comprehensive information about interactions between different
+    infrastructure components, including technical details, impact assessment,
+    and metadata for tracking and analysis.
+    
+    Attributes:
+        id (int): Primary key, auto-incrementing unique identifier
+        interaction_type (str): Type of interaction (e.g., data_flow, api_integration)
+        source_infrastructure (str): Infrastructure component that initiates the interaction
+        target_infrastructure (str): Infrastructure component that receives the interaction
+        lifecycle_stage (str): Research data lifecycle stage where interaction occurs
+        description (str): Detailed description of the interaction
+        technical_details (str): Technical implementation details and specifications
+        standards_protocols (str): Relevant standards, protocols, or specifications
+        benefits (str): Expected benefits and advantages
+        challenges (str): Known challenges and limitations
+        examples (str): Specific examples and use cases
+        contact_person (str): Name of the contact person
+        organization (str): Organization or institution name
+        email (str): Contact email address
+        priority (str): Priority level (low, medium, high, critical)
+        complexity (str): Implementation complexity (simple, moderate, complex, very_complex)
+        status (str): Current implementation status
+        notes (str): Additional notes and comments
+        created_at (datetime): Timestamp when record was created
+        updated_at (datetime): Timestamp when record was last updated
     """
+    
     __tablename__ = 'interactions'
     
     # Primary key
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     
-    # Core interaction data
-    interaction_type = Column(String(100), nullable=False, 
-                            help_text="Type of interaction (e.g., data_flow, api_call, etc.)")
-    source_infrastructure = Column(String(200), nullable=False,
-                                 help_text="Source infrastructure component")
-    target_infrastructure = Column(String(200), nullable=False,
-                                 help_text="Target infrastructure component")
-    lifecycle_stage = Column(String(50), nullable=False,
-                           help_text="Research data lifecycle stage")
-    description = Column(Text, nullable=False,
-                        help_text="Detailed description of the interaction")
+    # Core interaction information
+    interaction_type = Column(
+        String(100), 
+        nullable=False,
+        index=True,
+        doc="Type of interaction between infrastructure components"
+    )
     
-    # Optional technical details
-    technical_details = Column(Text, nullable=True,
-                             help_text="Technical implementation details")
-    benefits = Column(Text, nullable=True,
-                     help_text="Benefits of this interaction")
-    challenges = Column(Text, nullable=True,
-                       help_text="Challenges or limitations")
-    examples = Column(Text, nullable=True,
-                     help_text="Real-world examples")
+    source_infrastructure = Column(
+        String(200), 
+        nullable=False,
+        index=True,
+        doc="Infrastructure component that initiates the interaction"
+    )
+    
+    target_infrastructure = Column(
+        String(200), 
+        nullable=False,
+        index=True,
+        doc="Infrastructure component that receives the interaction"
+    )
+    
+    lifecycle_stage = Column(
+        String(50), 
+        nullable=False,
+        index=True,
+        doc="Research data lifecycle stage where interaction occurs"
+    )
+    
+    description = Column(
+        Text, 
+        nullable=False,
+        doc="Detailed description of the interaction and its purpose"
+    )
+    
+    # Technical implementation details
+    technical_details = Column(
+        Text, 
+        nullable=True,
+        doc="Technical specifications, protocols, and implementation details"
+    )
+    
+    standards_protocols = Column(
+        String(200), 
+        nullable=True,
+        doc="Relevant standards, protocols, or specifications used"
+    )
+    
+    # Impact assessment
+    benefits = Column(
+        Text, 
+        nullable=True,
+        doc="Expected benefits, advantages, and positive outcomes"
+    )
+    
+    challenges = Column(
+        Text, 
+        nullable=True,
+        doc="Known challenges, limitations, and potential issues"
+    )
+    
+    examples = Column(
+        Text, 
+        nullable=True,
+        doc="Specific examples, use cases, and real-world implementations"
+    )
     
     # Contact information
-    contact_person = Column(String(200), nullable=True,
-                          help_text="Contact person name")
-    organization = Column(String(200), nullable=True,
-                         help_text="Organization name")
-    email = Column(String(200), nullable=True,
-                  help_text="Contact email address")
+    contact_person = Column(
+        String(200), 
+        nullable=True,
+        doc="Name of the person providing this information"
+    )
     
-    # Classification
-    priority = Column(String(20), nullable=True, default='medium',
-                     help_text="Priority level (high, medium, low)")
-    complexity = Column(String(20), nullable=True, default='moderate',
-                       help_text="Complexity level (simple, moderate, complex)")
-    status = Column(String(20), nullable=True, default='proposed',
-                   help_text="Status (proposed, implemented, deprecated)")
+    organization = Column(
+        String(200), 
+        nullable=True,
+        index=True,
+        doc="Organization or institution name"
+    )
     
-    # Metadata
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False,
-                       help_text="When the record was created")
-    updated_at = Column(DateTime, default=datetime.utcnow, 
-                       onupdate=datetime.utcnow, nullable=False,
-                       help_text="When the record was last updated")
+    email = Column(
+        String(200), 
+        nullable=True,
+        doc="Contact email address"
+    )
     
-    def __repr__(self):
-        """String representation of the interaction."""
-        return f'<Interaction {self.id}: {self.source_infrastructure} -> {self.target_infrastructure}>'
+    # Classification and metadata
+    priority = Column(
+        String(20), 
+        nullable=True, 
+        default='medium',
+        index=True,
+        doc="Priority level for implementing this interaction"
+    )
     
-    def __str__(self):
-        """Human-readable string representation."""
-        return f'{self.interaction_type}: {self.source_infrastructure} -> {self.target_infrastructure}'
+    complexity = Column(
+        String(20), 
+        nullable=True, 
+        default='moderate',
+        doc="Expected complexity of implementing this interaction"
+    )
     
-    def to_dict(self):
+    status = Column(
+        String(20), 
+        nullable=True, 
+        default='proposed',
+        index=True,
+        doc="Current implementation status"
+    )
+    
+    notes = Column(
+        Text, 
+        nullable=True,
+        doc="Additional notes, comments, and relevant information"
+    )
+    
+    # Timestamps
+    created_at = Column(
+        DateTime, 
+        default=datetime.utcnow, 
+        nullable=False,
+        index=True,
+        doc="Timestamp when the interaction record was created"
+    )
+    
+    updated_at = Column(
+        DateTime, 
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+        doc="Timestamp when the interaction record was last updated"
+    )
+    
+    def __init__(self, **kwargs):
         """
-        Convert the interaction to a dictionary for JSON serialization.
+        Initialize a new Interaction instance.
+        
+        Args:
+            **kwargs: Keyword arguments for field values
+        """
+        super().__init__(**kwargs)
+        
+        # Set default timestamps if not provided
+        if not self.created_at:
+            self.created_at = datetime.utcnow()
+        if not self.updated_at:
+            self.updated_at = datetime.utcnow()
+    
+    def __repr__(self) -> str:
+        """
+        Return a string representation of the Interaction instance.
         
         Returns:
-            dict: Dictionary representation of the interaction
+            String representation including key identifying information
         """
-        return {
+        return (
+            f"<Interaction(id={self.id}, "
+            f"type='{self.interaction_type}', "
+            f"source='{self.source_infrastructure}', "
+            f"target='{self.target_infrastructure}', "
+            f"stage='{self.lifecycle_stage}')>"
+        )
+    
+    def to_dict(self, include_sensitive: bool = False) -> Dict[str, Any]:
+        """
+        Convert the Interaction instance to a dictionary.
+        
+        Args:
+            include_sensitive: Whether to include potentially sensitive fields like email
+            
+        Returns:
+            Dictionary representation of the interaction data
+        """
+        data = {
             'id': self.id,
             'interaction_type': self.interaction_type,
             'source_infrastructure': self.source_infrastructure,
@@ -93,203 +235,287 @@ class Interaction(db.Model):
             'lifecycle_stage': self.lifecycle_stage,
             'description': self.description,
             'technical_details': self.technical_details,
+            'standards_protocols': self.standards_protocols,
             'benefits': self.benefits,
             'challenges': self.challenges,
             'examples': self.examples,
             'contact_person': self.contact_person,
             'organization': self.organization,
-            'email': self.email,
             'priority': self.priority,
             'complexity': self.complexity,
             'status': self.status,
+            'notes': self.notes,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+        
+        # Include email only if explicitly requested
+        if include_sensitive:
+            data['email'] = self.email
+        
+        return data
+    
+    def to_csv_row(self) -> list:
+        """
+        Convert the Interaction instance to a CSV row format.
+        
+        Returns:
+            List of values suitable for CSV export
+        """
+        return [
+            self.id,
+            self.interaction_type,
+            self.source_infrastructure,
+            self.target_infrastructure,
+            self.lifecycle_stage,
+            self.description or '',
+            self.technical_details or '',
+            self.standards_protocols or '',
+            self.benefits or '',
+            self.challenges or '',
+            self.examples or '',
+            self.contact_person or '',
+            self.organization or '',
+            self.email or '',
+            self.priority or '',
+            self.complexity or '',
+            self.status or '',
+            self.notes or '',
+            self.created_at.isoformat() if self.created_at else '',
+            self.updated_at.isoformat() if self.updated_at else ''
+        ]
     
     @classmethod
-    def from_dict(cls, data):
+    def get_csv_headers(cls) -> list:
+        """
+        Get the CSV headers for export functionality.
+        
+        Returns:
+            List of column headers for CSV export
+        """
+        return [
+            'ID',
+            'Interaction Type',
+            'Source Infrastructure',
+            'Target Infrastructure',
+            'Lifecycle Stage',
+            'Description',
+            'Technical Details',
+            'Standards/Protocols',
+            'Benefits',
+            'Challenges',
+            'Examples',
+            'Contact Person',
+            'Organization',
+            'Email',
+            'Priority',
+            'Complexity',
+            'Status',
+            'Notes',
+            'Created At',
+            'Updated At'
+        ]
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Interaction':
         """
         Create an Interaction instance from a dictionary.
         
         Args:
-            data (dict): Dictionary containing interaction data
+            data: Dictionary containing interaction data
             
         Returns:
-            Interaction: New Interaction instance
+            New Interaction instance
+            
+        Raises:
+            ValueError: If required fields are missing
         """
-        # Remove None values and system fields
-        clean_data = {k: v for k, v in data.items() 
-                     if v is not None and k not in ['id', 'created_at', 'updated_at']}
+        required_fields = ['interaction_type', 'source_infrastructure', 
+                          'target_infrastructure', 'lifecycle_stage', 'description']
         
-        return cls(**clean_data)
+        for field in required_fields:
+            if field not in data or not data[field]:
+                raise ValueError(f"Required field '{field}' is missing or empty")
+        
+        # Filter out None values and unknown fields
+        valid_fields = {
+            'interaction_type', 'source_infrastructure', 'target_infrastructure',
+            'lifecycle_stage', 'description', 'technical_details', 'standards_protocols',
+            'benefits', 'challenges', 'examples', 'contact_person', 'organization',
+            'email', 'priority', 'complexity', 'status', 'notes'
+        }
+        
+        filtered_data = {k: v for k, v in data.items() 
+                        if k in valid_fields and v is not None}
+        
+        return cls(**filtered_data)
     
-    def update_from_dict(self, data):
+    def update_from_dict(self, data: Dict[str, Any]) -> None:
         """
-        Update the interaction from a dictionary.
+        Update the Interaction instance from a dictionary.
         
         Args:
-            data (dict): Dictionary containing updated interaction data
+            data: Dictionary containing updated field values
         """
-        updatable_fields = [
+        updatable_fields = {
             'interaction_type', 'source_infrastructure', 'target_infrastructure',
-            'lifecycle_stage', 'description', 'technical_details', 'benefits',
-            'challenges', 'examples', 'contact_person', 'organization', 
-            'email', 'priority', 'complexity', 'status'
-        ]
+            'lifecycle_stage', 'description', 'technical_details', 'standards_protocols',
+            'benefits', 'challenges', 'examples', 'contact_person', 'organization',
+            'email', 'priority', 'complexity', 'status', 'notes'
+        }
         
-        for field in updatable_fields:
-            if field in data and data[field] is not None:
-                setattr(self, field, data[field])
+        for field, value in data.items():
+            if field in updatable_fields and hasattr(self, field):
+                setattr(self, field, value)
         
-        # Update timestamp
+        # Update the modification timestamp
         self.updated_at = datetime.utcnow()
     
-    @property
-    def interaction_description(self):
-        """Alias for description field for backwards compatibility."""
-        return self.description
-    
-    @staticmethod
-    def get_interaction_types():
+    def get_summary(self) -> str:
         """
-        Get all available interaction types.
+        Get a brief summary of the interaction.
         
         Returns:
-            list: List of available interaction types
+            Summary string for display purposes
         """
-        return [
-            'data_flow', 'api_call', 'file_transfer', 'database_connection',
-            'authentication', 'authorization', 'metadata_exchange',
-            'workflow_integration', 'service_discovery', 'monitoring',
-            'backup_sync', 'user_interface', 'other'
+        return (
+            f"{self.interaction_type.replace('_', ' ').title()} "
+            f"from {self.source_infrastructure} to {self.target_infrastructure} "
+            f"({self.lifecycle_stage.title()} stage)"
+        )
+    
+    def is_complete(self) -> bool:
+        """
+        Check if the interaction has all recommended fields filled.
+        
+        Returns:
+            True if interaction is considered complete, False otherwise
+        """
+        required_fields = [
+            self.interaction_type, self.source_infrastructure,
+            self.target_infrastructure, self.lifecycle_stage, self.description
         ]
-    
-    @staticmethod
-    def get_lifecycle_stages():
-        """
-        Get all available lifecycle stages.
         
-        Returns:
-            list: List of available lifecycle stages
-        """
-        return [
-            'conceptualise', 'plan', 'collect', 'process', 'analyse',
-            'store', 'publish', 'preserve', 'share', 'access', 
-            'transform', 'cross_cutting'
+        recommended_fields = [
+            self.technical_details, self.benefits, self.contact_person
         ]
-    
-    @staticmethod
-    def get_priority_levels():
-        """
-        Get all available priority levels.
         
-        Returns:
-            list: List of available priority levels
-        """
-        return ['high', 'medium', 'low']
-    
-    @staticmethod
-    def get_complexity_levels():
-        """
-        Get all available complexity levels.
+        has_required = all(field for field in required_fields)
+        has_some_recommended = any(field for field in recommended_fields)
         
-        Returns:
-            list: List of available complexity levels
-        """
-        return ['simple', 'moderate', 'complex']
-    
-    @staticmethod
-    def get_status_options():
-        """
-        Get all available status options.
-        
-        Returns:
-            list: List of available status options
-        """
-        return ['proposed', 'implemented', 'deprecated']
-    
-    def validate(self):
-        """
-        Validate the interaction data.
-        
-        Returns:
-            tuple: (is_valid, error_messages)
-        """
-        errors = []
-        
-        # Required fields
-        if not self.interaction_type:
-            errors.append("Interaction type is required")
-        elif self.interaction_type not in self.get_interaction_types():
-            errors.append(f"Invalid interaction type: {self.interaction_type}")
-        
-        if not self.source_infrastructure:
-            errors.append("Source infrastructure is required")
-        
-        if not self.target_infrastructure:
-            errors.append("Target infrastructure is required")
-        
-        if not self.lifecycle_stage:
-            errors.append("Lifecycle stage is required")
-        elif self.lifecycle_stage not in self.get_lifecycle_stages():
-            errors.append(f"Invalid lifecycle stage: {self.lifecycle_stage}")
-        
-        if not self.description:
-            errors.append("Description is required")
-        
-        # Optional field validation
-        if self.priority and self.priority not in self.get_priority_levels():
-            errors.append(f"Invalid priority level: {self.priority}")
-        
-        if self.complexity and self.complexity not in self.get_complexity_levels():
-            errors.append(f"Invalid complexity level: {self.complexity}")
-        
-        if self.status and self.status not in self.get_status_options():
-            errors.append(f"Invalid status: {self.status}")
-        
-        # Email validation (basic)
-        if self.email and '@' not in self.email:
-            errors.append("Invalid email address format")
-        
-        return len(errors) == 0, errors
+        return has_required and has_some_recommended
 
 
-def create_tables(app):
+def init_db(app):
     """
-    Create all database tables.
+    Initialize the database with the Flask application.
     
     Args:
         app: Flask application instance
     """
     with app.app_context():
         db.create_all()
-        print("Database tables created successfully")
 
 
-def drop_tables(app):
+def help():
     """
-    Drop all database tables.
+    Display help information for the models module.
     
-    Args:
-        app: Flask application instance
+    This function provides comprehensive information about the database models,
+    their relationships, and usage examples.
     """
-    with app.app_context():
-        db.drop_all()
-        print("Database tables dropped successfully")
-
-
-def init_database(app):
-    """
-    Initialize the database with any required seed data.
+    print("""
+    MaLDReTH Infrastructure Interactions - Models Module
+    ===================================================
     
-    Args:
-        app: Flask application instance
-    """
-    with app.app_context():
-        # Create tables
-        db.create_all()
+    This module defines SQLAlchemy database models for the application.
+    
+    Models:
+    -------
+    
+    Interaction:
+        Primary model for storing infrastructure interaction data.
         
-        # Add any seed data here if needed
-        # For now, we'll just ensure the tables exist
+        Key Features:
+        - Comprehensive field validation
+        - Automatic timestamp management
+        - JSON serialization methods
+        - CSV export functionality
+        - Data validation and integrity checks
         
-        print("Database initialized successfully")
+        Required Fields:
+        - interaction_type: Type of interaction
+        - source_infrastructure: Source component
+        - target_infrastructure: Target component
+        - lifecycle_stage: Research data lifecycle stage
+        - description: Detailed description
+        
+        Optional Fields:
+        - technical_details: Implementation specifics
+        - standards_protocols: Relevant standards
+        - benefits: Expected advantages
+        - challenges: Known limitations
+        - examples: Use cases
+        - contact_person: Contact information
+        - organization: Institution name
+        - email: Contact email
+        - priority: Priority level
+        - complexity: Implementation complexity
+        - status: Current status
+        - notes: Additional comments
+    
+    Usage Examples:
+    ---------------
+    
+    # Create new interaction
+    interaction = Interaction(
+        interaction_type='data_flow',
+        source_infrastructure='Repository',
+        target_infrastructure='Analysis Platform',
+        lifecycle_stage='analyse',
+        description='Automated data transfer for analysis'
+    )
+    
+    # Convert to dictionary
+    data = interaction.to_dict()
+    
+    # Create from dictionary
+    new_interaction = Interaction.from_dict(data)
+    
+    # Update from dictionary
+    interaction.update_from_dict({'status': 'implemented'})
+    
+    # Get CSV representation
+    csv_row = interaction.to_csv_row()
+    headers = Interaction.get_csv_headers()
+    
+    Database Operations:
+    -------------------
+    
+    # Query interactions
+    all_interactions = Interaction.query.all()
+    by_type = Interaction.query.filter_by(interaction_type='data_flow').all()
+    recent = Interaction.query.order_by(Interaction.created_at.desc()).limit(10).all()
+    
+    # Statistics
+    total_count = Interaction.query.count()
+    by_stage = db.session.query(
+        Interaction.lifecycle_stage,
+        db.func.count(Interaction.id)
+    ).group_by(Interaction.lifecycle_stage).all()
+    
+    Validation:
+    -----------
+    The model includes built-in validation for:
+    - Required field presence
+    - Field length limits
+    - Data type consistency
+    - Relationship integrity
+    
+    For more information, see the SQLAlchemy documentation:
+    https://docs.sqlalchemy.org/
+    """)
+
+
+if __name__ == '__main__':
+    help()

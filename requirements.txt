@@ -1,36 +1,48 @@
-# Flask core and extensions
-Flask==3.0.3
-Flask-SQLAlchemy==3.1.1
-Flask-Migrate==4.0.7
-Flask-CORS
+# MaLDReTH Infrastructure Interactions - Python Dependencies
+# ==========================================================
 
-# Database drivers
-psycopg2-binary==2.9.9
+# Core Flask Framework
+Flask==2.3.3
+Werkzeug==2.3.7
 
-# Production server
+# Database and ORM
+Flask-SQLAlchemy==3.0.5
+SQLAlchemy==2.0.23
+Flask-Migrate==4.0.5
+psycopg2-binary==2.9.7
+
+# Forms and Validation
+Flask-WTF==1.1.1
+WTForms==3.0.1
+email-validator==2.0.0
+
+# Security and CORS
+Flask-CORS==4.0.0
+itsdangerous==2.1.2
+
+# Web Server for Production
 gunicorn==21.2.0
 
-# Environment and configuration
-python-dotenv==1.0.1
+# Development and Testing (optional)
+python-dotenv==1.0.0
 
-# Core dependencies
-Werkzeug==3.0.3
-Jinja2==3.1.4
-MarkupSafe==2.1.5
-SQLAlchemy==2.0.23
-alembic==1.13.2
+# Date and Time Utilities
+python-dateutil==2.8.2
+
+# Additional Utilities
 click==8.1.7
-blinker==1.8.2
-itsdangerous==2.2.0
+blinker==1.6.3
+MarkupSafe==2.1.3
+Jinja2==3.1.2
 
-# Development and testing dependencies (install with pip install -r requirements-dev.txt)
-# pytest==8.0.0
-# pytest-flask==1.3.0
-# pytest-cov==4.1.0
-# coverage==7.4.0
-# black==24.0.0
-# flake8==7.0.0
-# isort==5.13.0
-# mypy==1.8.0
-# bandit==1.7.5
-# safety==3.0.0
+# For CSV and Data Processing
+csv-writer==0.1.1
+
+# JSON Support (standard library, but listed for clarity)
+# json - built-in
+
+# Logging Support (standard library)
+# logging - built-in
+
+# Type Hints Support
+typing-extensions==4.8.0
