@@ -35,8 +35,8 @@ blinker==1.6.3
 MarkupSafe==2.1.3
 Jinja2==3.1.2
 
-# For CSV and Data Processing
-csv-writer==0.1.1
+# CSV support is built into Python standard library
+# No additional package needed - using built-in csv module
 
 # JSON Support (standard library, but listed for clarity)
 # json - built-in
