@@ -1,11 +1,15 @@
 """
 routes.py
 
-API routes for MaLDReTH Infrastructure Interactions.
+Main routes for the MaLDReTH Infrastructure Interactions application.
 """
 
-from flask import Blueprint, jsonify, request, render_template
-from models import db, Stage, ToolCategory, Tool, Connection
+import logging
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, flash
+from models import db, Interaction
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # Create blueprint
 main_bp = Blueprint('main', __name__)
@@ -13,134 +17,234 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
-    """Home page."""
-    return render_template('index.html')
-
-
-@main_bp.route('/api/lifecycle')
-def get_lifecycle():
-    """Get all lifecycle stages with connections."""
+    """Main page with overview and navigation."""
     try:
-        stages = Stage.query.all()
-        
-        # Build nodes
-        nodes = []
-        for stage in stages:
-            nodes.append({
-                'id': stage.id,
-                'name': stage.name,
-                'description': stage.description
-            })
-        
-        # Build connections
-        connections = Connection.query.all()
-        links = []
-        for conn in connections:
-            from_stage = Stage.query.get(conn.from_stage_id)
-            to_stage = Stage.query.get(conn.to_stage_id)
-            if from_stage and to_stage:
-                links.append({
-                    'from': from_stage.name,
-                    'to': to_stage.name,
-                    'type': conn.type
-                })
-        
-        return jsonify({
-            'nodes': nodes,
-            'links': links
-        })
+        interaction_count = Interaction.query.count()
+        recent_interactions = (
+            Interaction.query.order_by(Interaction.created_at.desc()).limit(5).all()
+        )
+
+        return render_template(
+            'index.html',
+            interaction_count=interaction_count,
+            recent_interactions=recent_interactions,
+        )
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error rendering index page: {e}")
+        flash("Error loading dashboard data", "error")
+        return render_template(
+            'index.html', interaction_count=0, recent_interactions=[]
+        )
 
 
-@main_bp.route('/api/tools/<stage_name>')
-def get_tools(stage_name):
-    """Get tools for a specific stage."""
+@main_bp.route('/add')
+def add_interaction():
+    """Form for adding new interactions."""
+    return render_template('add_interaction.html')
+
+
+@main_bp.route('/interactions')
+def view_interactions():
+    """View all interactions."""
     try:
-        # Find stage
-        stage = Stage.query.filter_by(name=stage_name.upper()).first()
-        if not stage:
-            return jsonify([])
-        
-        # Get tools
-        tools = Tool.query.filter_by(stage_id=stage.id).all()
-        
-        result = []
-        for tool in tools:
-            category = ToolCategory.query.get(tool.category_id)
-            result.append({
-                'id': tool.id,
-                'name': tool.name,
-                'description': tool.description,
-                'link': tool.link,
-                'provider': tool.provider,
-                'category': category.category if category else None
-            })
-        
-        return jsonify(result)
+        page = request.args.get('page', 1, type=int)
+        interactions = Interaction.query.order_by(
+            Interaction.created_at.desc()
+        ).paginate(
+            page=page, 
+            per_page=20, 
+            error_out=False
+        )
+        return render_template('interactions.html', interactions=interactions)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error viewing interactions: {e}")
+        flash("Error loading interactions", "error")
+        return render_template('interactions.html', interactions=None)
 
 
-@main_bp.route('/api/search')
-def search_tools():
-    """Search for tools."""
-    query = request.args.get('q', '').strip()
-    
-    if not query:
-        return jsonify({'error': 'Query parameter required'}), 400
-    
+@main_bp.route('/tools/explorer')
+def tools_explorer():
+    """Tool explorer page."""
+    return render_template('tools/explorer.html')
+
+
+@main_bp.route('/dashboard/visualization')
+def visualization_dashboard():
+    """Visualization dashboard page."""
+    return render_template('dashboard/visualization.html')
+
+
+@main_bp.route('/interactions/builder')
+def interaction_builder():
+    """Interaction builder page."""
+    return render_template('interactions/builder.html')
+
+
+@main_bp.route('/submit', methods=['POST'])
+def submit_interaction():
+    """Handle form submission for new interactions."""
     try:
-        # Search in tool names and descriptions
-        tools = Tool.query.filter(
-            db.or_(
-                Tool.name.ilike(f'%{query}%'),
-                Tool.description.ilike(f'%{query}%')
+        # Validate required fields
+        required_fields = [
+            'interaction_type',
+            'source_infrastructure',
+            'target_infrastructure',
+            'lifecycle_stage',
+            'description',
+        ]
+
+        for field in required_fields:
+            if not request.form.get(field):
+                flash(f"Missing required field: {field}", "error")
+                return render_template(
+                    'add_interaction.html',
+                    form_data=request.form,
+                )
+
+        # Create new interaction
+        interaction = Interaction(
+            interaction_type=request.form['interaction_type'],
+            source_infrastructure=request.form['source_infrastructure'],
+            target_infrastructure=request.form['target_infrastructure'],
+            lifecycle_stage=request.form['lifecycle_stage'],
+            description=request.form['description'],
+            technical_details=request.form.get('technical_details'),
+            benefits=request.form.get('benefits'),
+            challenges=request.form.get('challenges'),
+            examples=request.form.get('examples'),
+            contact_person=request.form.get('contact_person'),
+            organization=request.form.get('organization'),
+            email=request.form.get('email'),
+            priority=request.form.get('priority', 'medium'),
+            complexity=request.form.get('complexity', 'moderate'),
+            status=request.form.get('status', 'proposed'),
+        )
+
+        # Validate the interaction
+        is_valid, errors = interaction.validate()
+        if not is_valid:
+            for error in errors:
+                flash(error, "error")
+            return render_template(
+                'add_interaction.html',
+                form_data=request.form,
             )
-        ).all()
-        
-        result = []
-        for tool in tools:
-            category = ToolCategory.query.get(tool.category_id)
-            stage = Stage.query.get(tool.stage_id)
-            result.append({
-                'id': tool.id,
-                'name': tool.name,
-                'description': tool.description,
-                'link': tool.link,
-                'provider': tool.provider,
-                'category': category.category if category else None,
-                'stage': stage.name if stage else None
-            })
-        
-        return jsonify(result)
+
+        db.session.add(interaction)
+        db.session.commit()
+
+        logger.info(f"Created new interaction via form: {interaction.id}")
+        flash("Interaction created successfully!", "success")
+        return redirect(url_for('main.view_interactions'))
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        db.session.rollback()
+        logger.error(f"Error submitting interaction: {e}")
+        flash("Failed to submit interaction. Please try again.", "error")
+        return render_template(
+            'add_interaction.html',
+            form_data=request.form,
+        )
 
 
-@main_bp.route('/api/health')
-def health_check():
-    """Health check endpoint."""
+@main_bp.route('/interactions/<int:interaction_id>')
+def interaction_detail(interaction_id):
+    """View details for a specific interaction."""
     try:
-        # Check database connection
-        db.session.execute('SELECT 1')
-        
-        # Get counts
-        stages = Stage.query.count()
-        categories = ToolCategory.query.count()
-        tools = Tool.query.count()
-        
-        return jsonify({
-            'status': 'healthy',
-            'database': 'connected',
-            'counts': {
-                'stages': stages,
-                'categories': categories,
-                'tools': tools
-            }
-        })
+        interaction = Interaction.query.get_or_404(interaction_id)
+        return render_template('interaction_detail.html', interaction=interaction)
     except Exception as e:
-        return jsonify({
-            'status': 'unhealthy',
-            'error': str(e)
-        }), 500
+        logger.error(f"Error viewing interaction {interaction_id}: {e}")
+        flash("Interaction not found", "error")
+        return redirect(url_for('main.view_interactions'))
+
+
+@main_bp.route('/interactions/<int:interaction_id>/edit')
+def edit_interaction(interaction_id):
+    """Edit form for an interaction."""
+    try:
+        interaction = Interaction.query.get_or_404(interaction_id)
+        return render_template('edit_interaction.html', interaction=interaction)
+    except Exception as e:
+        logger.error(f"Error loading edit form for interaction {interaction_id}: {e}")
+        flash("Interaction not found", "error")
+        return redirect(url_for('main.view_interactions'))
+
+
+@main_bp.route('/interactions/<int:interaction_id>/update', methods=['POST'])
+def update_interaction(interaction_id):
+    """Update an existing interaction."""
+    try:
+        interaction = Interaction.query.get_or_404(interaction_id)
+        
+        # Update fields from form
+        interaction.update_from_dict(request.form.to_dict())
+        
+        # Validate the updated interaction
+        is_valid, errors = interaction.validate()
+        if not is_valid:
+            for error in errors:
+                flash(error, "error")
+            return render_template(
+                'edit_interaction.html',
+                interaction=interaction,
+                form_data=request.form,
+            )
+        
+        db.session.commit()
+        
+        logger.info(f"Updated interaction: {interaction.id}")
+        flash("Interaction updated successfully!", "success")
+        return redirect(url_for('main.interaction_detail', interaction_id=interaction.id))
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error updating interaction {interaction_id}: {e}")
+        flash("Failed to update interaction. Please try again.", "error")
+        return redirect(url_for('main.edit_interaction', interaction_id=interaction_id))
+
+
+@main_bp.route('/interactions/<int:interaction_id>/delete', methods=['POST'])
+def delete_interaction(interaction_id):
+    """Delete an interaction."""
+    try:
+        interaction = Interaction.query.get_or_404(interaction_id)
+        db.session.delete(interaction)
+        db.session.commit()
+        
+        logger.info(f"Deleted interaction: {interaction_id}")
+        flash("Interaction deleted successfully!", "success")
+        return redirect(url_for('main.view_interactions'))
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error deleting interaction {interaction_id}: {e}")
+        flash("Failed to delete interaction. Please try again.", "error")
+        return redirect(url_for('main.view_interactions'))
+
+
+@main_bp.errorhandler(404)
+def not_found_error(error):
+    """Handle 404 errors."""
+    return render_template('error.html', 
+                         error_code=404, 
+                         error_message="Page not found"), 404
+
+
+@main_bp.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors."""
+    db.session.rollback()
+    return render_template('error.html', 
+                         error_code=500, 
+                         error_message="Internal server error"), 500
+
+
+@main_bp.errorhandler(Exception)
+def handle_exception(error):
+    """Handle all other exceptions."""
+    logger.error(f"Unhandled exception: {error}")
+    db.session.rollback()
+    return render_template('error.html', 
+                         error_code=500, 
+                         error_message="An unexpected error occurred"), 500

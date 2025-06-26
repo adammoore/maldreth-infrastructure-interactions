@@ -1,2 +1,1 @@
-release: bash release.sh
-web: gunicorn app:server
+web: gunicorn app:app
