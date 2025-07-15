@@ -237,7 +237,20 @@ def export_csv():
 
 def init_database_with_maldreth_data():
     """Clear and initialize the database with MaLDReTH 1.0 final output data."""
-    db.drop_all()
+    try:
+        # Drop all tables with cascade
+        db.session.execute(db.text('DROP TABLE IF EXISTS tool_interactions CASCADE'))
+        db.session.execute(db.text('DROP TABLE IF EXISTS exemplar_tools CASCADE'))
+        db.session.execute(db.text('DROP TABLE IF EXISTS tool_categories CASCADE'))
+        db.session.execute(db.text('DROP TABLE IF EXISTS maldreth_stages CASCADE'))
+        db.session.execute(db.text('DROP TABLE IF EXISTS research_tools CASCADE'))
+        db.session.execute(db.text('DROP TABLE IF EXISTS tools CASCADE'))
+        db.session.execute(db.text('DROP TABLE IF EXISTS interactions CASCADE'))
+        db.session.commit()
+    except Exception as e:
+        logger.info(f"Tables may not exist yet: {e}")
+        db.session.rollback()
+    
     db.create_all()
 
     # 1. Create RDL Stages
