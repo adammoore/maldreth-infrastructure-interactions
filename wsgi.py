@@ -8,7 +8,7 @@ like Gunicorn to import and run the Flask application.
 
 import os
 import logging
-from streamlined_app import app, init_database_with_maldreth_data as init_db
+from streamlined_app import app
 
 # Configure logging for production
 logging.basicConfig(
@@ -16,19 +16,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-# Create application instance
-app = create_app()
-
-# Initialize database on first run
-with app.app_context():
-    try:
-        init_db()
-        populate_db()
-        logger.info("Database initialized successfully")
-    except Exception as e:
-        logger.error(f"Error initializing database: {e}")
-
 
 if __name__ == "__main__":
     # This block is only executed when running directly

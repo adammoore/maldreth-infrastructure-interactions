@@ -19,6 +19,11 @@ body {
     transform: translateY(-5px);
 }
 
+.card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,.15);
+}
+
 .card-header {
     font-weight: bold;
 }
@@ -31,4 +36,114 @@ body {
 .btn-primary:hover {
     background-color: #0056b3;
     border-color: #0056b3;
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4rem 0;
+    margin-bottom: 2rem;
+}
+
+.hero-section h1 {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-section .lead {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+/* Lifecycle Stage Colors */
+.stage-conceptualise {
+    background-color: #FF6B6B;
+}
+
+.stage-plan {
+    background-color: #4ECDC4;
+}
+
+.stage-fund {
+    background-color: #45B7D1;
+}
+
+.stage-collect {
+    background-color: #96CEB4;
+}
+
+.stage-process {
+    background-color: #FFEAA7;
+}
+
+.stage-analyse {
+    background-color: #DDA0DD;
+}
+
+.stage-store {
+    background-color: #98D8C8;
+}
+
+.stage-publish {
+    background-color: #F7DC6F;
+}
+
+.stage-preserve {
+    background-color: #BB8FCE;
+}
+
+.stage-share {
+    background-color: #85C1E9;
+}
+
+.stage-access {
+    background-color: #F8C471;
+}
+
+.stage-transform {
+    background-color: #82E0AA;
+}
+
+/* Statistics Cards */
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,.15);
+}
+
+/* Form Styles */
+.form-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-section h4 {
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.required {
+    color: #dc3545;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 2rem 0;
+    }
+    
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+    
+    .hero-section .lead {
+        font-size: 1rem;
+    }
 }

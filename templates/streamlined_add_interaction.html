@@ -17,7 +17,7 @@
                             <select class="form-select" id="source_tool_id" name="source_tool_id" required>
                                 <option value="">Select a source tool...</option>
                                 {% for tool in tools %}
-                                <option value="{{ tool.id }}">{{ tool.name }} ({{ tool.category.stage.name }})</option>
+                                <option value="{{ tool.id }}" data-stage="{{ tool.category.stage.name }}">{{ tool.name }} ({{ tool.category.stage.name }})</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -26,7 +26,7 @@
                             <select class="form-select" id="target_tool_id" name="target_tool_id" required>
                                 <option value="">Select a target tool...</option>
                                 {% for tool in tools %}
-                                <option value="{{ tool.id }}">{{ tool.name }} ({{ tool.category.stage.name }})</option>
+                                <option value="{{ tool.id }}" data-stage="{{ tool.category.stage.name }}">{{ tool.name }} ({{ tool.category.stage.name }})</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -135,4 +135,41 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sourceToolSelect = document.getElementById('source_tool_id');
+    const targetToolSelect = document.getElementById('target_tool_id');
+    const lifecycleStageSelect = document.getElementById('lifecycle_stage');
+    
+    function updateLifecycleStage() {
+        const sourceOption = sourceToolSelect.options[sourceToolSelect.selectedIndex];
+        const targetOption = targetToolSelect.options[targetToolSelect.selectedIndex];
+        
+        if (sourceOption && sourceOption.dataset.stage && targetOption && targetOption.dataset.stage) {
+            const sourceStage = sourceOption.dataset.stage;
+            const targetStage = targetOption.dataset.stage;
+            
+            // If both tools are from the same stage, select that stage
+            if (sourceStage === targetStage) {
+                lifecycleStageSelect.value = sourceStage;
+            } else {
+                // If tools are from different stages, prioritize the source tool's stage
+                lifecycleStageSelect.value = sourceStage;
+            }
+        } else if (sourceOption && sourceOption.dataset.stage) {
+            // If only source tool is selected, use its stage
+            lifecycleStageSelect.value = sourceOption.dataset.stage;
+        } else if (targetOption && targetOption.dataset.stage) {
+            // If only target tool is selected, use its stage
+            lifecycleStageSelect.value = targetOption.dataset.stage;
+        }
+    }
+    
+    // Add event listeners to both tool selects
+    sourceToolSelect.addEventListener('change', updateLifecycleStage);
+    targetToolSelect.addEventListener('change', updateLifecycleStage);
+});
+</script>
+
 {% endblock %}

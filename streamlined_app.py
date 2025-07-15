@@ -103,10 +103,17 @@ def index():
         stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
         total_interactions = ToolInteraction.query.count()
         total_tools = ExemplarTool.query.count()
+        total_stages = MaldrethStage.query.count()
+        
+        # Get recent interactions (last 5)
+        recent_interactions = ToolInteraction.query.order_by(ToolInteraction.submitted_at.desc()).limit(5).all()
+        
         return render_template('streamlined_index.html',
                              stages=stages,
                              total_interactions=total_interactions,
-                             total_tools=total_tools)
+                             total_tools=total_tools,
+                             total_stages=total_stages,
+                             recent_interactions=recent_interactions)
     except Exception as e:
         logger.error(f"Error in index route: {e}")
         return render_template('error.html', error=str(e)), 500
@@ -157,6 +164,73 @@ def view_interactions():
     except Exception as e:
         logger.error(f"Error viewing interactions: {e}")
         return render_template('error.html', error=str(e)), 500
+
+@app.route('/api/tool/<int:tool_id>/stage')
+def get_tool_stage(tool_id):
+    """Get the lifecycle stage for a specific tool."""
+    try:
+        tool = ExemplarTool.query.get_or_404(tool_id)
+        return jsonify({
+            'stage_name': tool.category.stage.name,
+            'stage_id': tool.category.stage.id
+        })
+    except Exception as e:
+        logger.error(f"Error getting tool stage: {e}")
+        return jsonify({'error': 'Tool not found'}), 404
+
+@app.route('/export/csv')
+def export_csv():
+    """Export all interactions to CSV format."""
+    try:
+        import csv
+        from io import StringIO
+        from flask import make_response
+        
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow([
+            'ID', 'Source Tool', 'Target Tool', 'Interaction Type', 'Lifecycle Stage',
+            'Description', 'Technical Details', 'Benefits', 'Challenges', 'Examples',
+            'Contact Person', 'Organization', 'Email', 'Priority', 'Complexity', 
+            'Status', 'Submitted By', 'Submitted At'
+        ])
+        
+        # Write data
+        interactions = ToolInteraction.query.all()
+        for interaction in interactions:
+            writer.writerow([
+                interaction.id,
+                interaction.source_tool.name,
+                interaction.target_tool.name,
+                interaction.interaction_type,
+                interaction.lifecycle_stage,
+                interaction.description,
+                interaction.technical_details or '',
+                interaction.benefits or '',
+                interaction.challenges or '',
+                interaction.examples or '',
+                interaction.contact_person or '',
+                interaction.organization or '',
+                interaction.email or '',
+                interaction.priority or '',
+                interaction.complexity or '',
+                interaction.status or '',
+                interaction.submitted_by or '',
+                interaction.submitted_at.strftime('%Y-%m-%d %H:%M:%S') if interaction.submitted_at else ''
+            ])
+        
+        output.seek(0)
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'text/csv'
+        response.headers['Content-Disposition'] = 'attachment; filename=maldreth_interactions.csv'
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error exporting CSV: {e}")
+        flash('Error exporting data. Please try again.', 'error')
+        return redirect(url_for('index'))
 
 
 # --- Database Initialization ---
