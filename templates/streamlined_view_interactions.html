@@ -1,0 +1,48 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}View All Interactions{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">All Tool Interactions</h1>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Source Tool</th>
+                        <th>Target Tool</th>
+                        <th>Interaction Type</th>
+                        <th>Lifecycle Stage</th>
+                        <th>Description</th>
+                        <th>Submitted At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for interaction in interactions %}
+                    <tr>
+                        <td>{{ interaction.source_tool.name }}</td>
+                        <td>{{ interaction.target_tool.name }}</td>
+                        <td>{{ interaction.interaction_type }}</td>
+                        <td>{{ interaction.lifecycle_stage }}</td>
+                        <td>{{ interaction.description }}</td>
+                        <td>{{ interaction.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">No interactions found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('add_interaction') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add New Interaction
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}MaLDReTH Cycle{% endblock %}
+
+{% block content %}
+<div class="text-center mb-5">
+    <h1 class="display-4">MaLDReTH Cycle Tool Interactions</h1>
+    <p class="lead">Visualizing and capturing interactions between exemplar tools across the research data lifecycle.</p>
+</div>
+
+<!-- Statistics -->
+<div class="row mb-5 text-center">
+    <div class="col-md-6">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h3 class="display-5">{{ total_tools }}</h3>
+                <p class="text-muted mb-0">Exemplar Tools</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h3 class="display-5">{{ total_interactions }}</h3>
+                <p class="text-muted mb-0">Captured Interactions</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MaLDReTH Stages & Tools -->
+<div class="row">
+    {% for stage in stages %}
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header" style="background-color: {{ stage.color }}; color: white;">
+                <h5 class="mb-0">{{ stage.name }}</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text text-muted">{{ stage.description }}</p>
+                {% for category in stage.tool_categories %}
+                <div class="mt-3">
+                    <h6>{{ category.name }}</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for tool in category.tools %}
+                        <li class="list-group-item py-1">{{ tool.name }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Recent Interactions -->
+<div class="mt-5">
+    <h2 class="text-center mb-4">Recent Interactions</h2>
+    {% if recent_interactions %}
+    <div class="list-group">
+        {% for interaction in recent_interactions %}
+        <div class="list-group-item list-group-item-action flex-column align-items-start">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ interaction.source_tool.name }} <i class="fas fa-exchange-alt"></i> {{ interaction.target_tool.name }}</h5>
+                <small>{{ interaction.submitted_at.strftime('%Y-%m-%d') }}</small>
+            </div>
+            <p class="mb-1">{{ interaction.description }}</p>
+            <small class="text-muted">Type: {{ interaction.interaction_type }} | Submitted by: {{ interaction.submitted_by or 'Anonymous' }}</small>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center text-muted">No interactions have been captured yet.</p>
+    {% endif %}
+    <div class="text-center mt-3">
+        <a href="{{ url_for('add_interaction') }}" class="btn btn-primary btn-lg">Add New Interaction</a>
+        <a href="{{ url_for('view_interactions') }}" class="btn btn-secondary btn-lg">View All Interactions</a>
+    </div>
+</div>
+{% endblock %}

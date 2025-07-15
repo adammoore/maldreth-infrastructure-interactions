@@ -1,0 +1,138 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}Add New Interaction{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">Add a New Tool Interaction</h1>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('add_interaction') }}">
+                    
+                    <!-- Core Information -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="source_tool_id" class="form-label">Source Tool</label>
+                            <select class="form-select" id="source_tool_id" name="source_tool_id" required>
+                                <option value="">Select a source tool...</option>
+                                {% for tool in tools %}
+                                <option value="{{ tool.id }}">{{ tool.name }} ({{ tool.category.stage.name }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="target_tool_id" class="form-label">Target Tool</label>
+                            <select class="form-select" id="target_tool_id" name="target_tool_id" required>
+                                <option value="">Select a target tool...</option>
+                                {% for tool in tools %}
+                                <option value="{{ tool.id }}">{{ tool.name }} ({{ tool.category.stage.name }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="interaction_type" class="form-label">Interaction Type</label>
+                            <input type="text" class="form-control" id="interaction_type" name="interaction_type" placeholder="e.g., Data Flow, API Call" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="lifecycle_stage" class="form-label">Lifecycle Stage</label>
+                            <select class="form-select" id="lifecycle_stage" name="lifecycle_stage" required>
+                                <option value="">Select a lifecycle stage...</option>
+                                {% for stage in stages %}
+                                <option value="{{ stage.name }}">{{ stage.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="Describe the interaction in detail." required></textarea>
+                    </div>
+
+                    <!-- Technical Details -->
+                    <h5 class="mt-4">Technical Details</h5>
+                    <div class="mb-3">
+                        <label for="technical_details" class="form-label">Technical Implementation</label>
+                        <textarea class="form-control" id="technical_details" name="technical_details" rows="2" placeholder="e.g., REST API, OAuth 2.0"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="benefits" class="form-label">Benefits</label>
+                        <textarea class="form-control" id="benefits" name="benefits" rows="2" placeholder="Advantages of this interaction"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="challenges" class="form-label">Challenges</label>
+                        <textarea class="form-control" id="challenges" name="challenges" rows="2" placeholder="Limitations or difficulties"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="examples" class="form-label">Examples</label>
+                        <textarea class="form-control" id="examples" name="examples" rows="2" placeholder="Real-world examples"></textarea>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <h5 class="mt-4">Contact Information</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="contact_person" class="form-label">Contact Person</label>
+                            <input type="text" class="form-control" id="contact_person" name="contact_person">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="organization" class="form-label">Organization</label>
+                            <input type="text" class="form-control" id="organization" name="organization">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email">
+                        </div>
+                    </div>
+
+                    <!-- Classification -->
+                    <h5 class="mt-4">Classification</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="priority" class="form-label">Priority</label>
+                            <select class="form-select" id="priority" name="priority">
+                                <option value="">Select...</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="complexity" class="form-label">Complexity</label>
+                            <select class="form-select" id="complexity" name="complexity">
+                                <option value="">Select...</option>
+                                <option value="simple">Simple</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="complex">Complex</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">Select...</option>
+                                <option value="proposed">Proposed</option>
+                                <option value="implemented">Implemented</option>
+                                <option value="deprecated">Deprecated</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Submitter -->
+                    <div class="mb-3">
+                        <label for="submitted_by" class="form-label">Your Name (Optional)</label>
+                        <input type="text" class="form-control" id="submitted_by" name="submitted_by" placeholder="Enter your name or affiliation">
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Submit Interaction</button>
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
