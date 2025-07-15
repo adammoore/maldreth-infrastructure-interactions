@@ -8,8 +8,7 @@ like Gunicorn to import and run the Flask application.
 
 import os
 import logging
-from app import create_app
-from database import init_db, populate_db
+from streamlined_app import app, init_database_with_maldreth_data as init_db
 
 # Configure logging for production
 logging.basicConfig(
