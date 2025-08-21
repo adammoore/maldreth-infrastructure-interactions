@@ -50,7 +50,6 @@ class MaldrethStage(db.Model):
     name = db.Column(db.String(50), nullable=False, unique=True)
     description = db.Column(db.Text)
     position = db.Column(db.Integer, default=0)
-    color = db.Column(db.String(7), default='#007bff')
     tool_categories = db.relationship('ToolCategory', backref='stage', lazy='dynamic', cascade='all, delete-orphan')
 
 class ToolCategory(db.Model):
@@ -67,11 +66,8 @@ class ExemplarTool(db.Model):
     __tablename__ = 'exemplar_tools'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    url = db.Column(db.String(500))
     stage_id = db.Column(db.Integer, db.ForeignKey('maldreth_stages.id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('tool_categories.id'), nullable=False)
-    is_active = db.Column(db.Boolean, default=True)
     source_interactions = db.relationship('ToolInteraction', foreign_keys='ToolInteraction.source_tool_id', backref='source_tool', lazy='dynamic')
     target_interactions = db.relationship('ToolInteraction', foreign_keys='ToolInteraction.target_tool_id', backref='target_tool', lazy='dynamic')
 

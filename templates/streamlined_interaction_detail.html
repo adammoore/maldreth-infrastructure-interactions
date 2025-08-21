@@ -1,0 +1,233 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}Interaction Details - {{ interaction.source_tool.name }} → {{ interaction.target_tool.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('view_interactions') }}">Interactions</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Interaction #{{ interaction.id }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h1 class="h3 mb-0">
+                                <i class="fas fa-exchange-alt me-2"></i>
+                                {{ interaction.interaction_type.replace('_', ' ').title() }}
+                            </h1>
+                        </div>
+                        <div class="col-auto">
+                            <span class="badge bg-light text-dark fs-6">ID: {{ interaction.id }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-5 text-center">
+                            <div class="p-3 bg-light rounded">
+                                <h4 class="text-primary">{{ interaction.source_tool.name }}</h4>
+                                <p class="text-muted mb-1">
+                                    <strong>Stage:</strong> {{ interaction.source_tool.category.stage.name }}
+                                </p>
+                                <p class="text-muted mb-0">
+                                    <strong>Category:</strong> {{ interaction.source_tool.category.name }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-2 text-center d-flex align-items-center justify-content-center">
+                            <div class="py-3">
+                                <i class="fas fa-arrow-right fa-2x text-primary"></i>
+                                <div class="mt-2">
+                                    <span class="badge bg-primary">{{ interaction.lifecycle_stage }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5 text-center">
+                            <div class="p-3 bg-light rounded">
+                                <h4 class="text-success">{{ interaction.target_tool.name }}</h4>
+                                <p class="text-muted mb-1">
+                                    <strong>Stage:</strong> {{ interaction.target_tool.category.stage.name }}
+                                </p>
+                                <p class="text-muted mb-0">
+                                    <strong>Category:</strong> {{ interaction.target_tool.category.name }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Description and Details -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Description</h5>
+                </div>
+                <div class="card-body">
+                    <p class="lead">{{ interaction.description }}</p>
+                </div>
+            </div>
+
+            {% if interaction.technical_details %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Technical Details</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ interaction.technical_details }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if interaction.benefits %}
+            <div class="card mb-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Benefits</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ interaction.benefits }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if interaction.challenges %}
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Challenges</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ interaction.challenges }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if interaction.examples %}
+            <div class="card mb-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Examples</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ interaction.examples }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Metadata Sidebar -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Metadata</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        {% if interaction.priority %}
+                        <dt class="col-sm-4">Priority:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-{% if interaction.priority == 'High' %}danger{% elif interaction.priority == 'Medium' %}warning{% else %}secondary{% endif %}">
+                                {{ interaction.priority }}
+                            </span>
+                        </dd>
+                        {% endif %}
+
+                        {% if interaction.complexity %}
+                        <dt class="col-sm-4">Complexity:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-{% if interaction.complexity == 'High' %}danger{% elif interaction.complexity == 'Medium' %}warning{% else %}success{% endif %}">
+                                {{ interaction.complexity }}
+                            </span>
+                        </dd>
+                        {% endif %}
+
+                        {% if interaction.status %}
+                        <dt class="col-sm-4">Status:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-{% if interaction.status == 'active' %}success{% elif interaction.status == 'pilot' %}info{% elif interaction.status == 'planned' %}warning{% else %}secondary{% endif %}">
+                                {{ interaction.status.title() }}
+                            </span>
+                        </dd>
+                        {% endif %}
+
+                        <dt class="col-sm-4">Submitted:</dt>
+                        <dd class="col-sm-8">{{ interaction.submitted_at.strftime('%Y-%m-%d %H:%M') if interaction.submitted_at else 'Unknown' }}</dd>
+
+                        {% if interaction.submitted_by %}
+                        <dt class="col-sm-4">Submitted By:</dt>
+                        <dd class="col-sm-8">{{ interaction.submitted_by }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            {% if interaction.contact_person or interaction.organization or interaction.email %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-address-book me-2"></i>Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        {% if interaction.contact_person %}
+                        <dt class="col-sm-4">Contact:</dt>
+                        <dd class="col-sm-8">{{ interaction.contact_person }}</dd>
+                        {% endif %}
+
+                        {% if interaction.organization %}
+                        <dt class="col-sm-4">Organization:</dt>
+                        <dd class="col-sm-8">{{ interaction.organization }}</dd>
+                        {% endif %}
+
+                        {% if interaction.email %}
+                        <dt class="col-sm-4">Email:</dt>
+                        <dd class="col-sm-8">
+                            <a href="mailto:{{ interaction.email }}" class="text-decoration-none">
+                                {{ interaction.email }}
+                            </a>
+                        </dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('view_interactions') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to All Interactions
+                        </a>
+                        <a href="{{ url_for('rdl_visualization') }}" class="btn btn-outline-info">
+                            <i class="fas fa-project-diagram me-2"></i>View in RDL Visualization
+                        </a>
+                        <a href="{{ url_for('add_interaction') }}" class="btn btn-outline-success">
+                            <i class="fas fa-plus me-2"></i>Add New Interaction
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add any specific JavaScript for interaction details if needed
+</script>
+{% endblock %}
