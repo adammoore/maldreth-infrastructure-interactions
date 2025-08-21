@@ -1,6 +1,6 @@
 {% extends "streamlined_base.html" %}
 
-{% block title %}MaLDReTH Infrastructure Interactions{% endblock %}
+{% block title %}PRISM - Platform for Research Infrastructure Synergy Mapping{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
@@ -10,11 +10,13 @@
             <div class="col-lg-8 mx-auto text-center">
                 <h1 class="display-4 fw-bold mb-4">
                     <i class="fas fa-project-diagram me-3"></i>
-                    MaLDReTH Infrastructure Interactions
+                    PRISM
                 </h1>
+                <h2 class="h4 text-light mb-3">Platform for Research Infrastructure Synergy Mapping</h2>
                 <p class="lead mb-4">
-                    Mapping and collecting potential infrastructure interactions across the research data lifecycle.
-                    Supporting the MaLDReTH 2 Working Group meeting with comprehensive data collection and analysis.
+                    An output of <strong>MaLDReTH II</strong> (Mapping the Landscape of Digital Research Tools Harmonised), 
+                    a Research Data Alliance Working Group initiative. PRISM enables systematic mapping and collection 
+                    of infrastructure interactions across the research data lifecycle to support FAIR data practices.
                 </p>
                 <div class="d-flex gap-3 justify-content-center flex-wrap">
                     <a href="{{ url_for('add_interaction') }}" class="btn btn-light btn-lg">
@@ -168,8 +170,15 @@
                         <i class="fas fa-rocket me-2"></i>Getting Started
                     </h3>
                     <p class="card-text">
-                        This application helps collect and manage infrastructure interactions across the research data lifecycle.
-                        Use the tools below to contribute to the MaLDReTH 2 Working Group data collection effort.
+                        PRISM facilitates the systematic mapping of digital research tools and their interactions across 
+                        the research data lifecycle. As an output of the RDA MaLDReTH II Working Group, this platform 
+                        supports the development of a comprehensive categorisation schema and autonomous database for 
+                        research infrastructure mapping.
+                    </p>
+                    <p class="small text-muted mb-3">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Contributing to the RDA Global Open Research Commons (GORC) initiative for improved 
+                        interoperability and FAIR workflows.
                     </p>
                     <div class="d-flex gap-3 justify-content-center flex-wrap">
                         <a href="{{ url_for('add_interaction') }}" class="btn btn-primary btn-lg">

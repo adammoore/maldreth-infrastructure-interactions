@@ -280,6 +280,11 @@ def export_interactions_csv():
         logger.error(f"Error exporting interactions to CSV: {e}")
         return render_template('error.html', error=str(e)), 500
 
+@app.route('/about')
+def about():
+    """About page with MaLDReTH II and RDA context."""
+    return render_template('about.html')
+
 @app.route('/rdl')
 def rdl_overview():
     """Display the MaLDReTH Research Data Lifecycle overview and information."""

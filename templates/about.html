@@ -1,0 +1,158 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}About PRISM - MaLDReTH II RDA{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 text-primary mb-3">
+                    <i class="fas fa-info-circle me-3"></i>About PRISM
+                </h1>
+                <p class="lead text-muted">
+                    Platform for Research Infrastructure Synergy Mapping
+                </p>
+            </div>
+
+            <!-- PRISM Overview -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h4 text-primary mb-3">
+                        <i class="fas fa-project-diagram me-2"></i>What is PRISM?
+                    </h2>
+                    <p>
+                        <strong>PRISM</strong> (Platform for Research Infrastructure Synergy Mapping) is a comprehensive 
+                        web-based platform designed to systematically map and analyze interactions between digital research 
+                        tools across the research data lifecycle. As a key output of the MaLDReTH II initiative, PRISM 
+                        facilitates the collection, visualization, and analysis of tool interactions to support improved 
+                        interoperability and FAIR data practices.
+                    </p>
+                    <div class="alert alert-info border-0">
+                        <h6 class="alert-heading">Key Features:</h6>
+                        <ul class="mb-0">
+                            <li>Interactive tool interaction mapping</li>
+                            <li>Research data lifecycle visualization</li>
+                            <li>Comprehensive CSV data export</li>
+                            <li>Open source tool identification</li>
+                            <li>Community-driven data collection</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MaLDReTH II Context -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h4 text-success mb-3">
+                        <i class="fas fa-network-wired me-2"></i>MaLDReTH II Initiative
+                    </h2>
+                    <p>
+                        <strong>MaLDReTH II</strong> (Mapping the Landscape of Digital Research Tools Harmonised) is a 
+                        Research Data Alliance (RDA) Working Group initiative focused on creating a comprehensive 
+                        categorisation schema and framework for digital research tools across the research data lifecycle.
+                    </p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Objectives:</h6>
+                            <ul class="small">
+                                <li>Develop a research data lifecycle model</li>
+                                <li>Create categorisation schema for tool types</li>
+                                <li>Build autonomous database infrastructure</li>
+                                <li>Enable community curation and development</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Key Deliverables:</h6>
+                            <ul class="small">
+                                <li>12-stage research data lifecycle model</li>
+                                <li>Tool categorisation framework</li>
+                                <li>Interactive mapping platform (PRISM)</li>
+                                <li>Open access searchable database</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RDA Context -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h4 text-warning mb-3">
+                        <i class="fas fa-globe me-2"></i>Research Data Alliance (RDA)
+                    </h2>
+                    <p>
+                        The <strong>Research Data Alliance</strong> is a community-driven initiative that focuses on 
+                        building social and technical infrastructure to enable open sharing of data across technologies, 
+                        disciplines, and countries. The MaLDReTH II Working Group operates under the RDA's 
+                        Oracle for Research (OfR) umbrella.
+                    </p>
+                    <div class="alert alert-warning border-0">
+                        <h6 class="alert-heading">Global Open Research Commons (GORC)</h6>
+                        <p class="mb-0 small">
+                            This work contributes to the RDA's Global Open Research Commons initiative, which aims to 
+                            improve interoperability between research tools and support FAIR (Findable, Accessible, 
+                            Interoperable, Reusable) data workflows across the global research community.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Participation -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h4 text-info mb-3">
+                        <i class="fas fa-users me-2"></i>Get Involved
+                    </h2>
+                    <p>
+                        PRISM is a community-driven platform that relies on contributions from researchers, developers, 
+                        and infrastructure providers worldwide. Your participation helps build a comprehensive understanding 
+                        of the digital research tools landscape.
+                    </p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="{{ url_for('add_interaction') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add Interaction
+                        </a>
+                        <a href="{{ url_for('view_interactions') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>View Data
+                        </a>
+                        <a href="https://www.rd-alliance.org/groups/rda-ofr-mapping-landscape-digital-research-tools-wg/" 
+                           class="btn btn-outline-secondary" target="_blank">
+                            <i class="fas fa-external-link-alt me-2"></i>RDA Working Group
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Information -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h4 text-secondary mb-3">
+                        <i class="fas fa-cogs me-2"></i>Technical Details
+                    </h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Platform:</strong> Flask-based web application</p>
+                            <p><strong>Database:</strong> PostgreSQL (Production) / SQLite (Development)</p>
+                            <p><strong>Deployment:</strong> Heroku cloud platform</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Data Format:</strong> CSV export capabilities</p>
+                            <p><strong>API:</strong> RESTful JSON endpoints</p>
+                            <p><strong>License:</strong> Open source contribution to RDA</p>
+                        </div>
+                    </div>
+                    <div class="alert alert-light border-0 mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-code-branch me-1"></i>
+                            This platform supports identification and promotion of open source tools through 
+                            visual indicators and enhanced metadata collection.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
