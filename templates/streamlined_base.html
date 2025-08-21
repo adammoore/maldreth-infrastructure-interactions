@@ -41,10 +41,18 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('view_interactions') }}">View Interactions</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('export_interactions_csv') }}">
-                            <i class="fas fa-download me-1"></i>Export CSV
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="csvDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-csv me-1"></i>CSV Tools
                         </a>
+                        <ul class="dropdown-menu" aria-labelledby="csvDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('export_interactions_csv') }}">
+                                <i class="fas fa-download me-2"></i>Export CSV
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('upload_interactions_csv') }}">
+                                <i class="fas fa-upload me-2"></i>Upload CSV
+                            </a></li>
+                        </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('about') }}">

@@ -325,6 +325,154 @@ def export_interactions_csv():
         logger.error(f"Error exporting interactions to CSV: {e}")
         return render_template('error.html', error=str(e)), 500
 
+@app.route('/upload/interactions/csv', methods=['GET', 'POST'])
+def upload_interactions_csv():
+    """Upload interactions from CSV file (without overwriting existing entries)."""
+    if request.method == 'GET':
+        return render_template('streamlined_upload_csv.html')
+    
+    try:
+        # Check if file was uploaded
+        if 'csv_file' not in request.files:
+            flash('No file selected. Please choose a CSV file to upload.', 'error')
+            return redirect(request.url)
+        
+        file = request.files['csv_file']
+        if file.filename == '':
+            flash('No file selected. Please choose a CSV file to upload.', 'error')
+            return redirect(request.url)
+        
+        if not file.filename.lower().endswith('.csv'):
+            flash('Invalid file type. Please upload a CSV file.', 'error')
+            return redirect(request.url)
+        
+        # Parse CSV content
+        stream = StringIO(file.stream.read().decode('utf-8'))
+        csv_reader = csv.DictReader(stream)
+        
+        imported_count = 0
+        skipped_count = 0
+        error_count = 0
+        errors = []
+        
+        # Get all existing interactions for duplicate checking
+        existing_interactions = ToolInteraction.query.all()
+        existing_signatures = set()
+        
+        for interaction in existing_interactions:
+            # Create signature based on source tool, target tool, and interaction type
+            signature = (
+                interaction.source_tool_id,
+                interaction.target_tool_id, 
+                interaction.interaction_type,
+                interaction.lifecycle_stage
+            )
+            existing_signatures.add(signature)
+        
+        for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 to account for header
+            try:
+                # Skip rows that are missing required fields
+                if not all([row.get('Source Tool'), row.get('Target Tool'), 
+                           row.get('Interaction Type'), row.get('Lifecycle Stage')]):
+                    skipped_count += 1
+                    errors.append(f"Row {row_num}: Missing required fields")
+                    continue
+                
+                # Find source and target tools by name
+                source_tool = ExemplarTool.query.filter_by(name=row['Source Tool']).first()
+                target_tool = ExemplarTool.query.filter_by(name=row['Target Tool']).first()
+                
+                if not source_tool:
+                    error_count += 1
+                    errors.append(f"Row {row_num}: Source tool '{row['Source Tool']}' not found")
+                    continue
+                    
+                if not target_tool:
+                    error_count += 1
+                    errors.append(f"Row {row_num}: Target tool '{row['Target Tool']}' not found")
+                    continue
+                
+                # Check for duplicates
+                signature = (
+                    source_tool.id,
+                    target_tool.id,
+                    row['Interaction Type'],
+                    row['Lifecycle Stage']
+                )
+                
+                if signature in existing_signatures:
+                    skipped_count += 1
+                    errors.append(f"Row {row_num}: Duplicate interaction (same source, target, type, and stage)")
+                    continue
+                
+                # Validate interaction type
+                if row['Interaction Type'] not in INTERACTION_TYPES:
+                    error_count += 1
+                    errors.append(f"Row {row_num}: Invalid interaction type '{row['Interaction Type']}'")
+                    continue
+                
+                # Create new interaction
+                interaction = ToolInteraction(
+                    source_tool_id=source_tool.id,
+                    target_tool_id=target_tool.id,
+                    interaction_type=row['Interaction Type'],
+                    lifecycle_stage=row['Lifecycle Stage'],
+                    description=row.get('Description', ''),
+                    technical_details=row.get('Technical Details', ''),
+                    benefits=row.get('Benefits', ''),
+                    challenges=row.get('Challenges', ''),
+                    examples=row.get('Examples', ''),
+                    contact_person=row.get('Contact Person', ''),
+                    organization=row.get('Organization', ''),
+                    email=row.get('Email', ''),
+                    priority=row.get('Priority', ''),
+                    complexity=row.get('Complexity', ''),
+                    status=row.get('Status', ''),
+                    submitted_by=row.get('Submitted By', 'CSV Upload'),
+                    submitted_at=datetime.now()
+                )
+                
+                db.session.add(interaction)
+                existing_signatures.add(signature)  # Add to prevent duplicates within this upload
+                imported_count += 1
+                
+            except Exception as e:
+                error_count += 1
+                errors.append(f"Row {row_num}: {str(e)}")
+                continue
+        
+        # Commit all successful imports
+        if imported_count > 0:
+            db.session.commit()
+        
+        # Prepare summary message
+        messages = []
+        if imported_count > 0:
+            messages.append(f"Successfully imported {imported_count} interaction(s)")
+        if skipped_count > 0:
+            messages.append(f"Skipped {skipped_count} duplicate(s)")
+        if error_count > 0:
+            messages.append(f"Failed to import {error_count} row(s)")
+        
+        # Show summary
+        summary = "; ".join(messages)
+        if error_count > 0 or skipped_count > 0:
+            flash(f"{summary}. Check details below.", 'warning')
+        else:
+            flash(summary, 'success')
+        
+        # Return results page with details
+        return render_template('streamlined_upload_results.html', 
+                             imported_count=imported_count,
+                             skipped_count=skipped_count, 
+                             error_count=error_count,
+                             errors=errors[:20])  # Limit to first 20 errors
+        
+    except Exception as e:
+        logger.error(f"Error uploading CSV: {e}")
+        flash(f'Error processing CSV file: {str(e)}', 'error')
+        return redirect(request.url)
+
 @app.route('/about')
 def about():
     """About page with MaLDReTH II and RDA context."""

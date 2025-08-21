@@ -1,0 +1,215 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}Upload CSV - PRISM{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="display-5 text-primary mb-3">
+                    <i class="fas fa-upload me-3"></i>Upload Interactions CSV
+                </h1>
+                <p class="lead text-muted">
+                    Import interaction data from a CSV file. Existing entries will not be overwritten.
+                </p>
+            </div>
+
+            <!-- Upload Form -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" action="{{ url_for('upload_interactions_csv') }}">
+                        <div class="mb-4">
+                            <label for="csv_file" class="form-label h5">
+                                <i class="fas fa-file-csv me-2 text-success"></i>Select CSV File
+                            </label>
+                            <input type="file" class="form-control form-control-lg" id="csv_file" name="csv_file" 
+                                   accept=".csv" required>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Maximum file size: 10MB. Only CSV files are accepted.
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('view_interactions') }}" class="btn btn-outline-secondary btn-lg me-md-2">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Interactions
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>Upload CSV
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Requirements & Format -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list-check me-2 text-primary"></i>Requirements
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="text-primary">Required Columns:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i><code>Source Tool</code></li>
+                                <li><i class="fas fa-check text-success me-2"></i><code>Target Tool</code></li>
+                                <li><i class="fas fa-check text-success me-2"></i><code>Interaction Type</code></li>
+                                <li><i class="fas fa-check text-success me-2"></i><code>Lifecycle Stage</code></li>
+                            </ul>
+                            
+                            <h6 class="text-info mt-3">Optional Columns:</h6>
+                            <div class="small text-muted">
+                                Description, Technical Details, Benefits, Challenges, Examples, 
+                                Contact Person, Organization, Email, Priority, Complexity, Status, Submitted By
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shield-alt me-2 text-success"></i>Safety Features
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Duplicate Protection:</strong> Existing interactions will not be overwritten
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-search text-info me-2"></i>
+                                    <strong>Validation:</strong> Tool names and interaction types are verified
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-list-alt text-warning me-2"></i>
+                                    <strong>Detailed Report:</strong> Summary of imported, skipped, and failed entries
+                                </li>
+                                <li>
+                                    <i class="fas fa-undo text-secondary me-2"></i>
+                                    <strong>Safe Import:</strong> No data loss if import fails
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sample CSV Format -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2 text-secondary"></i>CSV Format Example
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info border-0">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-download me-2"></i>Get Template
+                        </h6>
+                        <p class="mb-2">
+                            Download the current data as CSV to see the exact format and column names:
+                        </p>
+                        <a href="{{ url_for('export_interactions_csv') }}" class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-download me-1"></i>Download Template CSV
+                        </a>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Source Tool</th>
+                                    <th>Target Tool</th>
+                                    <th>Interaction Type</th>
+                                    <th>Lifecycle Stage</th>
+                                    <th>Description</th>
+                                    <th>Contact Person</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>DMP Tool</td>
+                                    <td>RSpace</td>
+                                    <td>API Integration</td>
+                                    <td>PLAN</td>
+                                    <td>Integration for data management planning</td>
+                                    <td>John Doe</td>
+                                </tr>
+                                <tr class="text-muted">
+                                    <td colspan="6" class="text-center small">
+                                        <i class="fas fa-ellipsis-h"></i> Additional columns can be included as needed
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Valid Interaction Types -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tags me-2 text-warning"></i>Valid Interaction Types
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for type in [
+                            'API Integration', 'Data Exchange', 'Metadata Exchange',
+                            'File Format Conversion', 'Workflow Integration', 'Plugin/Extension',
+                            'Direct Database Connection', 'Web Service', 'Command Line Interface',
+                            'Import/Export', 'Other'
+                        ] %}
+                        <div class="col-md-4 col-sm-6 mb-2">
+                            <span class="badge bg-light text-dark border">{{ type }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('csv_file');
+    const form = document.querySelector('form');
+    
+    // File validation
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                alert('Please select a CSV file.');
+                e.target.value = '';
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) { // 10MB
+                alert('File size must be less than 10MB.');
+                e.target.value = '';
+                return;
+            }
+        }
+    });
+    
+    // Form submission loading state
+    form.addEventListener('submit', function() {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+
+{% endblock %}
