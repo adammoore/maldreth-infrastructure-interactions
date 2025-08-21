@@ -35,4 +35,4 @@ jobs:
           heroku_email: ${{ secrets.HEROKU_EMAIL }}
           buildpack: "heroku/python"
           usedocker: false
-          remote_branch: "main"
+          branch: "main"
