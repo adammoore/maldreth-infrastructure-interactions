@@ -1,16 +1,23 @@
 """
 streamlined_app.py
-Refactored Flask application for MaLDReTH tool interaction capture.
+PRISM - Platform for Research Infrastructure Synergy Mapping
 
-This version aligns with the MaLDReTH 1.0 final outputs, including:
+A comprehensive Flask application for capturing and visualizing tool interactions
+across the research data lifecycle, evolved from the MaLDReTH project.
+
+PRISM provides:
 1. The 12 harmonised Research Data Lifecycle (RDL) stages.
 2. A comprehensive list of tool categories and exemplar tools.
-3. A detailed interaction capture form based on the project's Google Sheet.
+3. Advanced interaction capture with predefined types and lifecycle stages.
+4. Visual indicators for open source tools and detailed interaction views.
+5. CSV export capabilities and enhanced API functionality.
 """
 
 import os
+import csv
 import logging
-from flask import Flask, render_template, request, jsonify, flash, redirect, url_for
+from io import StringIO
+from flask import Flask, render_template, request, jsonify, flash, redirect, url_for, make_response
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -19,6 +26,36 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+# PRISM Configuration Constants
+INTERACTION_TYPES = [
+    'API Integration',
+    'Data Exchange',
+    'Metadata Exchange', 
+    'File Format Conversion',
+    'Workflow Integration',
+    'Plugin/Extension',
+    'Direct Database Connection',
+    'Web Service',
+    'Command Line Interface',
+    'Import/Export',
+    'Other'
+]
+
+LIFECYCLE_STAGES = [
+    'CONCEPTUALISE',
+    'PLAN', 
+    'FUND',
+    'COLLECT',
+    'PROCESS',
+    'ANALYSE',
+    'STORE',
+    'PUBLISH',
+    'PRESERVE',
+    'SHARE',
+    'ACCESS',
+    'TRANSFORM'
+]
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -72,6 +109,7 @@ class ExemplarTool(db.Model):
     stage_id = db.Column(db.Integer, db.ForeignKey('maldreth_stages.id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('tool_categories.id'), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
+    is_open_source = db.Column(db.Boolean, default=False)
     source_interactions = db.relationship('ToolInteraction', foreign_keys='ToolInteraction.source_tool_id', backref='source_tool', lazy='dynamic')
     target_interactions = db.relationship('ToolInteraction', foreign_keys='ToolInteraction.target_tool_id', backref='target_tool', lazy='dynamic')
 
@@ -127,6 +165,8 @@ def add_interaction():
     """Add a new tool interaction."""
     stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
     tools = ExemplarTool.query.order_by(ExemplarTool.name).all()
+    interaction_types = INTERACTION_TYPES
+    lifecycle_stages = LIFECYCLE_STAGES
     
     if request.method == 'POST':
         try:
@@ -157,7 +197,11 @@ def add_interaction():
             db.session.rollback()
             flash('Error adding interaction. Please try again.', 'error')
 
-    return render_template('streamlined_add_interaction.html', tools=tools, stages=stages)
+    return render_template('streamlined_add_interaction.html', 
+                         tools=tools, 
+                         stages=stages, 
+                         interaction_types=interaction_types, 
+                         lifecycle_stages=lifecycle_stages)
 
 @app.route('/interactions')
 def view_interactions():
@@ -177,6 +221,63 @@ def interaction_detail(interaction_id):
         return render_template('streamlined_interaction_detail.html', interaction=interaction)
     except Exception as e:
         logger.error(f"Error viewing interaction detail: {e}")
+        return render_template('error.html', error=str(e)), 500
+
+@app.route('/export/interactions/csv')
+def export_interactions_csv():
+    """Export all interactions to CSV format."""
+    try:
+        interactions = ToolInteraction.query.all()
+        
+        # Create CSV content
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow([
+            'ID', 'Source Tool', 'Target Tool', 'Interaction Type', 'Lifecycle Stage',
+            'Description', 'Technical Details', 'Benefits', 'Challenges', 'Examples',
+            'Contact Person', 'Organization', 'Email', 'Priority', 'Complexity',
+            'Status', 'Submitted By', 'Submitted At', 'Source Tool Open Source',
+            'Target Tool Open Source', 'Source Tool URL', 'Target Tool URL'
+        ])
+        
+        # Write data rows
+        for interaction in interactions:
+            writer.writerow([
+                interaction.id,
+                interaction.source_tool.name,
+                interaction.target_tool.name,
+                interaction.interaction_type,
+                interaction.lifecycle_stage,
+                interaction.description,
+                interaction.technical_details or '',
+                interaction.benefits or '',
+                interaction.challenges or '',
+                interaction.examples or '',
+                interaction.contact_person or '',
+                interaction.organization or '',
+                interaction.email or '',
+                interaction.priority or '',
+                interaction.complexity or '',
+                interaction.status or '',
+                interaction.submitted_by or '',
+                interaction.submitted_at.strftime('%Y-%m-%d %H:%M:%S') if interaction.submitted_at else '',
+                'Yes' if interaction.source_tool.is_open_source else 'No',
+                'Yes' if interaction.target_tool.is_open_source else 'No',
+                interaction.source_tool.url or '',
+                interaction.target_tool.url or ''
+            ])
+        
+        # Create response
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'text/csv'
+        response.headers['Content-Disposition'] = f'attachment; filename=prism_interactions_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error exporting interactions to CSV: {e}")
         return render_template('error.html', error=str(e)), 500
 
 @app.route('/rdl')
@@ -277,6 +378,117 @@ def get_tool_stage(tool_id):
         logger.error(f"Error getting tool stage: {e}")
         return jsonify({'error': 'Tool not found'}), 404
 
+@app.route('/api/v1/tools')
+def api_get_tools():
+    """API endpoint to retrieve all tools with their properties."""
+    try:
+        tools = ExemplarTool.query.filter_by(is_active=True).all()
+        tools_data = []
+        
+        for tool in tools:
+            tools_data.append({
+                'id': tool.id,
+                'name': tool.name,
+                'description': tool.description,
+                'url': tool.url,
+                'is_open_source': tool.is_open_source,
+                'stage': {
+                    'id': tool.category.stage.id,
+                    'name': tool.category.stage.name,
+                    'position': tool.category.stage.position
+                },
+                'category': {
+                    'id': tool.category.id,
+                    'name': tool.category.name,
+                    'description': tool.category.description
+                }
+            })
+        
+        return jsonify({
+            'success': True,
+            'count': len(tools_data),
+            'tools': tools_data
+        })
+    except Exception as e:
+        logger.error(f"Error in API get tools: {e}")
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+@app.route('/api/v1/interactions')
+def api_get_interactions():
+    """API endpoint to retrieve all interactions with detailed information."""
+    try:
+        interactions = ToolInteraction.query.all()
+        interactions_data = []
+        
+        for interaction in interactions:
+            interactions_data.append({
+                'id': interaction.id,
+                'interaction_type': interaction.interaction_type,
+                'lifecycle_stage': interaction.lifecycle_stage,
+                'description': interaction.description,
+                'technical_details': interaction.technical_details,
+                'benefits': interaction.benefits,
+                'challenges': interaction.challenges,
+                'examples': interaction.examples,
+                'priority': interaction.priority,
+                'complexity': interaction.complexity,
+                'status': interaction.status,
+                'submitted_at': interaction.submitted_at.isoformat() if interaction.submitted_at else None,
+                'source_tool': {
+                    'id': interaction.source_tool.id,
+                    'name': interaction.source_tool.name,
+                    'is_open_source': interaction.source_tool.is_open_source,
+                    'url': interaction.source_tool.url
+                },
+                'target_tool': {
+                    'id': interaction.target_tool.id,
+                    'name': interaction.target_tool.name,
+                    'is_open_source': interaction.target_tool.is_open_source,
+                    'url': interaction.target_tool.url
+                }
+            })
+        
+        return jsonify({
+            'success': True,
+            'count': len(interactions_data),
+            'interactions': interactions_data
+        })
+    except Exception as e:
+        logger.error(f"Error in API get interactions: {e}")
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+@app.route('/api/v1/statistics')
+def api_get_statistics():
+    """API endpoint to retrieve PRISM platform statistics."""
+    try:
+        stats = {
+            'total_tools': ExemplarTool.query.filter_by(is_active=True).count(),
+            'total_interactions': ToolInteraction.query.count(),
+            'total_stages': MaldrethStage.query.count(),
+            'open_source_tools': ExemplarTool.query.filter_by(is_active=True, is_open_source=True).count(),
+            'interaction_types': {},
+            'stage_distribution': {}
+        }
+        
+        # Count interactions by type
+        for interaction_type in INTERACTION_TYPES:
+            count = ToolInteraction.query.filter_by(interaction_type=interaction_type).count()
+            if count > 0:
+                stats['interaction_types'][interaction_type] = count
+        
+        # Count tools by stage
+        for stage in MaldrethStage.query.all():
+            tool_count = ExemplarTool.query.filter_by(stage_id=stage.id, is_active=True).count()
+            stats['stage_distribution'][stage.name] = tool_count
+        
+        return jsonify({
+            'success': True,
+            'statistics': stats
+        })
+    except Exception as e:
+        logger.error(f"Error in API get statistics: {e}")
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
 @app.route('/export/csv')
 def export_csv():
     """Export all interactions to CSV format."""
@@ -352,25 +564,26 @@ def init_database_with_maldreth_data():
     
     db.create_all()
 
-    # 1. Create RDL Stages
-    stages_data = [
-        ("CONCEPTUALISE", "To formulate the initial research idea or hypothesis, and define the scope of the research project and the data component/requirements of that project.", 0),
-        ("PLAN", "To establish a structured strategic framework for management of the research project, outlining aims, objectives, methodologies, and resources required for data collection, management and analysis.", 1),
-        ("FUND", "To identify and acquire financial resources to support the research project, including data collection, management, analysis, sharing, publishing and preservation.", 2),
-        ("COLLECT", "To use predefined procedures, methodologies and instruments to acquire and store data that is reliable, fit for purpose and of sufficient quality to test the research hypothesis.", 3),
-        ("PROCESS", "To make new and existing data analysis-ready. This may involve standardised pre-processing, cleaning, reformatting, structuring, filtering, and performing quality control checks on data.", 4),
-        ("ANALYSE", "To derive insights, knowledge, and understanding from processed data.", 5),
-        ("STORE", "To record data using technological media appropriate for processing and analysis whilst maintaining data integrity and security.", 6),
-        ("PUBLISH", "To release research data in published form for use by others with appropriate metadata for citation (including a unique persistent identifier) based on FAIR principles.", 7),
-        ("PRESERVE", "To ensure the safety, integrity, and accessibility of data for as long as necessary so that data is as FAIR as possible.", 8),
-        ("SHARE", "To make data available and accessible to humans and/or machines.", 9),
-        ("ACCESS", "To control and manage data access by designated users and reusers.", 10),
-        ("TRANSFORM", "To create new data from the original, for example by migration into a different format or by creating a subset.", 11)
-    ]
-    for name, desc, pos in stages_data:
-        stage = MaldrethStage(name=name, description=desc, position=pos)
-        db.session.add(stage)
-    db.session.commit()
+    # 1. Create RDL Stages (only if they don't already exist)
+    if MaldrethStage.query.count() == 0:
+        stages_data = [
+            ("CONCEPTUALISE", "To formulate the initial research idea or hypothesis, and define the scope of the research project and the data component/requirements of that project.", 0),
+            ("PLAN", "To establish a structured strategic framework for management of the research project, outlining aims, objectives, methodologies, and resources required for data collection, management and analysis.", 1),
+            ("FUND", "To identify and acquire financial resources to support the research project, including data collection, management, analysis, sharing, publishing and preservation.", 2),
+            ("COLLECT", "To use predefined procedures, methodologies and instruments to acquire and store data that is reliable, fit for purpose and of sufficient quality to test the research hypothesis.", 3),
+            ("PROCESS", "To make new and existing data analysis-ready. This may involve standardised pre-processing, cleaning, reformatting, structuring, filtering, and performing quality control checks on data.", 4),
+            ("ANALYSE", "To derive insights, knowledge, and understanding from processed data.", 5),
+            ("STORE", "To record data using technological media appropriate for processing and analysis whilst maintaining data integrity and security.", 6),
+            ("PUBLISH", "To release research data in published form for use by others with appropriate metadata for citation (including a unique persistent identifier) based on FAIR principles.", 7),
+            ("PRESERVE", "To ensure the safety, integrity, and accessibility of data for as long as necessary so that data is as FAIR as possible.", 8),
+            ("SHARE", "To make data available and accessible to humans and/or machines.", 9),
+            ("ACCESS", "To control and manage data access by designated users and reusers.", 10),
+            ("TRANSFORM", "To create new data from the original, for example by migration into a different format or by creating a subset.", 11)
+        ]
+        for name, desc, pos in stages_data:
+            stage = MaldrethStage(name=name, description=desc, position=pos)
+            db.session.add(stage)
+        db.session.commit()
 
     # 2. Create Tool Categories and Tools
     tools_catalog = {

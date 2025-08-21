@@ -22,8 +22,22 @@
                 <tbody>
                     {% for interaction in interactions %}
                     <tr>
-                        <td>{{ interaction.source_tool.name }}</td>
-                        <td>{{ interaction.target_tool.name }}</td>
+                        <td>
+                            {{ interaction.source_tool.name }}
+                            {% if interaction.source_tool.is_open_source %}
+                            <span class="badge bg-success ms-1" title="Open Source">
+                                <i class="fas fa-code-branch"></i> OS
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ interaction.target_tool.name }}
+                            {% if interaction.target_tool.is_open_source %}
+                            <span class="badge bg-success ms-1" title="Open Source">
+                                <i class="fas fa-code-branch"></i> OS
+                            </span>
+                            {% endif %}
+                        </td>
                         <td>{{ interaction.interaction_type }}</td>
                         <td>{{ interaction.lifecycle_stage }}</td>
                         <td>{{ interaction.description }}</td>

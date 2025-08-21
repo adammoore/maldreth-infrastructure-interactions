@@ -34,7 +34,12 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="interaction_type" class="form-label">Interaction Type</label>
-                            <input type="text" class="form-control" id="interaction_type" name="interaction_type" placeholder="e.g., Data Flow, API Call" required>
+                            <select class="form-select" id="interaction_type" name="interaction_type" required>
+                                <option value="">Select interaction type...</option>
+                                {% for interaction_type in interaction_types %}
+                                <option value="{{ interaction_type }}">{{ interaction_type }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label for="lifecycle_stage" class="form-label">Lifecycle Stage</label>
