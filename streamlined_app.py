@@ -194,7 +194,7 @@ def rdl_overview():
                 'source_interactions': source_count,
                 'target_interactions': target_count,
                 'total_interactions': source_count + target_count,
-                'tool_count': stage.tool_categories.join(ExemplarTool).count()
+                'tool_count': ExemplarTool.query.filter_by(stage_id=stage.id).count()
             }
         
         return render_template('rdl_overview.html', stages=stages, stage_stats=stage_stats)

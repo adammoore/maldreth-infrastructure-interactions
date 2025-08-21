@@ -1,0 +1,319 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}RDL Visualization - MaLDReTH Infrastructure{% endblock %}
+
+{% block extra_head %}
+<!-- Add D3.js for future interactive visualizations -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+    .stage-node {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .stage-node:hover {
+        transform: scale(1.05);
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    }
+    .lifecycle-flow {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    .stage-card {
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    .stage-card:hover {
+        background: rgba(255,255,255,1);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .connection-line {
+        stroke: #ffffff;
+        stroke-width: 2;
+        stroke-dasharray: 5,5;
+        opacity: 0.7;
+    }
+    .visualization-container {
+        min-height: 600px;
+        position: relative;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 text-primary mb-3">
+                <i class="fas fa-project-diagram me-3"></i>Research Data Lifecycle Visualization
+            </h1>
+            <p class="lead text-muted">
+                Interactive visualization of the MaLDReTH RDL showing stage relationships, tool interactions, and data flows.
+            </p>
+        </div>
+    </div>
+
+    <!-- Visualization Controls -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Visualization Controls</h5>
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <label for="view-mode" class="form-label">View Mode</label>
+                            <select class="form-select" id="view-mode" onchange="updateVisualization()">
+                                <option value="stages">Stage Overview</option>
+                                <option value="interactions">Interaction Flow</option>
+                                <option value="tools">Tool Mapping</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filter-stage" class="form-label">Focus Stage</label>
+                            <select class="form-select" id="filter-stage" onchange="filterByStage()">
+                                <option value="">All Stages</option>
+                                {% for stage in stages %}
+                                <option value="{{ stage.id }}">{{ stage.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button class="btn btn-outline-primary me-2" onclick="resetVisualization()">
+                                <i class="fas fa-redo me-1"></i>Reset
+                            </button>
+                            <button class="btn btn-primary" onclick="exportVisualization()">
+                                <i class="fas fa-download me-1"></i>Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Visualization Area -->
+    <div class="row">
+        <div class="col-12">
+            <div class="lifecycle-flow">
+                <div class="text-center mb-4">
+                    <h3 class="text-white mb-2">MaLDReTH Research Data Lifecycle Flow</h3>
+                    <p class="text-white-50">Interactive visualization showing the progression through research stages</p>
+                </div>
+                
+                <div class="visualization-container" id="main-visualization">
+                    <!-- Stage Flow Visualization -->
+                    <div class="row">
+                        {% for stage in stages %}
+                        <div class="col-lg-2 col-md-3 col-6 mb-3">
+                            <div class="stage-card text-center p-3 h-100 stage-node" 
+                                 data-stage-id="{{ stage.id }}"
+                                 data-stage-name="{{ stage.name }}"
+                                 data-stage-position="{{ stage.position }}">
+                                <div class="stage-number mb-2">
+                                    <span class="badge rounded-circle bg-primary fs-6 p-2" style="width: 40px; height: 40px; line-height: 1.5;">
+                                        {{ stage.position + 1 }}
+                                    </span>
+                                </div>
+                                <h6 class="mb-2 fw-bold text-primary">{{ stage.name }}</h6>
+                                <small class="text-muted d-block mb-2">
+                                    {% set stage_data = visualization_data.stages | selectattr('id', 'equalto', stage.id) | first %}
+                                    {% if stage_data %}
+                                    {{ stage_data.tool_count }} tools
+                                    {% else %}
+                                    0 tools
+                                    {% endif %}
+                                </small>
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar" 
+                                         style="width: {{ ((loop.index / stages|length) * 100) }}%; background-color: {{ stage.color or '#007bff' }};"></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if not loop.last and loop.index % 6 == 0 %}
+                        </div><div class="row">
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interaction Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2 text-primary"></i>Interaction Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 text-center border-end">
+                            <h4 class="text-primary mb-1">{{ visualization_data.interactions|length }}</h4>
+                            <small class="text-muted">Total Interactions</small>
+                        </div>
+                        <div class="col-6 text-center">
+                            <h4 class="text-success mb-1">{{ visualization_data.tools|length }}</h4>
+                            <small class="text-muted">Connected Tools</small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Interaction Types Breakdown -->
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-2">Interaction Types:</small>
+                        {% set interaction_types = visualization_data.interactions | map(attribute='type') | list %}
+                        {% for type in interaction_types | unique %}
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-outline-primary">{{ type|title }}</span>
+                            <small class="text-muted">{{ interaction_types | select('equalto', type) | list | length }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2 text-info"></i>Visualization Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info border-0 mb-3">
+                        <h6 class="alert-heading">Current View: Stage Overview</h6>
+                        <p class="mb-0">Showing the 12 MaLDReTH lifecycle stages with their relative positions and tool counts.</p>
+                    </div>
+                    
+                    <div class="interaction-legend">
+                        <small class="text-muted d-block mb-2">Legend:</small>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-primary">Stage Position</span>
+                            <span class="badge bg-success">Tool Count</span>
+                            <span class="badge bg-info">Progress Flow</span>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="future-features">
+                        <small class="text-muted d-block mb-2">Coming Soon:</small>
+                        <ul class="list-unstyled small text-muted">
+                            <li><i class="fas fa-check-circle me-2 text-success"></i>Interactive node connections</li>
+                            <li><i class="fas fa-check-circle me-2 text-success"></i>Tool-to-tool relationship mapping</li>
+                            <li><i class="fas fa-check-circle me-2 text-success"></i>Dynamic filtering and search</li>
+                            <li><i class="fas fa-check-circle me-2 text-success"></i>Export to various formats</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Development Notice -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-warning border-0 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-construction me-3 fs-4"></i>
+                    <div>
+                        <h5 class="alert-heading mb-2">Visualization Under Development</h5>
+                        <p class="mb-0">
+                            This is a foundational implementation of the RDL visualization. Future versions will include 
+                            interactive D3.js network graphs, real-time filtering, advanced analytics, and export capabilities. 
+                            The current view provides a structural overview that will evolve into a fully interactive experience.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex flex-wrap gap-3 justify-content-center">
+                <a href="{{ url_for('rdl_overview') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Overview
+                </a>
+                <a href="{{ url_for('view_interactions') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-list me-2"></i>View Data
+                </a>
+                <a href="{{ url_for('add_interaction') }}" class="btn btn-success btn-lg">
+                    <i class="fas fa-plus me-2"></i>Add Interaction
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for basic interactivity -->
+<script>
+// Placeholder functions for future development
+function updateVisualization() {
+    const mode = document.getElementById('view-mode').value;
+    console.log('Switching to view mode:', mode);
+    
+    // Show development notice
+    if (mode !== 'stages') {
+        alert('This view mode is under development. Currently showing stage overview.');
+        document.getElementById('view-mode').value = 'stages';
+    }
+}
+
+function filterByStage() {
+    const stageId = document.getElementById('filter-stage').value;
+    console.log('Filtering by stage:', stageId);
+    
+    // Basic highlighting for selected stage
+    document.querySelectorAll('.stage-node').forEach(node => {
+        if (stageId === '' || node.dataset.stageId === stageId) {
+            node.style.opacity = '1';
+            node.style.transform = 'scale(1)';
+        } else {
+            node.style.opacity = '0.5';
+            node.style.transform = 'scale(0.95)';
+        }
+    });
+}
+
+function resetVisualization() {
+    document.getElementById('view-mode').value = 'stages';
+    document.getElementById('filter-stage').value = '';
+    
+    document.querySelectorAll('.stage-node').forEach(node => {
+        node.style.opacity = '1';
+        node.style.transform = 'scale(1)';
+    });
+}
+
+function exportVisualization() {
+    alert('Export functionality is under development. Future versions will support PNG, SVG, and PDF exports.');
+}
+
+// Add click handlers to stage nodes
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.stage-node').forEach(node => {
+        node.addEventListener('click', function() {
+            const stageName = this.dataset.stageName;
+            const stageId = this.dataset.stageId;
+            
+            // Future: Navigate to detailed stage view
+            console.log('Clicked stage:', stageName, 'ID:', stageId);
+            
+            // For now, show basic info
+            alert(`${stageName} (Stage ${parseInt(this.dataset.stagePosition) + 1})\\n\\nClick interaction coming in future development!`);
+        });
+    });
+});
+</script>
+{% endblock %}

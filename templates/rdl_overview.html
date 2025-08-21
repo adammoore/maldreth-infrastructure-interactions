@@ -1,0 +1,143 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}Research Data Lifecycle Overview - MaLDReTH Infrastructure{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 text-primary mb-3">
+                <i class="fas fa-project-diagram me-3"></i>Research Data Lifecycle Overview
+            </h1>
+            <p class="lead text-muted">
+                Explore the 12 stages of the MaLDReTH Research Data Lifecycle and discover how tools interact across different phases of research.
+            </p>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ stages|length }}</h3>
+                    <p class="card-text">Lifecycle Stages</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ stage_stats.values() | map(attribute='total_interactions') | sum }}</h3>
+                    <p class="card-text">Total Interactions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ stage_stats.values() | map(attribute='tool_count') | sum }}</h3>
+                    <p class="card-text">Tools Catalogued</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h3 class="card-title">12</h3>
+                    <p class="card-text">RDL Phases</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lifecycle Stages -->
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">MaLDReTH Research Data Lifecycle Stages</h2>
+            
+            <div class="row">
+                {% for stage in stages %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header" style="background-color: {{ stage.color or '#007bff' }}10; border-bottom: 2px solid {{ stage.color or '#007bff' }};">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0 fw-bold" style="color: {{ stage.color or '#007bff' }};">
+                                    {{ loop.index }}. {{ stage.name }}
+                                </h5>
+                                <span class="badge rounded-pill" style="background-color: {{ stage.color or '#007bff' }};">
+                                    Phase {{ stage.position + 1 }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text text-muted">{{ stage.description or "Description will be added as the system develops." }}</p>
+                            
+                            <!-- Stage Statistics -->
+                            {% if stage.id in stage_stats %}
+                            <div class="row text-center mt-3">
+                                <div class="col-4">
+                                    <small class="text-muted d-block">Tools</small>
+                                    <strong class="text-primary">{{ stage_stats[stage.id].tool_count }}</strong>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted d-block">Interactions</small>
+                                    <strong class="text-success">{{ stage_stats[stage.id].total_interactions }}</strong>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted d-block">Position</small>
+                                    <strong class="text-info">{{ stage.position + 1 }}/12</strong>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-light border-0">
+                            <small class="text-muted">
+                                <i class="fas fa-lightbulb me-1"></i>
+                                Click stage to explore tools and interactions
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Development Notice -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info border-0 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-info-circle me-3 fs-4"></i>
+                    <div>
+                        <h5 class="alert-heading mb-2">Under Development</h5>
+                        <p class="mb-0">
+                            This RDL Overview page provides a foundational view of the MaLDReTH lifecycle stages. 
+                            Future enhancements will include interactive stage exploration, detailed tool mappings, 
+                            and advanced filtering capabilities.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex flex-wrap gap-3 justify-content-center">
+                <a href="{{ url_for('rdl_visualization') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-chart-network me-2"></i>View Visualization
+                </a>
+                <a href="{{ url_for('view_interactions') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-list me-2"></i>Browse Interactions
+                </a>
+                <a href="{{ url_for('add_interaction') }}" class="btn btn-outline-success btn-lg">
+                    <i class="fas fa-plus me-2"></i>Add Interaction
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
