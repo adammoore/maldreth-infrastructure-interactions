@@ -50,6 +50,7 @@ class MaldrethStage(db.Model):
     name = db.Column(db.String(50), nullable=False, unique=True)
     description = db.Column(db.Text)
     position = db.Column(db.Integer, default=0)
+    color = db.Column(db.String(7), default='#007bff')
     tool_categories = db.relationship('ToolCategory', backref='stage', lazy='dynamic', cascade='all, delete-orphan')
 
 class ToolCategory(db.Model):
@@ -163,6 +164,101 @@ def view_interactions():
         return render_template('streamlined_view_interactions.html', interactions=interactions)
     except Exception as e:
         logger.error(f"Error viewing interactions: {e}")
+        return render_template('error.html', error=str(e)), 500
+
+@app.route('/interaction/<int:interaction_id>')
+def interaction_detail(interaction_id):
+    """View detailed information about a specific interaction."""
+    try:
+        interaction = ToolInteraction.query.get_or_404(interaction_id)
+        return render_template('streamlined_interaction_detail.html', interaction=interaction)
+    except Exception as e:
+        logger.error(f"Error viewing interaction detail: {e}")
+        return render_template('error.html', error=str(e)), 500
+
+@app.route('/rdl')
+def rdl_overview():
+    """Display the MaLDReTH Research Data Lifecycle overview and information."""
+    try:
+        stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
+        # Get interaction statistics per stage
+        stage_stats = {}
+        for stage in stages:
+            # Count interactions where either source or target tool belongs to this stage
+            source_count = ToolInteraction.query.join(ExemplarTool, ToolInteraction.source_tool_id == ExemplarTool.id).filter(ExemplarTool.stage_id == stage.id).count()
+            target_count = ToolInteraction.query.join(ExemplarTool, ToolInteraction.target_tool_id == ExemplarTool.id).filter(ExemplarTool.stage_id == stage.id).count()
+            stage_stats[stage.id] = {
+                'source_interactions': source_count,
+                'target_interactions': target_count,
+                'total_interactions': source_count + target_count,
+                'tool_count': stage.tool_categories.join(ExemplarTool).count()
+            }
+        
+        return render_template('rdl_overview.html', stages=stages, stage_stats=stage_stats)
+    except Exception as e:
+        logger.error(f"Error viewing RDL overview: {e}")
+        return render_template('error.html', error=str(e)), 500
+
+@app.route('/rdl/visualization')
+def rdl_visualization():
+    """Display interactive visualization of the MaLDReTH RDL with interactions."""
+    try:
+        stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
+        interactions = ToolInteraction.query.all()
+        
+        # Prepare data for visualization
+        visualization_data = {
+            'stages': [],
+            'interactions': [],
+            'tools': []
+        }
+        
+        # Stage data
+        for stage in stages:
+            stage_data = {
+                'id': stage.id,
+                'name': stage.name,
+                'position': stage.position,
+                'description': stage.description,
+                'tool_count': ExemplarTool.query.filter_by(stage_id=stage.id).count(),
+                'category_count': ToolCategory.query.filter_by(stage_id=stage.id).count()
+            }
+            visualization_data['stages'].append(stage_data)
+        
+        # Tool data
+        tools = ExemplarTool.query.all()
+        for tool in tools:
+            tool_data = {
+                'id': tool.id,
+                'name': tool.name,
+                'stage_id': tool.stage_id,
+                'stage_name': tool.category.stage.name,
+                'category': tool.category.name
+            }
+            visualization_data['tools'].append(tool_data)
+        
+        # Interaction data
+        for interaction in interactions:
+            interaction_data = {
+                'id': interaction.id,
+                'source_tool_id': interaction.source_tool_id,
+                'target_tool_id': interaction.target_tool_id,
+                'source_tool_name': interaction.source_tool.name,
+                'target_tool_name': interaction.target_tool.name,
+                'source_stage_id': interaction.source_tool.stage_id,
+                'target_stage_id': interaction.target_tool.stage_id,
+                'interaction_type': interaction.interaction_type,
+                'lifecycle_stage': interaction.lifecycle_stage,
+                'description': interaction.description[:100] + '...' if len(interaction.description) > 100 else interaction.description,
+                'status': interaction.status or 'unknown'
+            }
+            visualization_data['interactions'].append(interaction_data)
+        
+        return render_template('rdl_visualization.html', 
+                             stages=stages, 
+                             visualization_data=visualization_data)
+    except Exception as e:
+        logger.error(f"Error in RDL visualization: {e}")
         return render_template('error.html', error=str(e)), 500
 
 @app.route('/api/tool/<int:tool_id>/stage')
