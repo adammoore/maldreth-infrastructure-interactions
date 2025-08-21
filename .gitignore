@@ -124,3 +124,42 @@ token.json
 # Local uploads
 uploads/
 instance/
+
+# Backup files and directories
+*.backup
+*.bak
+*_backup.py
+*_original_backup.*
+backup_*/
+*_backup/
+old/
+archive/
+
+# Migration temp files
+add_*_migration.py
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Heroku
+.heroku/
+
+# Editor files
+*~
+*.swp
+*.swo
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Node.js (if any frontend dependencies)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
