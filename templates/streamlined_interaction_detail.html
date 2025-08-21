@@ -26,7 +26,11 @@
                             </h1>
                         </div>
                         <div class="col-auto">
-                            <span class="badge bg-light text-dark fs-6">ID: {{ interaction.id }}</span>
+                            <span class="badge bg-light text-dark fs-6 me-2">ID: {{ interaction.id }}</span>
+                            <a href="{{ url_for('edit_interaction', interaction_id=interaction.id) }}" 
+                               class="btn btn-sm btn-outline-light" title="Curate this interaction">
+                                <i class="fas fa-edit"></i>
+                            </a>
                         </div>
                     </div>
                 </div>

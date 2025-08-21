@@ -17,6 +17,7 @@
                         <th>Lifecycle Stage</th>
                         <th>Description</th>
                         <th>Submitted At</th>
+                        <th width="80">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -42,10 +43,22 @@
                         <td>{{ interaction.lifecycle_stage }}</td>
                         <td>{{ interaction.description }}</td>
                         <td>{{ interaction.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{{ url_for('interaction_detail', interaction_id=interaction.id) }}" 
+                                   class="btn btn-outline-primary btn-sm" title="View details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('edit_interaction', interaction_id=interaction.id) }}" 
+                                   class="btn btn-outline-secondary btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="text-center">No interactions found.</td>
+                        <td colspan="7" class="text-center">No interactions found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
