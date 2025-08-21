@@ -8,6 +8,8 @@
 
 The MaLDReTH (Mapping the Landscape of Digital Research Tools Harmonised) Infrastructure Interactions project is a Flask-based web application that visualizes and manages the research data lifecycle. It provides an interactive interface for exploring research tools categorized by lifecycle stages, tool categories, and their interconnections.
 
+**Current Status**: Production deployment on Heroku (`mal2-data-survey`) with PostgreSQL database containing 12 lifecycle stages and comprehensive tool interaction data, including recent DMPTool integration.
+
 ## Features
 
 - 🔄 **Interactive Lifecycle Visualization**: Explore the research data lifecycle with an interactive circular diagram
@@ -72,6 +74,10 @@ The MaLDReTH (Mapping the Landscape of Digital Research Tools Harmonised) Infras
 
 5. **Initialize the database**
    ```bash
+   # For streamlined application (recommended)
+   python init_streamlined_db.py
+   
+   # Alternative: Traditional Flask migrations
    flask db init
    flask db migrate -m "Initial migration"
    flask db upgrade
@@ -79,6 +85,10 @@ The MaLDReTH (Mapping the Landscape of Digital Research Tools Harmonised) Infras
 
 6. **Load initial data**
    ```bash
+   # Streamlined initialization (includes all MaLDReTH data)
+   python init_streamlined_db.py
+   
+   # Legacy options:
    # From Excel file
    python init_maldreth_tools.py --file data/research_data_lifecycle.xlsx
    
@@ -132,7 +142,13 @@ ENABLE_RATE_LIMITING=true
 ### Command Line Tools
 
 ```bash
-# Initialize database with sample data
+# Initialize database with complete MaLDReTH data (recommended)
+python init_streamlined_db.py
+
+# Add specific tool interactions (e.g., DMPTool integration)
+python add_dmptool_entry.py
+
+# Legacy data initialization
 python init_maldreth_tools.py --file data/research_data_lifecycle.xlsx
 
 # Migrate data from CSV files

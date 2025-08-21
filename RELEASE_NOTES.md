@@ -1,3 +1,103 @@
+# Release Notes
+
+## 🔧 Version 2.0.1 - Database Schema Fix & DMPTool Integration
+
+**Release Date**: August 20, 2025  
+**Status**: Production Ready  
+**Deployment**: `mal2-data-survey` on Heroku  
+
+### 🚨 Critical Bug Fixes
+
+#### Database Schema Alignment Issue Resolved
+- **Issue**: Production app was failing with `relation "maldreth_stages" does not exist` error
+- **Root Cause**: Mismatch between two model systems:
+  - `models.py` - uses `Stage` model with `stages` table  
+  - `streamlined_app.py` - uses `MaldrethStage` model with `maldreth_stages` table
+  - Production (`wsgi.py`) uses `streamlined_app.py` but database had wrong schema
+- **Resolution**: 
+  - Reset Heroku PostgreSQL database completely
+  - Reinitialized using `init_database_with_maldreth_data()` from `streamlined_app.py`
+  - Verified all 12 lifecycle stages and tool relationships properly created
+
+#### Production Database Status
+- **Database**: PostgreSQL essential-0 plan, ~8.6MB
+- **Tables**: 12 tables with proper `maldreth_stages` schema
+- **Application**: Running successfully with HTTP 200 responses
+- **Uptime**: Web process stable since redeployment
+
+### ✨ New Features
+
+#### DMPTool Integration Entry
+Successfully added comprehensive DMPTool interaction from Maria Praetzellis (CDL):
+- **Source Tool**: DMPTool (PLAN stage)
+- **Target Tool**: RSpace (PROCESS stage)
+- **Integration Type**: API-based with REST API and JSON
+- **Lifecycle Coverage**: ALL stages
+- **Technical Standard**: RDA Common Standard for DMPs
+- **Contact**: maria.praetzellis@ucop.edu
+- **Status**: Pilot program
+- **Benefits**: Efficiency in planning, early security/privacy issue identification
+
+### 🛠️ Technical Improvements
+
+#### Database Infrastructure
+- **Schema Consistency**: All models now align with `streamlined_app.py` architecture
+- **Data Integrity**: Complete lifecycle data with 12 stages:
+  - CONCEPTUALISE, PLAN, FUND, COLLECT, PROCESS, ANALYSE
+  - STORE, PUBLISH, PRESERVE, SHARE, ACCESS, TRANSFORM
+- **Tool Categories**: Comprehensive categorization within each stage
+- **Exemplar Tools**: Full tool database with proper relationships
+
+#### Operational Scripts
+- **`add_dmptool_entry.py`**: Automated script for adding DMPTool interaction
+- **`init_streamlined_db.py`**: Complete database initialization utility
+- **Production Commands**: Verified Heroku deployment commands
+
+### 🔒 Production Deployment
+
+#### Heroku Configuration
+- **App**: `mal2-data-survey`
+- **Database**: PostgreSQL add-on with proper schema
+- **Status**: Fully operational with stable web process
+- **Logs**: Clean HTTP 200 responses, no schema errors
+
+#### Database Reinitialization Process
+```bash
+# Database reset command used
+heroku pg:reset DATABASE_URL --app mal2-data-survey --confirm mal2-data-survey
+
+# Reinitialization command used  
+heroku run --app mal2-data-survey "python -c \"from streamlined_app import app, init_database_with_maldreth_data; app.app_context().push(); init_database_with_maldreth_data()\""
+```
+
+### 📊 Impact
+
+#### Stability Improvements
+- **Eliminated Critical Error**: Fixed `relation does not exist` blocking production use
+- **Schema Consistency**: Single source of truth for database models
+- **Production Ready**: Stable deployment with verified functionality
+
+#### Data Enhancement
+- **New Integration**: DMPTool-RSpace interaction documented
+- **Research Value**: Valuable pilot program data for MaLDReTH working group
+- **API Standards**: RDA Common Standard integration example
+
+### 🧪 Verification
+
+#### Testing Completed
+- ✅ Database schema alignment verified
+- ✅ Application startup successful
+- ✅ HTTP endpoints responding correctly
+- ✅ DMPTool entry accessible via web interface
+- ✅ Data export functionality maintained
+
+#### Monitoring
+- **Web Process**: Stable uptime since 14:21:40
+- **Database**: Healthy connection and query performance
+- **Logs**: Clean operational logs with no schema errors
+
+---
+
 # Release Notes - Version 2.0.0
 
 ## 🚀 MaLDReTH Infrastructure Interactions v2.0.0
