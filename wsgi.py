@@ -24,8 +24,7 @@ import logging
 from typing import Optional
 
 # Import the unified application factory
-from app import create_app, init_database_with_maldreth_data
-from config import Config
+from streamlined_app import app as streamlined_app, init_database_with_maldreth_data
 
 # Configure comprehensive logging for production environment
 # For LLM/Copilot: This ensures proper logging in production for debugging and monitoring
@@ -47,8 +46,8 @@ logging.getLogger('werkzeug').setLevel(logging.WARNING)           # Reduce HTTP 
 try:
     logger.info("Initializing MaLDReTH application for production deployment...")
     
-    # Create application instance with production configuration
-    app = create_app(Config)
+    # Use the streamlined app instance
+    app = streamlined_app
     
     logger.info("MaLDReTH application initialized successfully for production")
     
@@ -70,7 +69,7 @@ def init_database_if_needed() -> None:
     """
     try:
         with app.app_context():
-            from models import MaldrethStage
+            from streamlined_app import MaldrethStage
             
             # Check if database is already populated
             if MaldrethStage.query.first() is None:
@@ -98,7 +97,7 @@ def get_app_info() -> dict:
     """
     try:
         with app.app_context():
-            from models import MaldrethStage, ExemplarTool, ToolInteraction
+            from streamlined_app import MaldrethStage, ExemplarTool, ToolInteraction
             
             return {
                 'application': 'MaLDReTH Tool Interaction Capture System',
