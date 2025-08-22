@@ -1297,126 +1297,190 @@ def migrate_database_schema():
         db.session.rollback()
 
 def init_database_with_maldreth_data():
-    """Initialize the database with MaLDReTH 1.0 final output data."""
-    try:
-        # First, try to migrate existing schema (production)
-        migrate_database_schema()
-        
-        # Create any missing tables
-        db.create_all()
-        
-    except Exception as e:
-        logger.info(f"Database initialization error: {e}")
-        # If migration fails, try fresh creation (development only)
-        try:
-            # Only drop and recreate in development (SQLite)
-            if 'sqlite' in str(db.engine.url):
-                db.session.execute(db.text('DROP TABLE IF EXISTS tool_interactions CASCADE'))
-                db.session.execute(db.text('DROP TABLE IF EXISTS exemplar_tools CASCADE'))
-                db.session.execute(db.text('DROP TABLE IF EXISTS tool_categories CASCADE'))
-                db.session.execute(db.text('DROP TABLE IF EXISTS maldreth_stages CASCADE'))
-                db.session.execute(db.text('DROP TABLE IF EXISTS research_tools CASCADE'))
-                db.session.execute(db.text('DROP TABLE IF EXISTS tools CASCADE'))
-                db.session.execute(db.text('DROP TABLE IF EXISTS interactions CASCADE'))
-                db.session.commit()
-            
-            db.create_all()
-        except Exception as e2:
-            logger.error(f"Critical database error: {e2}")
-            return
-
-    # 1. Create RDL Stages (only if they don't already exist)
-    if MaldrethStage.query.count() == 0:
-        stages_data = [
-            ("CONCEPTUALISE", "To formulate the initial research idea or hypothesis, and define the scope of the research project and the data component/requirements of that project.", 0),
-            ("PLAN", "To establish a structured strategic framework for management of the research project, outlining aims, objectives, methodologies, and resources required for data collection, management and analysis.", 1),
-            ("FUND", "To identify and acquire financial resources to support the research project, including data collection, management, analysis, sharing, publishing and preservation.", 2),
-            ("COLLECT", "To use predefined procedures, methodologies and instruments to acquire and store data that is reliable, fit for purpose and of sufficient quality to test the research hypothesis.", 3),
-            ("PROCESS", "To make new and existing data analysis-ready. This may involve standardised pre-processing, cleaning, reformatting, structuring, filtering, and performing quality control checks on data.", 4),
-            ("ANALYSE", "To derive insights, knowledge, and understanding from processed data.", 5),
-            ("STORE", "To record data using technological media appropriate for processing and analysis whilst maintaining data integrity and security.", 6),
-            ("PUBLISH", "To release research data in published form for use by others with appropriate metadata for citation (including a unique persistent identifier) based on FAIR principles.", 7),
-            ("PRESERVE", "To ensure the safety, integrity, and accessibility of data for as long as necessary so that data is as FAIR as possible.", 8),
-            ("SHARE", "To make data available and accessible to humans and/or machines.", 9),
-            ("ACCESS", "To control and manage data access by designated users and reusers.", 10),
-            ("TRANSFORM", "To create new data from the original, for example by migration into a different format or by creating a subset.", 11)
-        ]
-        for name, desc, pos in stages_data:
-            stage = MaldrethStage(name=name, description=desc, position=pos)
-            db.session.add(stage)
-        db.session.commit()
-
-    # 2. Create Tool Categories and Tools
-    tools_catalog = {
-        "CONCEPTUALISE": [
-            ("Mind mapping, concept mapping and knowledge modelling", "Tools that define the entities of research and their relationships", ["Miro", "Meister Labs (MindMeister + MeisterTask)", "XMind"]),
-            ("Diagramming and flowchart", "Tools that detail the research workflow", ["Lucidchart", "Draw.io (now Diagrams.net)", "Creately"]),
-            ("Wireframing and prototyping", "Tools that visualise and demonstrate the research workflow", ["Balsamiq", "(Figma)"])
-        ],
-        "PLAN": [
-            ("Data management planning (DMP)", "Tools focused on enabling preparation and submission of data management plans", ["DMP Tool", "DMP Online", "RDMO"]),
-            ("Project planning", "Tools designed to enable project planning", ["Trello", "Asana", "Microsoft project"]),
-            ("Combined DMP/project", "Tools which combine project planning with the ability to prepare data management plans", ["Data Stewardship Wizard", "Redbox research data", "Argos"])
-        ],
-        "COLLECT": [
-            ("Quantitative data collection tool", "Tools that collect quantitative data", ["Open Data Kit", "GBIF", "Cedar WorkBench"]),
-            ("Qualitative data collection (e.g. Survey tool)", "Tools that collect qualitative data", ["Survey Monkey", "Online Surveys", "Zooniverse"]),
-            ("Harvesting tool (e.g. WebScrapers)", "Tools that harvest data from various sources", ["Netlytic", "IRODS", "DROID"])
-        ],
-        "PROCESS": [
-            ("Electronic laboratory notebooks (ELNs)", "Tools that enable aggregation, management, and organization of experimental and physical sample data", ["elabnext", "E-lab FTW (Open source)", "RSpace (Open Source)", "Lab Archives"]),
-            ("Scientific computing across all programming languages", "Tools that enable creation and sharing of computational documents", ["Jupyter", "Mathematica", "WebAssembly"]),
-            ("Metadata Tool", "Tools that enable creation, application, and management of metadata", ["CEDAR Workbench (biomedical data)"])
-        ],
-        "ANALYSE": [
-            ("Remediation (e.g. motion capture for gait analysis)", "Tools that capture transformation of data observations", ["Track3D"]),
-            ("Computational methods (e.g. Statistical software)", "Tools that provide computational methods for analysis", ["SPSS", "Matlab"]),
-            ("Computational tools", "Tools that provide computational frameworks for processing and analysis", ["Jupyter", "RStudio", "Eclipse"])
-        ],
-        "STORE": [
-            ("Data Repository", "Tools that structure and provide a framework to organise information", ["Figshare", "Zenodo", "Dataverse"]),
-            ("Archive", "Tools that facilitate the long-term storage of data", ["Libsafe"]),
-            ("Management tool", "Tools that facilitate the organisation of data", ["iRODS", "GLOBUS", "Mediaflux"])
-        ],
-        "PUBLISH": [
-            ("Discipline-specific data repository", "Tools that enable storage and public sharing of data for specific disciplines", ["NOMAD-OASIS"]),
-            ("Generalist data repository", "Tools that enable storage and public sharing of generalist data", ["Figshare", "Zenodo", "Dataverse", "CKAN"]),
-            ("Metadata repository", "Tools that enable the storage and public sharing of metadata", ["DataCite Commons", "IBM Infosphere"])
-        ],
-        "PRESERVE": [
-            ("Data repository", "Tools that enable storage and public sharing of data", ["Dataverse", "Invenio UKDS"]),
-            ("Archive", "Tools that facilitate the long-term preservation of data", ["Archivematica"]),
-            ("Containers", "Tools that create an environment in which data can be seen in its original environment", ["Preservica", "Docker", "Archive-it.org"])
-        ],
-        "SHARE": [
-            ("Data repository", "Tools that enable storage and public sharing of data", ["Dataverse", "Zenodo", "Figshare"]),
-            ("Electronic laboratory notebooks (ELNs)", "Tools that enable aggregation, organization and management of experimental and physical sample data", ["elabftw", "RSpace", "elabnext", "lab archives"]),
-            ("Scientific computing across all programming languages", "Tools that enable creation and sharing of computational documents", ["Eclipse", "Jupyter", "Wolfram Alpha"])
-        ],
-        "ACCESS": [
-            ("Data repository", "Tools that store data so that it can be publicly accessed", ["CKAN", "Dataverse", "DRYAD"]),
-            ("Database", "Tools that structure and provide a framework to access information", ["Oracle", "MySQL / sqlLite", "Postgres"]),
-            ("Authorisation/Authentication Infrastructure", "Tools that enable scalable authorised and authenticated access to data", ["LDAP", "SAML2", "AD"])
-        ],
-        "TRANSFORM": [
-            ("Electronic laboratory notebooks (ELNs)", "Tools that enable aggregation, management, and organization of experimental and physical sample data", ["elabftw", "RSpace", "elabnext", "Lab archive"]),
-            ("Programming languages", "Tools and platforms infrastructure used to transform data", ["Python (Interpreted language)", "Perl (4GL)", "Fortran (Compiled language)"]),
-            ("Extract, Transform, Load (ETL) tools", "A data integration process used to combine data from multiple sources", ["OCI (Cloud Infrastructure Provider)", "Apache Spark", "Snowflake (Commercial)"])
-        ]
+    """Initialize database with MaLDReTH 1.0 data, preventing duplicates."""
+    logger.info("Starting database initialization with duplicate prevention...")
+    
+    # Check if data already exists (skip if already populated)
+    existing_stages = MaldrethStage.query.count()
+    existing_tools = ExemplarTool.query.filter_by(is_active=True).count()
+    
+    if existing_stages >= 12 and existing_tools > 50:
+        logger.info(f"Database already populated: {existing_stages} stages, {existing_tools} tools - skipping initialization")
+        return
+    
+    logger.info("Database needs initialization - proceeding with data setup...")
+    
+    # Deactivate any existing auto-created tools to prevent conflicts
+    auto_tools = ExemplarTool.query.filter_by(auto_created=True, is_active=True).all()
+    for tool in auto_tools:
+        tool.is_active = False
+    logger.info(f"Deactivated {len(auto_tools)} existing auto-created tools")
+    
+    # MaLDReTH 1.0 reference data (simplified for reliability)
+    maldreth_data = {
+        "CONCEPTUALISE": {
+            "description": "To formulate the initial research idea or hypothesis, and define the scope of the research project and data requirements.",
+            "categories": {
+                "Mind mapping, concept mapping and knowledge modelling": ["FreeMind", "XMind", "Lucidchart", "Miro", "Roam Research"],
+                "Diagramming and flowchart": ["Draw.io", "Visio", "Creately"],
+                "Literature review": ["Zotero", "Mendeley"]
+            }
+        },
+        "PLAN": {
+            "description": "To establish a structured strategic framework for management of the research project, outlining aims, objectives, methodologies, and resource allocation.",
+            "categories": {
+                "Data management planning (DMP)": ["DMPTool", "DMP Assistant", "DMPT"],
+                "Project planning": ["Gantt Project", "Microsoft Project", "Trello"],
+                "Research methodology": ["NVivo", "Atlas.ti"]
+            }
+        },
+        "FUND": {
+            "description": "To identify and acquire financial resources to support the research project, including data collection, analysis, storage, and dissemination activities.",
+            "categories": {}  # No specific tools for funding stage
+        },
+        "COLLECT": {
+            "description": "To gather primary and secondary data according to the research methodology and ethical guidelines established during the planning phase.",
+            "categories": {
+                "Survey and questionnaire": ["SurveyMonkey", "Google Forms", "Qualtrics"],
+                "Data collection": ["ODK", "KoBoToolbox", "REDCap"],
+                "Field data collection": ["Epicollect5", "Survey123", "Fulcrum"]
+            }
+        },
+        "PROCESS": {
+            "description": "To transform, clean, validate, and prepare raw data for analysis, ensuring data quality and consistency.",
+            "categories": {
+                "Electronic Laboratory Notebooks (ELNs)": ["LabArchives", "eLabJournal"],
+                "Scientific computing across all programming languages": ["Jupyter", "RStudio"],
+                "Data cleaning and transformation": ["OpenRefine", "Trifacta", "DataLadder"]
+            }
+        },
+        "ANALYSE": {
+            "description": "To examine, interpret, and derive insights from processed data using appropriate analytical methods and tools.",
+            "categories": {
+                "Statistical analysis": ["R", "SPSS", "SAS"],
+                "Data visualization": ["Tableau", "D3.js"],
+                "Machine learning": ["Python scikit-learn", "TensorFlow"]
+            }
+        },
+        "STORE": {
+            "description": "To securely store processed data and analysis results in appropriate formats and locations for future access and use.",
+            "categories": {
+                "Data repository": ["Figshare", "Zenodo"],
+                "Archive": ["DSpace"],
+                "Cloud storage": ["Google Drive", "Dropbox", "OneDrive"]
+            }
+        },
+        "PUBLISH": {
+            "description": "To share research findings and datasets through appropriate channels, ensuring proper attribution and accessibility.",
+            "categories": {
+                "Academic publishing": ["LaTeX", "Overleaf", "Word"],
+                "Data publication": ["Dataverse", "Figshare"],
+                "Preprint servers": ["arXiv", "bioRxiv", "PeerJ Preprints"]
+            }
+        },
+        "PRESERVE": {
+            "description": "To ensure long-term accessibility and integrity of research data and outputs through appropriate preservation strategies.",
+            "categories": {
+                "Digital preservation": ["LOCKSS", "Fedora", "DSpace", "Samvera"],
+                "Data repository": ["Institutional Repository", "Domain Repository", "Zenodo", "Figshare"],
+                "Archive": ["Digital preservation system"]
+            }
+        },
+        "SHARE": {
+            "description": "To make research data and findings available to other researchers and stakeholders through appropriate sharing mechanisms.",
+            "categories": {
+                "Data repository": ["GitHub", "Zenodo"],
+                "Electronic Laboratory Notebooks (ELNs)": ["LabArchives", "Benchling", "eLabNext", "Lab Archives"],
+                "Scientific computing across all programming languages": ["Jupyter", "Eclipse", "Jupyter"]
+            }
+        },
+        "ACCESS": {
+            "description": "To provide controlled and documented access to research data for verification, reuse, and further research activities.",
+            "categories": {
+                "Data repository": ["DataCite", "CKAN"],
+                "Access control": ["Shibboleth", "OAuth"],
+                "Data discovery": ["DataCite", "Google Dataset Search", "CKAN"]
+            }
+        },
+        "TRANSFORM": {
+            "description": "To convert and adapt research data and outputs into new formats, applications, or research contexts.",
+            "categories": {
+                "Data transformation": ["Apache Spark", "Talend", "Pentaho"],
+                "Electronic Laboratory Notebooks (ELNs)": ["LabArchives"],
+                "Format conversion": ["Pandoc", "ImageMagick", "FFmpeg"]
+            }
+        }
     }
-
-    for stage_name, categories in tools_catalog.items():
-        stage_obj = MaldrethStage.query.filter_by(name=stage_name).one()
-        for cat_name, cat_desc, tools in categories:
-            category_obj = ToolCategory(name=cat_name, description=cat_desc, stage_id=stage_obj.id)
-            db.session.add(category_obj)
-            db.session.flush() # Get category ID
+    
+    # Create or update stages and categories
+    for position, (stage_name, stage_info) in enumerate(maldreth_data.items()):
+        # Get or create stage
+        stage = MaldrethStage.query.filter_by(name=stage_name).first()
+        if not stage:
+            stage = MaldrethStage(
+                name=stage_name,
+                description=stage_info["description"],
+                position=position
+            )
+            db.session.add(stage)
+            db.session.flush()  # Get the stage ID
+        
+        # Create categories and tools for this stage
+        for category_name, tools in stage_info["categories"].items():
+            # Get or create category
+            category = ToolCategory.query.filter_by(
+                name=category_name, 
+                stage_id=stage.id
+            ).first()
+            
+            if not category:
+                category = ToolCategory(
+                    name=category_name,
+                    stage_id=stage.id,
+                    description=f"Category for {category_name} tools in {stage_name} stage"
+                )
+                db.session.add(category)
+                db.session.flush()  # Get the category ID
+            
+            # Add tools to this category (prevent duplicates)
             for tool_name in tools:
-                tool_obj = ExemplarTool(name=tool_name, stage_id=stage_obj.id, category_id=category_obj.id)
-                db.session.add(tool_obj)
-
+                # Check if tool already exists in this category
+                existing_tool = ExemplarTool.query.filter_by(
+                    name=tool_name,
+                    category_id=category.id,
+                    stage_id=stage.id,
+                    is_active=True
+                ).first()
+                
+                if not existing_tool:
+                    tool = ExemplarTool(
+                        name=tool_name,
+                        stage_id=stage.id,
+                        category_id=category.id,
+                        description=f"{tool_name} - {category_name} tool for {stage_name}",
+                        is_active=True,
+                        auto_created=True,
+                        import_source="MaLDReTH 1.0 Initial Data"
+                    )
+                    db.session.add(tool)
+    
+    # Commit all changes
     db.session.commit()
-    logger.info("Database initialized with MaLDReTH 1.0 data.")
+    
+    # Final statistics
+    total_stages = MaldrethStage.query.count()
+    total_categories = ToolCategory.query.count()
+    total_active_tools = ExemplarTool.query.filter_by(is_active=True).count()
+    
+    logger.info(f"Database initialization complete:")
+    logger.info(f"  Stages: {total_stages}")
+    logger.info(f"  Categories: {total_categories}")  
+    logger.info(f"  Active tools: {total_active_tools}")
+
+@app.route('/d3-diagnostic')
+def d3_diagnostic():
+    """Diagnostic page for D3.js issues."""
+    return render_template('d3_diagnostic.html')
 
 
 if __name__ == '__main__':
