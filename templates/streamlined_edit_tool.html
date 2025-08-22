@@ -1,0 +1,188 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}Edit {{ tool.name }} - PRISM{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-edit text-primary me-3"></i>Edit Tool
+                </h1>
+                <p class="lead text-muted">Update information for {{ tool.name }}</p>
+            </div>
+
+            <!-- Edit Tool Form -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2 text-primary"></i>Tool Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <!-- Basic Information -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">
+                                        <i class="fas fa-tag me-1 text-muted"></i>Tool Name <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="name" name="name" required 
+                                           value="{{ tool.name }}" placeholder="e.g., GitHub, Zenodo, DMPTool">
+                                    <small class="form-text text-muted">Official name of the research tool</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="provider" class="form-label">
+                                        <i class="fas fa-building me-1 text-muted"></i>Provider/Organization
+                                    </label>
+                                    <input type="text" class="form-control" id="provider" name="provider" 
+                                           value="{{ tool.provider or '' }}" placeholder="e.g., GitHub Inc., CERN, UC Berkeley">
+                                    <small class="form-text text-muted">Organization that develops or maintains the tool</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="url" class="form-label">
+                                        <i class="fas fa-link me-1 text-muted"></i>Website URL
+                                    </label>
+                                    <input type="url" class="form-control" id="url" name="url" 
+                                           value="{{ tool.url or '' }}" placeholder="https://example.com">
+                                    <small class="form-text text-muted">Official website or documentation URL</small>
+                                </div>
+                            </div>
+
+                            <!-- Classification -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="category_id" class="form-label">
+                                        <i class="fas fa-folder me-1 text-muted"></i>Category <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="category_id" name="category_id" required>
+                                        <option value="">Select a category...</option>
+                                        {% for stage in stages %}
+                                            <optgroup label="{{ stage.name }} - {{ stage.description }}">
+                                                {% for category in stage.tool_categories %}
+                                                    <option value="{{ category.id }}" 
+                                                            {% if category.id == tool.category_id %}selected{% endif %}>
+                                                        {{ category.name }}
+                                                    </option>
+                                                {% endfor %}
+                                            </optgroup>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">Choose the category that best fits this tool</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_open_source" name="is_open_source"
+                                               {% if tool.is_open_source %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_open_source">
+                                            <i class="fas fa-code-branch me-1 text-success"></i>Open Source Tool
+                                        </label>
+                                        <small class="form-text text-muted d-block">Check if this tool is open source</small>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                                               {% if tool.is_active %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_active">
+                                            <i class="fas fa-toggle-on me-1 text-success"></i>Active Tool
+                                        </label>
+                                        <small class="form-text text-muted d-block">Uncheck to deactivate this tool</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <label for="description" class="form-label">
+                                <i class="fas fa-align-left me-1 text-muted"></i>Description
+                            </label>
+                            <textarea class="form-control" id="description" name="description" rows="4" 
+                                      placeholder="Describe the tool's purpose, key features, and use cases...">{{ tool.description or '' }}</textarea>
+                            <small class="form-text text-muted">Detailed description of the tool's functionality and purpose</small>
+                        </div>
+
+                        <!-- Tool Metadata (Read-only) -->
+                        {% if tool.auto_created or tool.import_source %}
+                        <div class="mb-4">
+                            <h6 class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>Tool Metadata
+                            </h6>
+                            <div class="row">
+                                {% if tool.auto_created %}
+                                <div class="col-md-6">
+                                    <div class="alert alert-info border-0">
+                                        <small>
+                                            <i class="fas fa-robot me-1"></i>
+                                            <strong>Auto-Created Tool:</strong> This tool was automatically created during CSV import.
+                                        </small>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if tool.import_source %}
+                                <div class="col-md-6">
+                                    <div class="alert alert-light border">
+                                        <small>
+                                            <i class="fas fa-file-import me-1"></i>
+                                            <strong>Import Source:</strong> {{ tool.import_source }}
+                                        </small>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-3 justify-content-center">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Update Tool
+                            </button>
+                            <a href="{{ url_for('tool_detail', tool_id=tool.id) }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="card border-warning shadow-sm mt-4">
+                <div class="card-header bg-warning bg-opacity-10 border-warning">
+                    <h5 class="mb-0 text-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Tool Usage Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Current Usage</h6>
+                            <ul class="list-unstyled small text-muted">
+                                <li><i class="fas fa-arrow-right text-muted me-2"></i>{{ tool.source_interactions.count() }} interactions as source tool</li>
+                                <li><i class="fas fa-arrow-right text-muted me-2"></i>{{ tool.target_interactions.count() }} interactions as target tool</li>
+                                <li><i class="fas fa-arrow-right text-muted me-2"></i>{{ tool.source_interactions.count() + tool.target_interactions.count() }} total interactions</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning">Important Notes</h6>
+                            <ul class="list-unstyled small text-muted">
+                                <li><i class="fas fa-info-circle text-info me-2"></i>Changes affect all existing interactions</li>
+                                <li><i class="fas fa-info-circle text-info me-2"></i>Deactivating hides tool from new interactions</li>
+                                <li><i class="fas fa-info-circle text-info me-2"></i>Tool cannot be deleted if used in interactions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

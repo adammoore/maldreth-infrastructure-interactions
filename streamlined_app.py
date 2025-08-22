@@ -110,6 +110,11 @@ class ExemplarTool(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('tool_categories.id'), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     is_open_source = db.Column(db.Boolean, default=False)
+    provider = db.Column(db.String(200))  # MaLDReTH compatibility: tool provider/organization
+    auto_created = db.Column(db.Boolean, default=False)  # Track if created from CSV import
+    import_source = db.Column(db.String(100))  # Track origin of tool data
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     source_interactions = db.relationship('ToolInteraction', foreign_keys='ToolInteraction.source_tool_id', backref='source_tool', lazy='dynamic')
     target_interactions = db.relationship('ToolInteraction', foreign_keys='ToolInteraction.target_tool_id', backref='target_tool', lazy='dynamic')
 
@@ -134,6 +139,50 @@ class ToolInteraction(db.Model):
     status = db.Column(db.String(20))
     submitted_by = db.Column(db.String(100))
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# --- Helper Functions ---
+
+def create_tool_from_csv(tool_name, import_source='CSV Import'):
+    """Create a new tool automatically from CSV import when tool doesn't exist."""
+    try:
+        # Get a default category for unknown tools (use first available category)
+        default_category = ToolCategory.query.first()
+        if not default_category:
+            # If no categories exist, create a default one
+            default_stage = MaldrethStage.query.first()
+            if not default_stage:
+                raise Exception("No stages exist in database - cannot create tools")
+            
+            default_category = ToolCategory(
+                name="Imported Tools",
+                description="Auto-created category for tools imported from CSV",
+                stage_id=default_stage.id
+            )
+            db.session.add(default_category)
+            db.session.flush()  # Get the ID
+        
+        # Create the new tool
+        new_tool = ExemplarTool(
+            name=tool_name,
+            description=f"Auto-created from {import_source}: {tool_name}",
+            stage_id=default_category.stage_id,
+            category_id=default_category.id,
+            is_active=True,
+            auto_created=True,
+            import_source=import_source,
+            provider="Unknown"
+        )
+        
+        db.session.add(new_tool)
+        db.session.flush()  # Get the ID without committing
+        
+        logger.info(f"Auto-created tool: {tool_name} (ID: {new_tool.id})")
+        return new_tool
+        
+    except Exception as e:
+        logger.error(f"Error creating tool {tool_name}: {e}")
+        raise
 
 
 # --- Routes ---
@@ -353,7 +402,9 @@ def upload_interactions_csv():
         imported_count = 0
         skipped_count = 0
         error_count = 0
+        created_tools_count = 0
         errors = []
+        created_tools_list = []
         
         # Get all existing interactions for duplicate checking
         existing_interactions = ToolInteraction.query.all()
@@ -378,19 +429,29 @@ def upload_interactions_csv():
                     errors.append(f"Row {row_num}: Missing required fields")
                     continue
                 
-                # Find source and target tools by name
+                # Find source and target tools by name, create if not found
                 source_tool = ExemplarTool.query.filter_by(name=row['Source Tool']).first()
                 target_tool = ExemplarTool.query.filter_by(name=row['Target Tool']).first()
                 
                 if not source_tool:
-                    error_count += 1
-                    errors.append(f"Row {row_num}: Source tool '{row['Source Tool']}' not found")
-                    continue
+                    try:
+                        source_tool = create_tool_from_csv(row['Source Tool'], 'CSV Import')
+                        created_tools_count += 1
+                        created_tools_list.append(f"Row {row_num}: Created source tool '{row['Source Tool']}'")
+                    except Exception as e:
+                        error_count += 1
+                        errors.append(f"Row {row_num}: Failed to create source tool '{row['Source Tool']}': {e}")
+                        continue
                     
                 if not target_tool:
-                    error_count += 1
-                    errors.append(f"Row {row_num}: Target tool '{row['Target Tool']}' not found")
-                    continue
+                    try:
+                        target_tool = create_tool_from_csv(row['Target Tool'], 'CSV Import')
+                        created_tools_count += 1
+                        created_tools_list.append(f"Row {row_num}: Created target tool '{row['Target Tool']}'")
+                    except Exception as e:
+                        error_count += 1
+                        errors.append(f"Row {row_num}: Failed to create target tool '{row['Target Tool']}': {e}")
+                        continue
                 
                 # Check for duplicates
                 signature = (
@@ -449,6 +510,8 @@ def upload_interactions_csv():
         messages = []
         if imported_count > 0:
             messages.append(f"Successfully imported {imported_count} interaction(s)")
+        if created_tools_count > 0:
+            messages.append(f"Auto-created {created_tools_count} new tool(s)")
         if skipped_count > 0:
             messages.append(f"Skipped {skipped_count} duplicate(s)")
         if error_count > 0:
@@ -466,7 +529,9 @@ def upload_interactions_csv():
                              imported_count=imported_count,
                              skipped_count=skipped_count, 
                              error_count=error_count,
-                             errors=errors[:20])  # Limit to first 20 errors
+                             created_tools_count=created_tools_count,
+                             errors=errors[:20],  # Limit to first 20 errors
+                             created_tools=created_tools_list[:20])  # Limit to first 20 created tools
         
     except Exception as e:
         logger.error(f"Error uploading CSV: {e}")
@@ -628,6 +693,157 @@ def rdl_visualization():
         logger.error(f"Error in RDL visualization: {e}")
         return render_template('error.html', error=str(e)), 500
 
+# --- Tool Management Routes ---
+
+@app.route('/add-tool', methods=['GET', 'POST'])
+def add_tool():
+    """Add a new tool to the database."""
+    stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
+    categories = ToolCategory.query.all()
+    
+    if request.method == 'POST':
+        try:
+            # Get selected category and its stage
+            category_id = int(request.form.get('category_id'))
+            category = ToolCategory.query.get_or_404(category_id)
+            
+            tool = ExemplarTool(
+                name=request.form.get('name'),
+                description=request.form.get('description'),
+                url=request.form.get('url'),
+                provider=request.form.get('provider'),
+                stage_id=category.stage_id,
+                category_id=category_id,
+                is_open_source=bool(request.form.get('is_open_source')),
+                is_active=True,
+                auto_created=False,
+                import_source='Manual Entry'
+            )
+            
+            db.session.add(tool)
+            db.session.commit()
+            flash(f'Tool "{tool.name}" added successfully!', 'success')
+            return redirect(url_for('tool_detail', tool_id=tool.id))
+            
+        except Exception as e:
+            logger.error(f"Error adding tool: {e}")
+            db.session.rollback()
+            flash('Error adding tool. Please try again.', 'error')
+    
+    return render_template('streamlined_add_tool.html', 
+                         stages=stages, 
+                         categories=categories)
+
+@app.route('/tool/<int:tool_id>')
+def tool_detail(tool_id):
+    """Display details for a specific tool."""
+    try:
+        tool = ExemplarTool.query.get_or_404(tool_id)
+        
+        # Get interaction counts
+        source_interactions = tool.source_interactions.count()
+        target_interactions = tool.target_interactions.count()
+        total_interactions = source_interactions + target_interactions
+        
+        # Get recent interactions (last 5)
+        recent_interactions = ToolInteraction.query.filter(
+            (ToolInteraction.source_tool_id == tool_id) | 
+            (ToolInteraction.target_tool_id == tool_id)
+        ).order_by(ToolInteraction.submitted_at.desc()).limit(5).all()
+        
+        return render_template('streamlined_tool_detail.html',
+                             tool=tool,
+                             source_interactions=source_interactions,
+                             target_interactions=target_interactions,
+                             total_interactions=total_interactions,
+                             recent_interactions=recent_interactions)
+    except Exception as e:
+        logger.error(f"Error displaying tool detail: {e}")
+        return render_template('error.html', error=str(e)), 500
+
+@app.route('/tool/<int:tool_id>/edit', methods=['GET', 'POST'])
+def edit_tool(tool_id):
+    """Edit an existing tool."""
+    try:
+        tool = ExemplarTool.query.get_or_404(tool_id)
+        stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
+        categories = ToolCategory.query.all()
+        
+        if request.method == 'POST':
+            # Get selected category and its stage
+            category_id = int(request.form.get('category_id'))
+            category = ToolCategory.query.get_or_404(category_id)
+            
+            # Update tool fields
+            tool.name = request.form.get('name')
+            tool.description = request.form.get('description')
+            tool.url = request.form.get('url')
+            tool.provider = request.form.get('provider')
+            tool.stage_id = category.stage_id
+            tool.category_id = category_id
+            tool.is_open_source = bool(request.form.get('is_open_source'))
+            tool.is_active = bool(request.form.get('is_active'))
+            
+            db.session.commit()
+            flash(f'Tool "{tool.name}" updated successfully!', 'success')
+            return redirect(url_for('tool_detail', tool_id=tool_id))
+        
+        return render_template('streamlined_edit_tool.html',
+                             tool=tool,
+                             stages=stages,
+                             categories=categories)
+    except Exception as e:
+        logger.error(f"Error editing tool: {e}")
+        return render_template('error.html', error=str(e)), 500
+
+@app.route('/tools')
+def view_tools():
+    """Display all tools with search and filter capabilities."""
+    try:
+        # Get filter parameters
+        stage_filter = request.args.get('stage')
+        category_filter = request.args.get('category')
+        search = request.args.get('search', '').strip()
+        show_auto_created = request.args.get('auto_created') == 'true'
+        
+        # Base query
+        query = ExemplarTool.query.filter_by(is_active=True)
+        
+        # Apply filters
+        if stage_filter:
+            query = query.filter(ExemplarTool.stage_id == stage_filter)
+        
+        if category_filter:
+            query = query.filter(ExemplarTool.category_id == category_filter)
+            
+        if search:
+            query = query.filter(
+                ExemplarTool.name.ilike(f'%{search}%') |
+                ExemplarTool.description.ilike(f'%{search}%') |
+                ExemplarTool.provider.ilike(f'%{search}%')
+            )
+        
+        if show_auto_created:
+            query = query.filter(ExemplarTool.auto_created == True)
+        
+        tools = query.order_by(ExemplarTool.name).all()
+        stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
+        categories = ToolCategory.query.all()
+        
+        return render_template('streamlined_view_tools.html',
+                             tools=tools,
+                             stages=stages,
+                             categories=categories,
+                             current_stage=stage_filter,
+                             current_category=category_filter,
+                             current_search=search,
+                             show_auto_created=show_auto_created)
+    except Exception as e:
+        logger.error(f"Error viewing tools: {e}")
+        return render_template('error.html', error=str(e)), 500
+
+# --- API Routes ---
+
 @app.route('/api/tool/<int:tool_id>/stage')
 def get_tool_stage(tool_id):
     """Get the lifecycle stage for a specific tool."""
@@ -654,7 +870,12 @@ def api_get_tools():
                 'name': tool.name,
                 'description': tool.description,
                 'url': tool.url,
+                'provider': tool.provider,
                 'is_open_source': tool.is_open_source,
+                'auto_created': tool.auto_created,
+                'import_source': tool.import_source,
+                'created_at': tool.created_at.isoformat() if tool.created_at else None,
+                'updated_at': tool.updated_at.isoformat() if tool.updated_at else None,
                 'stage': {
                     'id': tool.category.stage.id,
                     'name': tool.category.stage.name,
