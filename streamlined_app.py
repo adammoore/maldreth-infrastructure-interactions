@@ -84,6 +84,7 @@ def normalize_tool_name(name):
     return name.lower().strip().replace('(', '').replace(')', '').replace('.', '').replace('-', '').replace('_', '').replace(' ', '')
 
 
+
 # --- Data Models ---
 
 class MaldrethStage(db.Model):
@@ -1204,14 +1205,34 @@ def migrate_database_schema():
         if 'updated_at' not in columns:
             migrations_needed.append('ALTER TABLE exemplar_tools ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP')
         
+        # Check tool_interactions table for enhanced visualization fields
+        try:
+            interaction_columns = [col['name'] for col in inspector.get_columns('tool_interactions')]
+            if 'priority' not in interaction_columns:
+                migrations_needed.append("ALTER TABLE tool_interactions ADD COLUMN priority VARCHAR(20) DEFAULT 'Medium'")
+            if 'complexity' not in interaction_columns:
+                migrations_needed.append("ALTER TABLE tool_interactions ADD COLUMN complexity VARCHAR(20) DEFAULT 'Medium'")
+            if 'status' not in interaction_columns:
+                migrations_needed.append("ALTER TABLE tool_interactions ADD COLUMN status VARCHAR(20) DEFAULT 'Active'")
+        except Exception as e:
+            logger.warning(f"Could not check tool_interactions table: {e}")
+        
         # Execute migrations
         for migration in migrations_needed:
             logger.info(f"Executing migration: {migration}")
-            db.session.execute(db.text(migration))
+            try:
+                db.session.execute(db.text(migration))
+            except Exception as e:
+                logger.error(f"Failed to execute migration {migration}: {e}")
+                continue
         
         if migrations_needed:
-            db.session.commit()
-            logger.info(f"Successfully applied {len(migrations_needed)} schema migrations")
+            try:
+                db.session.commit()
+                logger.info(f"Successfully applied {len(migrations_needed)} schema migrations")
+            except Exception as e:
+                logger.error(f"Failed to commit migrations: {e}")
+                db.session.rollback()
         else:
             logger.info("Database schema is up to date")
             
@@ -1344,6 +1365,9 @@ def init_database_with_maldreth_data():
 
 if __name__ == '__main__':
     with app.app_context():
+        # Run database migrations for new fields
+        migrate_database_schema()
+        
         # This will re-create the database each time the app starts.
         # For a real deployment, you'd use migrations instead.
         init_database_with_maldreth_data()
