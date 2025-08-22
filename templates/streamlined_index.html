@@ -117,11 +117,11 @@
                                         </a>
                                     </div>
                                     {% endfor %}
-                                    {% if category.tools|length > 5 %}
+                                    {% if category.tools.count() > 5 %}
                                     <div class="col-12">
                                         <a href="{{ url_for('view_tools') }}?category={{ category.id }}" 
                                            class="btn btn-link btn-sm text-decoration-none">
-                                            <i class="fas fa-plus me-1"></i>{{ category.tools|length - 5 }} more tools
+                                            <i class="fas fa-plus me-1"></i>{{ category.tools.count() - 5 }} more tools
                                         </a>
                                     </div>
                                     {% endif %}
