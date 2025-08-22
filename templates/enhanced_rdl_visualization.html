@@ -3,22 +3,72 @@
 {% block title %}Enhanced RDL Visualization - PRISM | MaLDReTH II RDA{% endblock %}
 
 {% block extra_head %}
-<!-- Enhanced D3.js and visualization libraries with fallback -->
-<script src="https://d3js.org/d3.v7.min.js" 
-        onerror="console.error('Failed to load D3.js from CDN'); loadD3Fallback()"></script>
-<script src="https://unpkg.com/d3-force@3"></script>
+<!-- Enhanced D3.js loading with proper fallback mechanism -->
 <script>
-function loadD3Fallback() {
-    console.log('Attempting D3.js fallback...');
-    // Try alternative CDN
+function loadD3Enhanced() {
+    const primaryScript = document.createElement('script');
+    primaryScript.src = 'https://d3js.org/d3.v7.min.js';
+    
+    primaryScript.onload = function() {
+        console.log('D3.js loaded from primary CDN');
+        // Load d3-force extension after main D3.js loads
+        loadD3Force();
+    };
+    
+    primaryScript.onerror = function() {
+        console.log('Primary D3.js CDN failed, trying fallback...');
+        loadD3EnhancedFallback();
+    };
+    
+    document.head.appendChild(primaryScript);
+}
+
+function loadD3EnhancedFallback() {
     const fallbackScript = document.createElement('script');
     fallbackScript.src = 'https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js';
+    
+    fallbackScript.onload = function() {
+        console.log('D3.js loaded from fallback CDN');
+        // Load d3-force extension after main D3.js loads
+        loadD3Force();
+    };
+    
     fallbackScript.onerror = function() {
         console.error('All D3.js CDNs failed to load');
-        document.getElementById('d3-error-message').style.display = 'block';
+        const errorDiv = document.getElementById('d3-error-message');
+        if (errorDiv) {
+            errorDiv.style.display = 'block';
+        }
     };
+    
     document.head.appendChild(fallbackScript);
 }
+
+function loadD3Force() {
+    const forceScript = document.createElement('script');
+    forceScript.src = 'https://unpkg.com/d3-force@3';
+    
+    forceScript.onload = function() {
+        console.log('D3-force loaded successfully');
+        // Initialize visualization when all D3.js components are loaded
+        if (typeof initializeVisualization === 'function') {
+            setTimeout(initializeVisualization, 100);
+        }
+    };
+    
+    forceScript.onerror = function() {
+        console.warn('D3-force extension failed to load, proceeding with basic D3.js');
+        // Initialize visualization even without d3-force
+        if (typeof initializeVisualization === 'function') {
+            setTimeout(initializeVisualization, 100);
+        }
+    };
+    
+    document.head.appendChild(forceScript);
+}
+
+// Load D3.js immediately
+loadD3Enhanced();
 </script>
 <style>
     .visualization-container {

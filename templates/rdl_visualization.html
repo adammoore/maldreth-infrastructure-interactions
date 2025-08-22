@@ -3,21 +3,53 @@
 {% block title %}RDL Visualization - PRISM | MaLDReTH II RDA{% endblock %}
 
 {% block extra_head %}
-<!-- Add D3.js for interactive visualizations with fallback -->
-<script src="https://d3js.org/d3.v7.min.js" 
-        onerror="console.error('Failed to load D3.js from CDN'); loadD3Fallback()"></script>
+<!-- D3.js loading with proper fallback mechanism -->
 <script>
+function loadD3() {
+    const primaryScript = document.createElement('script');
+    primaryScript.src = 'https://d3js.org/d3.v7.min.js';
+    
+    primaryScript.onload = function() {
+        console.log('D3.js loaded from primary CDN');
+        // Initialize visualization when D3.js loads
+        if (typeof initializeCircularVisualization === 'function') {
+            initializeCircularVisualization();
+        }
+    };
+    
+    primaryScript.onerror = function() {
+        console.log('Primary D3.js CDN failed, trying fallback...');
+        loadD3Fallback();
+    };
+    
+    document.head.appendChild(primaryScript);
+}
+
 function loadD3Fallback() {
-    console.log('Attempting D3.js fallback...');
-    // Try alternative CDN
     const fallbackScript = document.createElement('script');
     fallbackScript.src = 'https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js';
+    
+    fallbackScript.onload = function() {
+        console.log('D3.js loaded from fallback CDN');
+        // Initialize visualization when D3.js loads from fallback
+        if (typeof initializeCircularVisualization === 'function') {
+            initializeCircularVisualization();
+        }
+    };
+    
     fallbackScript.onerror = function() {
         console.error('All D3.js CDNs failed to load');
-        document.getElementById('d3-error-message').style.display = 'block';
+        const errorDiv = document.getElementById('d3-error-message');
+        if (errorDiv) {
+            errorDiv.style.display = 'block';
+        }
     };
+    
     document.head.appendChild(fallbackScript);
 }
+
+// Load D3.js immediately
+loadD3();
 </script>
 <style>
     .stage-node {

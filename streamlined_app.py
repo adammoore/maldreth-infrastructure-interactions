@@ -16,6 +16,7 @@ PRISM provides:
 import os
 import csv
 import logging
+import math
 from io import StringIO
 from flask import Flask, render_template, request, jsonify, flash, redirect, url_for, make_response
 from flask_cors import CORS
@@ -72,6 +73,17 @@ if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 CORS(app)
+
+# Add custom Jinja2 filters for trigonometric functions
+@app.template_filter('cos')
+def cos_filter(degrees):
+    """Convert degrees to cosine value."""
+    return math.cos(math.radians(float(degrees)))
+
+@app.template_filter('sin')
+def sin_filter(degrees):
+    """Convert degrees to sine value."""
+    return math.sin(math.radians(float(degrees)))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
