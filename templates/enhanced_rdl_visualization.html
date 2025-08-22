@@ -1,0 +1,733 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}Enhanced RDL Visualization - PRISM | MaLDReTH II RDA{% endblock %}
+
+{% block extra_head %}
+<!-- Enhanced D3.js and visualization libraries -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://unpkg.com/d3-force@3"></script>
+<style>
+    .visualization-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        min-height: 600px;
+        position: relative;
+    }
+    
+    .stage-node {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .stage-node:hover {
+        transform: scale(1.1);
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+    }
+    
+    .tool-node {
+        cursor: pointer;
+        opacity: 0.8;
+        transition: all 0.3s ease;
+    }
+    
+    .tool-node:hover {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+    
+    .connection-line {
+        stroke: #ffffff;
+        stroke-width: 2;
+        stroke-dasharray: 5,5;
+        opacity: 0.6;
+        transition: all 0.3s ease;
+    }
+    
+    .connection-line:hover {
+        opacity: 1;
+        stroke-width: 3;
+    }
+    
+    .stage-label {
+        fill: white;
+        font-size: 12px;
+        text-anchor: middle;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    .tool-label {
+        fill: #333;
+        font-size: 10px;
+        text-anchor: middle;
+        font-weight: normal;
+    }
+    
+    .legend {
+        background: rgba(255,255,255,0.9);
+        border-radius: 8px;
+        padding: 1rem;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        max-width: 250px;
+    }
+    
+    .control-panel {
+        background: rgba(255,255,255,0.95);
+        border-radius: 8px;
+        padding: 1rem;
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        max-width: 300px;
+    }
+    
+    .stage-stats {
+        background: rgba(255,255,255,0.1);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        color: white;
+    }
+    
+    .network-view {
+        width: 100%;
+        height: 600px;
+    }
+    
+    .tooltip {
+        position: absolute;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        border-radius: 4px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 12px;
+        max-width: 200px;
+        z-index: 1000;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 text-primary mb-3">
+                <i class="fas fa-project-diagram me-3"></i>Enhanced Research Data Lifecycle Visualization
+            </h1>
+            <p class="lead text-muted">
+                Interactive network visualization inspired by MaLDReTH 1 patterns, showing stage relationships, tool clusters, and interaction flows across the research data lifecycle.
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Visualization -->
+    <div class="row">
+        <div class="col-12">
+            <div class="visualization-container" id="main-visualization">
+                <!-- Control Panel -->
+                <div class="control-panel">
+                    <h5 class="mb-3">
+                        <i class="fas fa-cog me-2"></i>Visualization Controls
+                    </h5>
+                    
+                    <div class="mb-3">
+                        <label for="view-mode" class="form-label">View Mode</label>
+                        <select class="form-select form-select-sm" id="view-mode" onchange="updateVisualization()">
+                            <option value="circular">Circular Layout</option>
+                            <option value="force">Force-Directed Network</option>
+                            <option value="hierarchical">Hierarchical Tree</option>
+                            <option value="matrix">Connection Matrix</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="show-tools" class="form-label">Tool Display</label>
+                        <select class="form-select form-select-sm" id="show-tools" onchange="toggleToolDisplay()">
+                            <option value="none">Stages Only</option>
+                            <option value="clusters">Tool Clusters</option>
+                            <option value="individual">Individual Tools</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="filter-stage" class="form-label">Focus Stage</label>
+                        <select class="form-select form-select-sm" id="filter-stage" onchange="filterByStage()">
+                            <option value="">All Stages</option>
+                            {% for stage in stages %}
+                            <option value="{{ stage.id }}">{{ stage.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-light btn-sm" onclick="resetVisualization()">
+                            <i class="fas fa-redo me-1"></i>Reset View
+                        </button>
+                        <button class="btn btn-light btn-sm" onclick="exportVisualization()">
+                            <i class="fas fa-download me-1"></i>Export SVG
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Legend -->
+                <div class="legend">
+                    <h6 class="mb-2">
+                        <i class="fas fa-info-circle me-1"></i>Legend
+                    </h6>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-2" style="width: 16px; height: 16px; background: #007bff; border-radius: 50%;"></div>
+                        <small>Lifecycle Stage</small>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-2" style="width: 12px; height: 12px; background: #28a745; border-radius: 50%;"></div>
+                        <small>Research Tool</small>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-2" style="width: 20px; height: 2px; background: white; opacity: 0.6;"></div>
+                        <small>Stage Connection</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="me-2" style="width: 20px; height: 2px; background: #ffc107;"></div>
+                        <small>Tool Interaction</small>
+                    </div>
+                </div>
+                
+                <!-- Network Visualization -->
+                <svg class="network-view" id="network-svg"></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Dashboard -->
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-network me-2 text-primary"></i>Network Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="network-stats">
+                        <div class="col-3 text-center">
+                            <h4 class="text-primary mb-1">{{ stages|length }}</h4>
+                            <small class="text-muted">Lifecycle Stages</small>
+                        </div>
+                        <div class="col-3 text-center">
+                            <h4 class="text-success mb-1">{{ total_tools or 0 }}</h4>
+                            <small class="text-muted">Research Tools</small>
+                        </div>
+                        <div class="col-3 text-center">
+                            <h4 class="text-info mb-1">{{ total_interactions or 0 }}</h4>
+                            <small class="text-muted">Tool Interactions</small>
+                        </div>
+                        <div class="col-3 text-center">
+                            <h4 class="text-warning mb-1" id="connection-density">0%</h4>
+                            <small class="text-muted">Network Density</small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="stage-stats" id="stage-details">
+                        <h6 class="text-muted mb-2">Stage Distribution</h6>
+                        <div class="row">
+                            {% for stage in stages %}
+                            <div class="col-md-4 mb-3">
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                    <span class="fw-bold">{{ stage.name }}</span>
+                                    <span class="badge bg-primary">{{ stage.tools.count() }} tools</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i>Insights
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info border-0 mb-3">
+                        <h6 class="alert-heading">MaLDReTH 1 Integration</h6>
+                        <p class="mb-0 small">This visualization adopts the successful patterns from MaLDReTH 1, including circular layouts, interactive node expansion, and force-directed positioning.</p>
+                    </div>
+                    
+                    <div class="network-insights" id="dynamic-insights">
+                        <h6 class="text-muted mb-2">Key Observations</h6>
+                        <ul class="list-unstyled small">
+                            <li class="mb-2">
+                                <i class="fas fa-circle me-2 text-success"></i>
+                                <strong>Most Connected Stage:</strong> <span id="most-connected-stage">-</span>
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-circle me-2 text-primary"></i>
+                                <strong>Tool Diversity:</strong> <span id="tool-diversity">-</span>
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-circle me-2 text-warning"></i>
+                                <strong>Interaction Density:</strong> <span id="interaction-density">-</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="future-features">
+                        <h6 class="text-muted mb-2">Enhanced Features</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-success">✓ Circular Layout</span>
+                            <span class="badge bg-success">✓ Tool Clustering</span>
+                            <span class="badge bg-success">✓ Interactive Filtering</span>
+                            <span class="badge bg-secondary">→ Real-time Updates</span>
+                            <span class="badge bg-secondary">→ Path Analysis</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex flex-wrap gap-3 justify-content-center">
+                <a href="{{ url_for('rdl_overview') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Overview
+                </a>
+                <a href="{{ url_for('rdl_visualization') }}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-eye me-2"></i>Standard View
+                </a>
+                <a href="{{ url_for('view_interactions') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-list me-2"></i>View Data
+                </a>
+                <a href="{{ url_for('add_interaction') }}" class="btn btn-success btn-lg">
+                    <i class="fas fa-plus me-2"></i>Add Interaction
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tooltip for hover information -->
+<div class="tooltip" id="tooltip"></div>
+
+<!-- Enhanced JavaScript for Network Visualization -->
+<script>
+// Global variables for visualization
+let svg, width, height, simulation;
+let nodes = [], links = [];
+let currentMode = 'circular';
+let showToolsMode = 'none';
+let selectedStage = null;
+
+// Data from server
+const stageData = {{ stages | tojsonfilter | safe }};
+const toolData = {{ tools | tojsonfilter | safe }};
+const interactionData = {{ interactions | tojsonfilter | safe }};
+
+// Initialize visualization on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initializeVisualization();
+    calculateNetworkInsights();
+});
+
+function initializeVisualization() {
+    // Set up SVG dimensions
+    const container = document.getElementById('network-svg');
+    const containerRect = container.getBoundingClientRect();
+    width = containerRect.width;
+    height = containerRect.height;
+    
+    svg = d3.select('#network-svg')
+        .attr('width', width)
+        .attr('height', height);
+    
+    // Initialize with circular layout
+    updateVisualization();
+}
+
+function updateVisualization() {
+    const mode = document.getElementById('view-mode').value;
+    currentMode = mode;
+    
+    // Clear previous visualization
+    svg.selectAll('*').remove();
+    
+    switch(mode) {
+        case 'circular':
+            createCircularLayout();
+            break;
+        case 'force':
+            createForceDirectedLayout();
+            break;
+        case 'hierarchical':
+            createHierarchicalLayout();
+            break;
+        case 'matrix':
+            createMatrixView();
+            break;
+    }
+}
+
+function createCircularLayout() {
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(width, height) / 3;
+    
+    // Position stages in a circle
+    const angleStep = (2 * Math.PI) / stageData.length;
+    
+    stageData.forEach((stage, index) => {
+        const angle = index * angleStep - Math.PI / 2; // Start from top
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        
+        // Create stage node
+        const stageGroup = svg.append('g')
+            .attr('class', 'stage-node')
+            .attr('transform', `translate(${x}, ${y})`)
+            .style('cursor', 'pointer')
+            .on('click', () => focusOnStage(stage.id))
+            .on('mouseover', (event) => showTooltip(event, `${stage.name}: ${stage.tools ? stage.tools.length : 0} tools`))
+            .on('mouseout', hideTooltip);
+        
+        // Stage circle
+        stageGroup.append('circle')
+            .attr('r', 25)
+            .attr('fill', stage.color || '#007bff')
+            .attr('stroke', 'white')
+            .attr('stroke-width', 3);
+        
+        // Stage number
+        stageGroup.append('text')
+            .attr('class', 'stage-label')
+            .attr('y', 5)
+            .text(stage.position + 1);
+        
+        // Stage name
+        stageGroup.append('text')
+            .attr('class', 'stage-label')
+            .attr('y', 45)
+            .attr('font-size', '10px')
+            .text(stage.name);
+        
+        // Draw connections to next stage
+        if (index < stageData.length - 1) {
+            const nextAngle = (index + 1) * angleStep - Math.PI / 2;
+            const nextX = centerX + radius * Math.cos(nextAngle);
+            const nextY = centerY + radius * Math.sin(nextAngle);
+            
+            svg.append('line')
+                .attr('class', 'connection-line')
+                .attr('x1', x)
+                .attr('y1', y)
+                .attr('x2', nextX)
+                .attr('y2', nextY);
+        }
+        
+        // Connect last stage to first
+        if (index === stageData.length - 1) {
+            const firstX = centerX + radius * Math.cos(-Math.PI / 2);
+            const firstY = centerY + radius * Math.sin(-Math.PI / 2);
+            
+            svg.append('line')
+                .attr('class', 'connection-line')
+                .attr('x1', x)
+                .attr('y1', y)
+                .attr('x2', firstX)
+                .attr('y2', firstY);
+        }
+    });
+    
+    // Add tools if enabled
+    if (showToolsMode !== 'none') {
+        addToolsToVisualization();
+    }
+}
+
+function createForceDirectedLayout() {
+    // Prepare nodes and links for force simulation
+    nodes = stageData.map(stage => ({
+        id: `stage_${stage.id}`,
+        name: stage.name,
+        type: 'stage',
+        stage: stage,
+        size: 30
+    }));
+    
+    links = [];
+    
+    // Create links between consecutive stages
+    for (let i = 0; i < stageData.length; i++) {
+        const source = `stage_${stageData[i].id}`;
+        const target = `stage_${stageData[(i + 1) % stageData.length].id}`;
+        links.push({ source, target, type: 'stage_connection' });
+    }
+    
+    // Add tool nodes if enabled
+    if (showToolsMode === 'individual' && toolData) {
+        toolData.forEach(tool => {
+            nodes.push({
+                id: `tool_${tool.id}`,
+                name: tool.name,
+                type: 'tool',
+                tool: tool,
+                size: 15
+            });
+            
+            // Link tools to their stages
+            links.push({
+                source: `stage_${tool.stage_id}`,
+                target: `tool_${tool.id}`,
+                type: 'tool_connection'
+            });
+        });
+    }
+    
+    // Create force simulation
+    simulation = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(links).id(d => d.id).distance(100))
+        .force('charge', d3.forceManyBody().strength(-300))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('collision', d3.forceCollide().radius(d => d.size + 5));
+    
+    // Create links
+    const link = svg.append('g')
+        .selectAll('line')
+        .data(links)
+        .enter().append('line')
+        .attr('class', 'connection-line')
+        .attr('stroke-width', d => d.type === 'stage_connection' ? 2 : 1);
+    
+    // Create nodes
+    const node = svg.append('g')
+        .selectAll('g')
+        .data(nodes)
+        .enter().append('g')
+        .attr('class', d => d.type === 'stage' ? 'stage-node' : 'tool-node')
+        .call(d3.drag()
+            .on('start', dragStarted)
+            .on('drag', dragged)
+            .on('end', dragEnded));
+    
+    // Add circles for nodes
+    node.append('circle')
+        .attr('r', d => d.size)
+        .attr('fill', d => {
+            if (d.type === 'stage') {
+                return d.stage.color || '#007bff';
+            } else {
+                return d.tool.is_open_source ? '#28a745' : '#6c757d';
+            }
+        })
+        .attr('stroke', 'white')
+        .attr('stroke-width', 2);
+    
+    // Add labels
+    node.append('text')
+        .attr('class', d => d.type === 'stage' ? 'stage-label' : 'tool-label')
+        .attr('y', d => d.type === 'stage' ? 5 : 3)
+        .attr('font-size', d => d.type === 'stage' ? '12px' : '8px')
+        .text(d => d.type === 'stage' ? (d.stage.position + 1) : d.name.substring(0, 10));
+    
+    // Update positions on simulation tick
+    simulation.on('tick', () => {
+        link
+            .attr('x1', d => d.source.x)
+            .attr('y1', d => d.source.y)
+            .attr('x2', d => d.target.x)
+            .attr('y2', d => d.target.y);
+        
+        node
+            .attr('transform', d => `translate(${d.x}, ${d.y})`);
+    });
+    
+    // Add hover effects
+    node
+        .on('mouseover', (event, d) => {
+            const tooltip = d.type === 'stage' ? 
+                `${d.name}: ${d.stage.tools ? d.stage.tools.length : 0} tools` :
+                `${d.name} (${d.tool.is_open_source ? 'Open Source' : 'Proprietary'})`;
+            showTooltip(event, tooltip);
+        })
+        .on('mouseout', hideTooltip)
+        .on('click', (event, d) => {
+            if (d.type === 'stage') {
+                focusOnStage(d.stage.id);
+            }
+        });
+}
+
+function createHierarchicalLayout() {
+    // Placeholder for hierarchical tree layout
+    svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', height / 2)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .style('font-size', '18px')
+        .text('Hierarchical Layout - Coming Soon');
+}
+
+function createMatrixView() {
+    // Placeholder for matrix view
+    svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', height / 2)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .style('font-size', '18px')
+        .text('Connection Matrix View - Coming Soon');
+}
+
+function addToolsToVisualization() {
+    // Implementation depends on current layout mode
+    // This is a simplified version for circular layout
+    if (currentMode === 'circular' && toolData) {
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const radius = Math.min(width, height) / 3;
+        
+        toolData.forEach((tool, index) => {
+            const stageIndex = stageData.findIndex(s => s.id === tool.stage_id);
+            if (stageIndex === -1) return;
+            
+            const angleStep = (2 * Math.PI) / stageData.length;
+            const angle = stageIndex * angleStep - Math.PI / 2;
+            const toolRadius = radius + 60 + (index % 3) * 20;
+            
+            const x = centerX + toolRadius * Math.cos(angle);
+            const y = centerY + toolRadius * Math.sin(angle);
+            
+            const toolGroup = svg.append('g')
+                .attr('class', 'tool-node')
+                .attr('transform', `translate(${x}, ${y})`)
+                .style('cursor', 'pointer')
+                .on('mouseover', (event) => showTooltip(event, `${tool.name} (${tool.is_open_source ? 'Open Source' : 'Proprietary'})`))
+                .on('mouseout', hideTooltip);
+            
+            toolGroup.append('circle')
+                .attr('r', 8)
+                .attr('fill', tool.is_open_source ? '#28a745' : '#6c757d')
+                .attr('stroke', 'white')
+                .attr('stroke-width', 1);
+        });
+    }
+}
+
+function toggleToolDisplay() {
+    showToolsMode = document.getElementById('show-tools').value;
+    updateVisualization();
+}
+
+function filterByStage() {
+    selectedStage = document.getElementById('filter-stage').value;
+    updateVisualization();
+}
+
+function focusOnStage(stageId) {
+    selectedStage = stageId;
+    document.getElementById('filter-stage').value = stageId;
+    updateVisualization();
+}
+
+function resetVisualization() {
+    document.getElementById('view-mode').value = 'circular';
+    document.getElementById('show-tools').value = 'none';
+    document.getElementById('filter-stage').value = '';
+    selectedStage = null;
+    showToolsMode = 'none';
+    currentMode = 'circular';
+    updateVisualization();
+}
+
+function exportVisualization() {
+    const svgData = new XMLSerializer().serializeToString(document.getElementById('network-svg'));
+    const blob = new Blob([svgData], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'rdl_visualization.svg';
+    link.click();
+    
+    URL.revokeObjectURL(url);
+}
+
+function showTooltip(event, text) {
+    const tooltip = document.getElementById('tooltip');
+    tooltip.innerHTML = text;
+    tooltip.style.opacity = 1;
+    tooltip.style.left = (event.pageX + 10) + 'px';
+    tooltip.style.top = (event.pageY - 30) + 'px';
+}
+
+function hideTooltip() {
+    document.getElementById('tooltip').style.opacity = 0;
+}
+
+function calculateNetworkInsights() {
+    // Calculate network density
+    const totalPossibleConnections = stageData.length * (stageData.length - 1) / 2;
+    const actualConnections = stageData.length; // Circular connections
+    const density = Math.round((actualConnections / totalPossibleConnections) * 100);
+    
+    document.getElementById('connection-density').textContent = density + '%';
+    
+    // Find most connected stage (by tool count)
+    let mostConnectedStage = stageData[0];
+    stageData.forEach(stage => {
+        if ((stage.tools ? stage.tools.length : 0) > (mostConnectedStage.tools ? mostConnectedStage.tools.length : 0)) {
+            mostConnectedStage = stage;
+        }
+    });
+    
+    document.getElementById('most-connected-stage').textContent = mostConnectedStage.name;
+    
+    // Calculate tool diversity
+    const toolCount = toolData ? toolData.length : 0;
+    const stageCount = stageData.length;
+    const diversity = toolCount > 0 ? Math.round(toolCount / stageCount) : 0;
+    
+    document.getElementById('tool-diversity').textContent = `${diversity} tools/stage avg`;
+    
+    // Interaction density
+    const interactionCount = interactionData ? interactionData.length : 0;
+    const interactionDensity = toolCount > 0 ? Math.round((interactionCount / toolCount) * 100) / 100 : 0;
+    
+    document.getElementById('interaction-density').textContent = `${interactionDensity} interactions/tool`;
+}
+
+// Drag functions for force-directed layout
+function dragStarted(event, d) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+}
+
+function dragged(event, d) {
+    d.fx = event.x;
+    d.fy = event.y;
+}
+
+function dragEnded(event, d) {
+    if (!event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+}
+</script>
+{% endblock %}

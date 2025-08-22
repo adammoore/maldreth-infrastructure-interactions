@@ -77,6 +77,12 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def normalize_tool_name(name):
+    """Normalize tool names for comparison and deduplication."""
+    if not name:
+        return ""
+    return name.lower().strip().replace('(', '').replace(')', '').replace('.', '').replace('-', '').replace('_', '').replace(' ', '')
+
 
 # --- Data Models ---
 
@@ -143,9 +149,24 @@ class ToolInteraction(db.Model):
 
 # --- Helper Functions ---
 
-def create_tool_from_csv(tool_name, import_source='CSV Import'):
-    """Create a new tool automatically from CSV import when tool doesn't exist."""
+def find_or_create_tool_from_csv(tool_name, import_source='CSV Import'):
+    """Find existing tool by normalized name or create new one with deduplication."""
     try:
+        # Normalize the tool name for comparison
+        normalized_name = normalize_tool_name(tool_name)
+        
+        # Look for existing tools with similar normalized names
+        existing_tools = ExemplarTool.query.filter(
+            func.lower(func.replace(func.replace(func.replace(ExemplarTool.name, ' ', ''), '-', ''), '.', '')) == normalized_name
+        ).all()
+        
+        if existing_tools:
+            # Return the first canonical tool
+            canonical_tool = existing_tools[0]
+            logger.info(f"Found existing tool for CSV import: {canonical_tool.name} (ID: {canonical_tool.id}) instead of creating '{tool_name}'")
+            return canonical_tool, False  # Found existing
+        
+        # No existing tool found, create new one
         # Get a default category for unknown tools (use first available category)
         default_category = ToolCategory.query.first()
         if not default_category:
@@ -191,11 +212,11 @@ def create_tool_from_csv(tool_name, import_source='CSV Import'):
         db.session.add(new_tool)
         db.session.flush()  # Get the ID without committing
         
-        logger.info(f"Auto-created tool: {tool_name} (ID: {new_tool.id})")
-        return new_tool
+        logger.info(f"Auto-created new tool from CSV: {tool_name} (ID: {new_tool.id})")
+        return new_tool, True  # Created new
         
     except Exception as e:
-        logger.error(f"Error creating tool {tool_name}: {e}")
+        logger.error(f"Error finding/creating tool from CSV {tool_name}: {e}")
         raise
 
 
@@ -449,7 +470,7 @@ def upload_interactions_csv():
                 
                 if not source_tool:
                     try:
-                        source_tool = create_tool_from_csv(row['Source Tool'], 'CSV Import')
+                        source_tool, created = find_or_create_tool_from_csv(row['Source Tool'], 'CSV Import')
                         created_tools_count += 1
                         created_tools_list.append(f"Row {row_num}: Created source tool '{row['Source Tool']}'")
                     except Exception as e:
@@ -459,7 +480,7 @@ def upload_interactions_csv():
                     
                 if not target_tool:
                     try:
-                        target_tool = create_tool_from_csv(row['Target Tool'], 'CSV Import')
+                        target_tool, created = find_or_create_tool_from_csv(row['Target Tool'], 'CSV Import')
                         created_tools_count += 1
                         created_tools_list.append(f"Row {row_num}: Created target tool '{row['Target Tool']}'")
                     except Exception as e:
@@ -717,6 +738,90 @@ def rdl_visualization():
                              visualization_data=visualization_data)
     except Exception as e:
         logger.error(f"Error in RDL visualization: {e}")
+        return render_template('error.html', error=str(e)), 500
+
+@app.route('/enhanced-rdl-visualization')
+def enhanced_rdl_visualization():
+    """Display enhanced interactive visualization based on MaLDReTH 1 patterns."""
+    try:
+        stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
+        tools = ExemplarTool.query.filter_by(is_active=True).all()
+        interactions = ToolInteraction.query.all()
+        
+        # Prepare comprehensive data for enhanced visualization
+        stage_list = []
+        tool_list = []
+        interaction_list = []
+        
+        # Enhanced stage data with colors and statistics
+        stage_colors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD',
+            '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9', '#F8C471', '#82E0AA'
+        ]
+        
+        for i, stage in enumerate(stages):
+            stage_tools = [t for t in tools if t.stage_id == stage.id]
+            
+            stage_data = {
+                'id': stage.id,
+                'name': stage.name,
+                'description': stage.description or f"Stage {stage.position + 1} of the research data lifecycle",
+                'position': stage.position,
+                'color': stage_colors[i % len(stage_colors)],
+                'tool_count': len(stage_tools),
+                'tools': [{'id': t.id, 'name': t.name, 'is_open_source': t.is_open_source} for t in stage_tools]
+            }
+            stage_list.append(stage_data)
+        
+        # Enhanced tool data
+        for tool in tools:
+            tool_data = {
+                'id': tool.id,
+                'name': tool.name,
+                'description': tool.description or f"Research tool: {tool.name}",
+                'url': tool.url,
+                'stage_id': tool.stage_id,
+                'category_id': tool.category_id,
+                'is_open_source': tool.is_open_source,
+                'is_active': tool.is_active,
+                'provider': getattr(tool, 'provider', 'Unknown'),
+                'auto_created': getattr(tool, 'auto_created', False)
+            }
+            tool_list.append(tool_data)
+        
+        # Enhanced interaction data
+        for interaction in interactions:
+            interaction_data = {
+                'id': interaction.id,
+                'source_tool_id': interaction.source_tool_id,
+                'target_tool_id': interaction.target_tool_id,
+                'source_tool_name': interaction.source_tool.name if interaction.source_tool else 'Unknown',
+                'target_tool_name': interaction.target_tool.name if interaction.target_tool else 'Unknown',
+                'interaction_type': interaction.interaction_type,
+                'lifecycle_stage': interaction.lifecycle_stage,
+                'description': interaction.description,
+                'priority': getattr(interaction, 'priority', 'Medium'),
+                'status': getattr(interaction, 'status', 'Active')
+            }
+            interaction_list.append(interaction_data)
+        
+        # Calculate summary statistics
+        total_tools = len(tool_list)
+        total_interactions = len(interaction_list)
+        open_source_tools = len([t for t in tool_list if t['is_open_source']])
+        auto_created_tools = len([t for t in tool_list if t['auto_created']])
+        
+        return render_template('enhanced_rdl_visualization.html',
+                             stages=stage_list,
+                             tools=tool_list,
+                             interactions=interaction_list,
+                             total_tools=total_tools,
+                             total_interactions=total_interactions,
+                             open_source_tools=open_source_tools,
+                             auto_created_tools=auto_created_tools)
+                             
+    except Exception as e:
+        logger.error(f"Error in enhanced RDL visualization: {e}")
         return render_template('error.html', error=str(e)), 500
 
 # --- Tool Management Routes ---
