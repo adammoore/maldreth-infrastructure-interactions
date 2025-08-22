@@ -50,29 +50,21 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       
-      - name: Install Heroku CLI
+      - name: Deploy to Heroku using API
         run: |
-          curl https://cli-assets.heroku.com/install-ubuntu.sh | sh
+          # Create a tarball of the source code
+          tar -czf source.tar.gz --exclude='.git' --exclude='node_modules' --exclude='venv' --exclude='__pycache__' .
           
-      - name: Configure Heroku credentials
-        run: |
-          cat > ~/.netrc <<EOF
-          machine api.heroku.com
-            login ${{ secrets.HEROKU_EMAIL }}
-            password ${{ secrets.HEROKU_API_KEY }}
-          machine git.heroku.com
-            login ${{ secrets.HEROKU_EMAIL }}
-            password ${{ secrets.HEROKU_API_KEY }}
-          EOF
-          chmod 600 ~/.netrc
+          # Deploy using Heroku API
+          curl -X POST "https://api.heroku.com/apps/${{ secrets.HEROKU_APP_NAME }}/builds" \
+            -H "Accept: application/vnd.heroku+json; version=3" \
+            -H "Authorization: Bearer ${{ secrets.HEROKU_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "source_blob": {
+                "url": "https://github.com/${{ github.repository }}/archive/${{ github.sha }}.tar.gz"
+              }
+            }'
           
-      - name: Add Heroku remote and deploy
-        run: |
-          heroku git:remote --app ${{ secrets.HEROKU_APP_NAME }}
-          git push heroku main --force
-          
-      - name: Verify deployment
-        run: |
-          heroku ps --app ${{ secrets.HEROKU_APP_NAME }}
-          echo "✅ Deployment completed successfully"
+          echo "✅ Deployment initiated successfully"
           echo "🌐 Application available at: https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com/"

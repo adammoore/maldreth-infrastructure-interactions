@@ -610,23 +610,35 @@ def information_structures():
 
 @app.route('/rdl')
 def rdl_overview():
-    """Display the MaLDReTH Research Data Lifecycle overview and information."""
+    """Display the MaLDReTH Research Data Lifecycle overview with actual tools."""
     try:
         stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
-        # Get interaction statistics per stage
-        stage_stats = {}
+        
+        # Get comprehensive stage data with tools
+        stage_data = {}
         for stage in stages:
+            # Get tools for this stage
+            tools = ExemplarTool.query.filter_by(stage_id=stage.id, is_active=True).order_by(ExemplarTool.name).limit(10).all()
+            
             # Count interactions where either source or target tool belongs to this stage
             source_count = ToolInteraction.query.join(ExemplarTool, ToolInteraction.source_tool_id == ExemplarTool.id).filter(ExemplarTool.stage_id == stage.id).count()
             target_count = ToolInteraction.query.join(ExemplarTool, ToolInteraction.target_tool_id == ExemplarTool.id).filter(ExemplarTool.stage_id == stage.id).count()
-            stage_stats[stage.id] = {
+            
+            # Get tool categories for this stage
+            categories = ToolCategory.query.filter_by(stage_id=stage.id).all()
+            
+            stage_data[stage.id] = {
                 'source_interactions': source_count,
                 'target_interactions': target_count,
                 'total_interactions': source_count + target_count,
-                'tool_count': ExemplarTool.query.filter_by(stage_id=stage.id).count()
+                'tool_count': ExemplarTool.query.filter_by(stage_id=stage.id, is_active=True).count(),
+                'category_count': len(categories),
+                'tools': tools,
+                'categories': categories,
+                'has_more_tools': ExemplarTool.query.filter_by(stage_id=stage.id, is_active=True).count() > 10
             }
         
-        return render_template('rdl_overview.html', stages=stages, stage_stats=stage_stats)
+        return render_template('rdl_overview.html', stages=stages, stage_stats=stage_data)
     except Exception as e:
         logger.error(f"Error viewing RDL overview: {e}")
         return render_template('error.html', error=str(e)), 500
