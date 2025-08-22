@@ -335,9 +335,9 @@ let showToolsMode = 'none';
 let selectedStage = null;
 
 // Data from server
-const stageData = {{ stages | tojsonfilter | safe }};
-const toolData = {{ tools | tojsonfilter | safe }};
-const interactionData = {{ interactions | tojsonfilter | safe }};
+const stageData = {{ stages | tojson | safe }};
+const toolData = {{ tools | tojson | safe }};
+const interactionData = {{ interactions | tojson | safe }};
 
 // Initialize visualization on page load
 document.addEventListener('DOMContentLoaded', function() {
