@@ -478,6 +478,71 @@ def about():
     """About page with MaLDReTH II and RDA context."""
     return render_template('about.html')
 
+@app.route('/information-structures')
+def information_structures():
+    """Information Structures page with database schema and live data visualization."""
+    try:
+        # Get database statistics
+        stats = {
+            'total_interactions': ToolInteraction.query.count(),
+            'total_tools': ExemplarTool.query.count(),
+            'total_stages': MaldrethStage.query.count(),
+            'total_categories': ToolCategory.query.count(),
+        }
+        
+        # Get interaction type distribution
+        interaction_types = db.session.query(
+            ToolInteraction.interaction_type,
+            db.func.count(ToolInteraction.id).label('count')
+        ).group_by(ToolInteraction.interaction_type).all()
+        
+        # Get lifecycle stage distribution
+        stage_distribution = db.session.query(
+            ToolInteraction.lifecycle_stage,
+            db.func.count(ToolInteraction.id).label('count')
+        ).group_by(ToolInteraction.lifecycle_stage).all()
+        
+        # Get tool usage in interactions
+        tool_usage = db.session.query(
+            ExemplarTool.name,
+            db.func.count(ToolInteraction.id).label('count')
+        ).join(
+            ToolInteraction, 
+            db.or_(
+                ToolInteraction.source_tool_id == ExemplarTool.id,
+                ToolInteraction.target_tool_id == ExemplarTool.id
+            )
+        ).group_by(ExemplarTool.name).order_by(
+            db.func.count(ToolInteraction.id).desc()
+        ).limit(10).all()
+        
+        # Get recent interactions
+        recent_interactions = ToolInteraction.query.order_by(
+            ToolInteraction.submitted_at.desc()
+        ).limit(5).all()
+        
+        # Get all stages with their tool counts
+        stages_with_tools = []
+        for stage in MaldrethStage.query.order_by(MaldrethStage.position).all():
+            tool_count = ExemplarTool.query.join(ToolCategory).filter(
+                ToolCategory.stage_id == stage.id
+            ).count()
+            stages_with_tools.append({
+                'stage': stage,
+                'tool_count': tool_count
+            })
+        
+        return render_template('information_structures.html',
+                             stats=stats,
+                             interaction_types=interaction_types,
+                             stage_distribution=stage_distribution,
+                             tool_usage=tool_usage,
+                             recent_interactions=recent_interactions,
+                             stages_with_tools=stages_with_tools)
+    except Exception as e:
+        logger.error(f"Error loading information structures: {e}")
+        return render_template('error.html', error=str(e)), 500
+
 @app.route('/rdl')
 def rdl_overview():
     """Display the MaLDReTH Research Data Lifecycle overview and information."""

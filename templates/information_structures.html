@@ -1,0 +1,458 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}Information Structures - PRISM{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 text-primary mb-3">
+                <i class="fas fa-database me-3"></i>Information Structures
+            </h1>
+            <p class="lead text-muted">
+                Database schema, data formats, and live visualization of PRISM's information architecture
+                supporting the MaLDReTH II research data lifecycle mapping initiative.
+            </p>
+        </div>
+    </div>
+
+    <!-- Live Database Statistics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h4 text-secondary mb-3">
+                <i class="fas fa-chart-line me-2"></i>Live Database Statistics
+            </h2>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-exchange-alt fa-3x text-primary mb-3"></i>
+                    <h3 class="text-primary">{{ stats.total_interactions }}</h3>
+                    <p class="text-muted mb-0">Tool Interactions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-tools fa-3x text-success mb-3"></i>
+                    <h3 class="text-success">{{ stats.total_tools }}</h3>
+                    <p class="text-muted mb-0">Exemplar Tools</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-layer-group fa-3x text-info mb-3"></i>
+                    <h3 class="text-info">{{ stats.total_stages }}</h3>
+                    <p class="text-muted mb-0">Lifecycle Stages</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-sitemap fa-3x text-warning mb-3"></i>
+                    <h3 class="text-warning">{{ stats.total_categories }}</h3>
+                    <p class="text-muted mb-0">Tool Categories</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Schema Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">
+                        <i class="fas fa-project-diagram me-2 text-primary"></i>Database Schema Architecture
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Entity</th>
+                                            <th>Purpose</th>
+                                            <th>Key Fields</th>
+                                            <th>Relationships</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>ToolInteraction</strong></td>
+                                            <td>Core interaction records</td>
+                                            <td>interaction_type, lifecycle_stage, description</td>
+                                            <td>source_tool_id → ExemplarTool<br>target_tool_id → ExemplarTool</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>ExemplarTool</strong></td>
+                                            <td>Research tools in MaLDReTH taxonomy</td>
+                                            <td>name, is_open_source, description, url</td>
+                                            <td>category_id → ToolCategory</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>ToolCategory</strong></td>
+                                            <td>Tool classification groups</td>
+                                            <td>name, description</td>
+                                            <td>stage_id → MaldrethStage</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>MaldrethStage</strong></td>
+                                            <td>Research data lifecycle stages</td>
+                                            <td>name, description, position, color</td>
+                                            <td>One-to-many → ToolCategory</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="alert alert-info border-0">
+                                <h6 class="alert-heading">Schema Design Principles</h6>
+                                <ul class="small mb-0">
+                                    <li><strong>Hierarchical:</strong> Stages → Categories → Tools</li>
+                                    <li><strong>Flexible:</strong> Many-to-many tool interactions</li>
+                                    <li><strong>Extensible:</strong> Support for new tool types</li>
+                                    <li><strong>Metadata-rich:</strong> Comprehensive interaction details</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Data Visualizations -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2 text-primary"></i>Interaction Types Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if interaction_types %}
+                    <div class="row">
+                        {% for type_data in interaction_types %}
+                        <div class="col-12 mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small">{{ type_data.interaction_type }}</span>
+                                <span class="badge bg-primary">{{ type_data.count }}</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: {{ (type_data.count / interaction_types|map(attribute='count')|max * 100) if interaction_types else 0 }}%">
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">No interaction data available yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2 text-success"></i>Lifecycle Stage Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if stage_distribution %}
+                    <div class="row">
+                        {% for stage_data in stage_distribution %}
+                        <div class="col-12 mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small">{{ stage_data.lifecycle_stage }}</span>
+                                <span class="badge bg-success">{{ stage_data.count }}</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ (stage_data.count / stage_distribution|map(attribute='count')|max * 100) if stage_distribution else 0 }}%">
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">No stage data available yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSV Format Documentation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">
+                        <i class="fas fa-file-csv me-2 text-success"></i>CSV Import/Export Format
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <p class="text-muted">
+                                PRISM supports CSV import/export with the following standardized format. 
+                                All fields marked with <span class="badge badge-sm bg-danger">Required</span> must be present.
+                            </p>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Field Name</th>
+                                            <th>Type</th>
+                                            <th>Required</th>
+                                            <th>Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>Source Tool</code></td>
+                                            <td>String</td>
+                                            <td><span class="badge badge-sm bg-danger">Required</span></td>
+                                            <td>Name of the source tool (must exist in database)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>Target Tool</code></td>
+                                            <td>String</td>
+                                            <td><span class="badge badge-sm bg-danger">Required</span></td>
+                                            <td>Name of the target tool (must exist in database)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>Interaction Type</code></td>
+                                            <td>Enum</td>
+                                            <td><span class="badge badge-sm bg-danger">Required</span></td>
+                                            <td>Type from predefined list (API Integration, Data Exchange, etc.)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>Lifecycle Stage</code></td>
+                                            <td>Enum</td>
+                                            <td><span class="badge badge-sm bg-danger">Required</span></td>
+                                            <td>MaLDReTH lifecycle stage (PLAN, COLLECT, ANALYSE, etc.)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>Description</code></td>
+                                            <td>Text</td>
+                                            <td><span class="badge badge-sm bg-secondary">Optional</span></td>
+                                            <td>Detailed description of the interaction</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>Technical Details</code></td>
+                                            <td>Text</td>
+                                            <td><span class="badge badge-sm bg-secondary">Optional</span></td>
+                                            <td>Implementation details (API, protocols, formats)</td>
+                                        </tr>
+                                        <tr class="table-secondary">
+                                            <td colspan="4" class="text-center small">
+                                                <i class="fas fa-ellipsis-h me-2"></i>
+                                                Additional optional fields: Benefits, Challenges, Examples, Contact Person, Organization, Email, Priority, Complexity, Status, Submitted By
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="alert alert-success border-0">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-download me-2"></i>Demo CSV Available
+                                </h6>
+                                <p class="small mb-3">
+                                    A comprehensive demo CSV file is included in the repository with sample interactions 
+                                    from the MaLDReTH II working session.
+                                </p>
+                                <div class="d-grid gap-2">
+                                    <a href="https://github.com/adammoore/maldreth-infrastructure-interactions/blob/main/demo_interactions.csv" 
+                                       class="btn btn-sm btn-outline-success" target="_blank">
+                                        <i class="fas fa-external-link-alt me-1"></i>View Demo CSV
+                                    </a>
+                                    <a href="{{ url_for('upload_interactions_csv') }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-upload me-1"></i>Upload CSV
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MaLDReTH Lifecycle Stages -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">
+                        <i class="fas fa-recycle me-2 text-info"></i>MaLDReTH Research Data Lifecycle Stages
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for stage_info in stages_with_tools %}
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="card border h-100">
+                                <div class="card-header bg-{{ loop.index % 4 == 1 and 'primary' or (loop.index % 4 == 2 and 'success' or (loop.index % 4 == 3 and 'warning' or 'info')) }} text-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">{{ stage_info.stage.position + 1 }}. {{ stage_info.stage.name }}</h6>
+                                        <span class="badge bg-light text-dark">{{ stage_info.tool_count }} tools</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <p class="small text-muted mb-0">{{ stage_info.stage.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Most Active Tools -->
+    {% if tool_usage %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trophy me-2 text-warning"></i>Most Connected Tools
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for tool in tool_usage %}
+                        <div class="list-group-item border-0 px-0 d-flex justify-content-between align-items-center">
+                            <span>{{ tool.name }}</span>
+                            <span class="badge bg-warning rounded-pill">{{ tool.count }} interaction{{ 's' if tool.count != 1 else '' }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2 text-info"></i>Recent Interactions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_interactions %}
+                    <div class="list-group list-group-flush">
+                        {% for interaction in recent_interactions %}
+                        <div class="list-group-item border-0 px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ interaction.source_tool.name }} → {{ interaction.target_tool.name }}</h6>
+                                    <p class="mb-1 small text-muted">{{ interaction.interaction_type }}</p>
+                                    <small class="text-muted">{{ interaction.submitted_at.strftime('%Y-%m-%d %H:%M') if interaction.submitted_at else 'Unknown date' }}</small>
+                                </div>
+                                <span class="badge bg-primary">{{ interaction.lifecycle_stage }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">No recent interactions available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Technical Documentation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">
+                        <i class="fas fa-code me-2 text-secondary"></i>Technical Implementation
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Database Technology</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-database me-2 text-muted"></i>PostgreSQL (Production)</li>
+                                <li><i class="fas fa-database me-2 text-muted"></i>SQLite (Development)</li>
+                                <li><i class="fas fa-layer-group me-2 text-muted"></i>SQLAlchemy ORM</li>
+                                <li><i class="fas fa-sync me-2 text-muted"></i>Flask-Migrate for schema management</li>
+                            </ul>
+                            
+                            <h6 class="text-success mt-3">API Endpoints</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-link me-2 text-muted"></i><code>/api/v1/tools</code> - Tools catalog</li>
+                                <li><i class="fas fa-link me-2 text-muted"></i><code>/api/v1/interactions</code> - Interactions data</li>
+                                <li><i class="fas fa-download me-2 text-muted"></i><code>/export/interactions/csv</code> - CSV export</li>
+                                <li><i class="fas fa-upload me-2 text-muted"></i><code>/upload/interactions/csv</code> - CSV import</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning">Data Validation</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-shield-alt me-2 text-muted"></i>Duplicate detection on import</li>
+                                <li><i class="fas fa-check me-2 text-muted"></i>Tool name validation</li>
+                                <li><i class="fas fa-list me-2 text-muted"></i>Interaction type enumeration</li>
+                                <li><i class="fas fa-lock me-2 text-muted"></i>Data integrity constraints</li>
+                            </ul>
+                            
+                            <h6 class="text-info mt-3">Integration Features</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-edit me-2 text-muted"></i>Curation interface for data quality</li>
+                                <li><i class="fas fa-chart-line me-2 text-muted"></i>Real-time statistics and visualization</li>
+                                <li><i class="fas fa-cloud me-2 text-muted"></i>Heroku cloud deployment</li>
+                                <li><i class="fas fa-robot me-2 text-muted"></i>GitHub Actions CI/CD pipeline</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Links -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="{{ url_for('view_interactions') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-list me-2"></i>View All Data
+                </a>
+                <a href="{{ url_for('upload_interactions_csv') }}" class="btn btn-success btn-lg">
+                    <i class="fas fa-upload me-2"></i>Upload CSV
+                </a>
+                <a href="{{ url_for('export_interactions_csv') }}" class="btn btn-outline-info btn-lg">
+                    <i class="fas fa-download me-2"></i>Export CSV
+                </a>
+                <a href="https://github.com/adammoore/maldreth-infrastructure-interactions" 
+                   class="btn btn-outline-secondary btn-lg" target="_blank">
+                    <i class="fab fa-github me-2"></i>GitHub Repository
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
