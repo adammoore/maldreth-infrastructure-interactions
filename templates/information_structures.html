@@ -72,56 +72,331 @@
                     </h3>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Entity</th>
-                                            <th>Purpose</th>
-                                            <th>Key Fields</th>
-                                            <th>Relationships</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><strong>ToolInteraction</strong></td>
-                                            <td>Core interaction records</td>
-                                            <td>interaction_type, lifecycle_stage, description</td>
-                                            <td>source_tool_id → ExemplarTool<br>target_tool_id → ExemplarTool</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>ExemplarTool</strong></td>
-                                            <td>Research tools in MaLDReTH taxonomy</td>
-                                            <td>name, is_open_source, description, url</td>
-                                            <td>category_id → ToolCategory</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>ToolCategory</strong></td>
-                                            <td>Tool classification groups</td>
-                                            <td>name, description</td>
-                                            <td>stage_id → MaldrethStage</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>MaldrethStage</strong></td>
-                                            <td>Research data lifecycle stages</td>
-                                            <td>name, description, position, color</td>
-                                            <td>One-to-many → ToolCategory</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                    <!-- Database Schema Diagram -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="schema-diagram" style="background: #f8f9fa; border-radius: 0.5rem; padding: 2rem; overflow-x: auto;">
+                                <div class="d-flex justify-content-center flex-wrap gap-4" style="min-width: 1200px;">
+                                    
+                                    <!-- MaldrethStage Table -->
+                                    <div class="schema-table" style="position: relative;">
+                                        <div class="card border-primary" style="width: 280px; box-shadow: 0 4px 12px rgba(0,123,255,0.15);">
+                                            <div class="card-header bg-primary text-white text-center">
+                                                <h6 class="mb-0"><i class="fas fa-circle-nodes me-2"></i>maldreth_stages</h6>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm mb-0">
+                                                        <tbody>
+                                                            <tr class="table-warning">
+                                                                <td><i class="fas fa-key text-warning me-2"></i><strong>id</strong></td>
+                                                                <td><code>INT</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>name</td>
+                                                                <td><code>VARCHAR(50)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>description</td>
+                                                                <td><code>TEXT</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>position</td>
+                                                                <td><code>INT</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>color</td>
+                                                                <td><code>VARCHAR(7)</code></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ToolCategory Table -->
+                                    <div class="schema-table" style="position: relative;">
+                                        <div class="card border-success" style="width: 280px; box-shadow: 0 4px 12px rgba(40,167,69,0.15);">
+                                            <div class="card-header bg-success text-white text-center">
+                                                <h6 class="mb-0"><i class="fas fa-folder me-2"></i>tool_categories</h6>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm mb-0">
+                                                        <tbody>
+                                                            <tr class="table-warning">
+                                                                <td><i class="fas fa-key text-warning me-2"></i><strong>id</strong></td>
+                                                                <td><code>INT</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>name</td>
+                                                                <td><code>VARCHAR(200)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>description</td>
+                                                                <td><code>TEXT</code></td>
+                                                            </tr>
+                                                            <tr class="table-info">
+                                                                <td><i class="fas fa-link text-info me-2"></i><strong>stage_id</strong></td>
+                                                                <td><code>INT</code></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ExemplarTool Table -->
+                                    <div class="schema-table" style="position: relative;">
+                                        <div class="card border-info" style="width: 280px; box-shadow: 0 4px 12px rgba(23,162,184,0.15);">
+                                            <div class="card-header bg-info text-white text-center">
+                                                <h6 class="mb-0"><i class="fas fa-tools me-2"></i>exemplar_tools</h6>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm mb-0">
+                                                        <tbody>
+                                                            <tr class="table-warning">
+                                                                <td><i class="fas fa-key text-warning me-2"></i><strong>id</strong></td>
+                                                                <td><code>INT</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>name</td>
+                                                                <td><code>VARCHAR(100)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>description</td>
+                                                                <td><code>TEXT</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>url</td>
+                                                                <td><code>VARCHAR(500)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>provider</td>
+                                                                <td><code>VARCHAR(200)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>is_open_source</td>
+                                                                <td><code>BOOLEAN</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>is_active</td>
+                                                                <td><code>BOOLEAN</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>auto_created</td>
+                                                                <td><code>BOOLEAN</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>import_source</td>
+                                                                <td><code>VARCHAR(100)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>created_at</td>
+                                                                <td><code>DATETIME</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>updated_at</td>
+                                                                <td><code>DATETIME</code></td>
+                                                            </tr>
+                                                            <tr class="table-info">
+                                                                <td><i class="fas fa-link text-info me-2"></i><strong>stage_id</strong></td>
+                                                                <td><code>INT</code></td>
+                                                            </tr>
+                                                            <tr class="table-info">
+                                                                <td><i class="fas fa-link text-info me-2"></i><strong>category_id</strong></td>
+                                                                <td><code>INT</code></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ToolInteraction Table -->
+                                    <div class="schema-table" style="position: relative;">
+                                        <div class="card border-warning" style="width: 280px; box-shadow: 0 4px 12px rgba(255,193,7,0.15);">
+                                            <div class="card-header bg-warning text-dark text-center">
+                                                <h6 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>tool_interactions</h6>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm mb-0">
+                                                        <tbody>
+                                                            <tr class="table-warning">
+                                                                <td><i class="fas fa-key text-warning me-2"></i><strong>id</strong></td>
+                                                                <td><code>INT</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>interaction_type</td>
+                                                                <td><code>VARCHAR(100)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>lifecycle_stage</td>
+                                                                <td><code>VARCHAR(50)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>description</td>
+                                                                <td><code>TEXT</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>technical_details</td>
+                                                                <td><code>TEXT</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>benefits</td>
+                                                                <td><code>TEXT</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>challenges</td>
+                                                                <td><code>TEXT</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>examples</td>
+                                                                <td><code>TEXT</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>contact_person</td>
+                                                                <td><code>VARCHAR(100)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>organization</td>
+                                                                <td><code>VARCHAR(100)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>email</td>
+                                                                <td><code>VARCHAR(100)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>priority</td>
+                                                                <td><code>VARCHAR(20)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>complexity</td>
+                                                                <td><code>VARCHAR(20)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>status</td>
+                                                                <td><code>VARCHAR(20)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>submitted_by</td>
+                                                                <td><code>VARCHAR(100)</code></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>submitted_at</td>
+                                                                <td><code>DATETIME</code></td>
+                                                            </tr>
+                                                            <tr class="table-info">
+                                                                <td><i class="fas fa-link text-info me-2"></i><strong>source_tool_id</strong></td>
+                                                                <td><code>INT</code></td>
+                                                            </tr>
+                                                            <tr class="table-info">
+                                                                <td><i class="fas fa-link text-info me-2"></i><strong>target_tool_id</strong></td>
+                                                                <td><code>INT</code></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Relationship Lines -->
+                                <svg class="relationship-lines" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;">
+                                    <!-- Stage to Category relationship -->
+                                    <defs>
+                                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                            <polygon points="0 0, 10 3.5, 0 7" fill="#6c757d" />
+                                        </marker>
+                                    </defs>
+                                    <!-- Note: SVG lines would need JavaScript to calculate positions dynamically -->
+                                </svg>
                             </div>
                         </div>
-                        <div class="col-lg-4">
+                    </div>
+
+                    <!-- Relationship Legend -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-sitemap me-2 text-primary"></i>Relationships
+                                    </h6>
+                                    <div class="small">
+                                        <div class="mb-2">
+                                            <i class="fas fa-arrow-right text-muted me-2"></i>
+                                            <strong>maldreth_stages</strong> → <strong>tool_categories</strong> (1:many)
+                                        </div>
+                                        <div class="mb-2">
+                                            <i class="fas fa-arrow-right text-muted me-2"></i>
+                                            <strong>tool_categories</strong> → <strong>exemplar_tools</strong> (1:many)
+                                        </div>
+                                        <div class="mb-2">
+                                            <i class="fas fa-arrow-right text-muted me-2"></i>
+                                            <strong>exemplar_tools</strong> → <strong>tool_interactions</strong> (1:many as source)
+                                        </div>
+                                        <div class="mb-0">
+                                            <i class="fas fa-arrow-right text-muted me-2"></i>
+                                            <strong>exemplar_tools</strong> → <strong>tool_interactions</strong> (1:many as target)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-info-circle me-2 text-info"></i>Field Legend
+                                    </h6>
+                                    <div class="small">
+                                        <div class="mb-2">
+                                            <i class="fas fa-key text-warning me-2"></i>
+                                            <strong class="text-warning">Primary Key</strong> - Unique identifier
+                                        </div>
+                                        <div class="mb-2">
+                                            <i class="fas fa-link text-info me-2"></i>
+                                            <strong class="text-info">Foreign Key</strong> - References another table
+                                        </div>
+                                        <div class="mb-0">
+                                            <code class="text-muted">DATA_TYPE</code> - Column data type and constraints
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Schema Design Principles -->
+                    <div class="row">
+                        <div class="col-12">
                             <div class="alert alert-info border-0">
-                                <h6 class="alert-heading">Schema Design Principles</h6>
-                                <ul class="small mb-0">
-                                    <li><strong>Hierarchical:</strong> Stages → Categories → Tools</li>
-                                    <li><strong>Flexible:</strong> Many-to-many tool interactions</li>
-                                    <li><strong>Extensible:</strong> Support for new tool types</li>
-                                    <li><strong>Metadata-rich:</strong> Comprehensive interaction details</li>
-                                </ul>
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-lightbulb me-2"></i>Schema Design Principles
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <ul class="small mb-0">
+                                            <li><strong>Hierarchical Structure:</strong> Stages → Categories → Tools → Interactions</li>
+                                            <li><strong>Flexible Relationships:</strong> Many-to-many tool interactions</li>
+                                            <li><strong>MaLDReTH Compatibility:</strong> Enhanced fields for tool providers and import tracking</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <ul class="small mb-0">
+                                            <li><strong>Audit Trail:</strong> Timestamps and source tracking for all tools</li>
+                                            <li><strong>Extensible Design:</strong> Support for new interaction types and tool metadata</li>
+                                            <li><strong>Data Integrity:</strong> Foreign key constraints and validation</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
