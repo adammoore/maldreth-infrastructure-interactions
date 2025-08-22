@@ -20,9 +20,40 @@
         </div>
     </div>
 
-    <!-- MaLDReTH Stacked Nested Visualization -->
-    <div class="row justify-content-center">
-        <div class="col-12">
+    <!-- MaLDReTH Dual Visualization: Circular + Stacked -->
+    <div class="row">
+        <!-- Circular Overview -->
+        <div class="col-lg-5">
+            <div class="circular-overview-container">
+                <div class="circular-header mb-3">
+                    <h4 class="text-center text-white mb-0">Circular Lifecycle Overview</h4>
+                    <p class="text-center text-light mb-0 small">Click stages to explore in detail →</p>
+                </div>
+                
+                <!-- Circular SVG Visualization -->
+                <div class="circular-viz-wrapper" style="position: relative; height: 400px;">
+                    <svg id="circular-lifecycle" width="100%" height="100%" viewBox="0 0 400 400">
+                        <defs>
+                            <marker id="circle-arrow" markerWidth="8" markerHeight="6" 
+                                    refX="7" refY="3" orient="auto">
+                                <polygon points="0 0, 8 3, 0 6" fill="rgba(255,255,255,0.8)" />
+                            </marker>
+                        </defs>
+                        
+                        <!-- Central Circle -->
+                        <circle cx="200" cy="200" r="60" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+                        <text x="200" y="190" text-anchor="middle" fill="white" font-size="14" font-weight="bold">MaLDReTH</text>
+                        <text x="200" y="210" text-anchor="middle" fill="white" font-size="12">Research Data</text>
+                        <text x="200" y="225" text-anchor="middle" fill="white" font-size="12">Lifecycle</text>
+                        
+                        <!-- Stage circles will be added by JavaScript -->
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stacked Interactive View -->
+        <div class="col-lg-7">
             <div class="stacked-lifecycle-container">
                 <div class="lifecycle-header mb-4">
                     <h3 class="text-center text-white mb-0">MaLDReTH Research Data Lifecycle</h3>
@@ -48,23 +79,41 @@
                 {% set stage_color = '#90C695' if stage.name in ['CONCEPTUALISE', 'PLAN', 'COLLECT', 'PROCESS', 'ANALYSE', 'STORE'] else '#7FB3D3' %}
                 {% set stage_color = '#4A90A4' if stage.name == 'FUND' else stage_color %}
                 
-                <div class="stage-stack-container mb-3" data-stage-id="{{ stage.id }}">
-                    <!-- Stage Header - Clickable -->
-                    <div class="stage-header clickable" style="background-color: {{ stage_color }};" onclick="toggleStageExpansion({{ stage.id }})">
+                <div class="stage-stack-container mb-2" data-stage-id="{{ stage.id }}">
+                    <!-- Stage Connection Line -->
+                    {% if not loop.first %}
+                    <div class="stage-connector">
+                        <div class="connector-line"></div>
+                        <div class="connector-arrow"><i class="fas fa-arrow-down"></i></div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Special circular connection for last stage -->
+                    {% if loop.last %}
+                    <div class="circular-connector">
+                        <div class="circular-line"></div>
+                        <div class="circular-text">
+                            <small class="text-light"><i class="fas fa-redo me-1"></i>Circular Flow</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Stage Header - Clickable, Compact -->
+                    <div class="stage-header clickable compact" style="background-color: {{ stage_color }};" onclick="toggleStageExpansion({{ stage.id }}); highlightCircularStage({{ stage.id }})">
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center">
-                                <div class="stage-number me-3">{{ stage.position + 1 }}</div>
+                                <div class="stage-number-compact me-2">{{ stage.position + 1 }}</div>
                                 <div>
-                                    <h5 class="mb-0 text-white">{{ stage.name.title() }} <i class="fas fa-chevron-down expand-icon ms-2"></i></h5>
-                                    <small class="text-light">{{ stage.description[:50] if stage.description else 'Research data lifecycle stage' }}...</small>
+                                    <h6 class="mb-0 text-white stage-title-compact">{{ stage.name.title() }} <i class="fas fa-chevron-down expand-icon ms-1"></i></h6>
+                                    <small class="text-light stage-desc-compact">{{ stage.description[:30] if stage.description else 'RDL stage' }}...</small>
                                 </div>
                             </div>
-                            <div class="stage-stats text-white">
-                                <span class="badge bg-light text-dark me-2">
+                            <div class="stage-stats-compact text-white">
+                                <span class="badge bg-light text-dark badge-sm">
                                     {% set stage_data = visualization_data.stages | selectattr('id', 'equalto', stage.id) | first %}
-                                    {{ stage_data.tool_count if stage_data else 0 }} tools
+                                    {{ stage_data.tool_count if stage_data else 0 }}
                                 </span>
-                                <span class="badge bg-light text-dark">{{ stage.tool_categories.count() }} categories</span>
+                                <span class="badge bg-light text-dark badge-sm ms-1">{{ stage.tool_categories.count() }}</span>
                             </div>
                         </div>
                     </div>
@@ -99,23 +148,12 @@
                         </div>
                         {% endif %}
                     </div>
-                    
-                    <!-- Flow Arrow to Next Stage -->
-                    {% if not loop.last and stage.name != 'TRANSFORM' %}
-                    <div class="flow-arrow">
-                        <i class="fas fa-arrow-down"></i>
-                    </div>
-                    {% elif stage.name == 'TRANSFORM' %}
-                    <div class="flow-arrow-back">
-                        <i class="fas fa-arrow-up"></i>
-                        <small class="text-muted">Back to Conceptualise</small>
-                    </div>
-                    {% endif %}
                 </div>
                 {% endfor %}
                 
             </div>
         </div>
+    </div>
     </div>
 
     <!-- Stage Details Table -->
@@ -321,6 +359,110 @@ function expandAllTools() {
     });
 }
 
+// Initialize circular visualization
+function initializeCircularVisualization() {
+    const stages = {{ stages | tojson | safe }};
+    const svg = document.getElementById('circular-lifecycle');
+    
+    stages.forEach((stage, index) => {
+        const angle = (index * 360 / stages.length) - 90; // Start from top
+        const radius = 130;
+        const centerX = 200;
+        const centerY = 200;
+        
+        const x = centerX + radius * Math.cos(angle * Math.PI / 180);
+        const y = centerY + radius * Math.sin(angle * Math.PI / 180);
+        
+        // Stage circle
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', x);
+        circle.setAttribute('cy', y);
+        circle.setAttribute('r', '15');
+        circle.setAttribute('fill', stage.name === 'FUND' ? '#4A90A4' : 
+                          ['CONCEPTUALISE', 'PLAN', 'COLLECT', 'PROCESS', 'ANALYSE', 'STORE'].includes(stage.name) ? '#90C695' : '#7FB3D3');
+        circle.setAttribute('stroke', 'rgba(255,255,255,0.8)');
+        circle.setAttribute('stroke-width', '2');
+        circle.setAttribute('class', 'circular-stage-node');
+        circle.setAttribute('data-stage-id', stage.id);
+        circle.style.cursor = 'pointer';
+        circle.onclick = () => {
+            highlightCircularStage(stage.id);
+            toggleStageExpansion(stage.id);
+        };
+        svg.appendChild(circle);
+        
+        // Stage number
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', x);
+        text.setAttribute('y', y + 4);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('fill', 'white');
+        text.setAttribute('font-size', '12');
+        text.setAttribute('font-weight', 'bold');
+        text.textContent = stage.position + 1;
+        text.style.pointerEvents = 'none';
+        svg.appendChild(text);
+        
+        // Connection arrow to next stage
+        if (index < stages.length - 1) {
+            const nextAngle = ((index + 1) * 360 / stages.length) - 90;
+            const nextX = centerX + radius * Math.cos(nextAngle * Math.PI / 180);
+            const nextY = centerY + radius * Math.sin(nextAngle * Math.PI / 180);
+            
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', x + 12 * Math.cos((angle + 30) * Math.PI / 180));
+            line.setAttribute('y1', y + 12 * Math.sin((angle + 30) * Math.PI / 180));
+            line.setAttribute('x2', nextX - 12 * Math.cos((nextAngle - 30) * Math.PI / 180));
+            line.setAttribute('y2', nextY - 12 * Math.sin((nextAngle - 30) * Math.PI / 180));
+            line.setAttribute('stroke', 'rgba(255,255,255,0.6)');
+            line.setAttribute('stroke-width', '2');
+            line.setAttribute('marker-end', 'url(#circle-arrow)');
+            svg.appendChild(line);
+        }
+    });
+    
+    // Closing arrow from last to first stage
+    if (stages.length > 0) {
+        const firstAngle = -90;
+        const lastAngle = ((stages.length - 1) * 360 / stages.length) - 90;
+        const firstX = centerX + radius * Math.cos(firstAngle * Math.PI / 180);
+        const firstY = centerY + radius * Math.sin(firstAngle * Math.PI / 180);
+        const lastX = centerX + radius * Math.cos(lastAngle * Math.PI / 180);
+        const lastY = centerY + radius * Math.sin(lastAngle * Math.PI / 180);
+        
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', lastX + 12 * Math.cos((lastAngle + 30) * Math.PI / 180));
+        line.setAttribute('y1', lastY + 12 * Math.sin((lastAngle + 30) * Math.PI / 180));
+        line.setAttribute('x2', firstX - 12 * Math.cos((firstAngle - 30) * Math.PI / 180));
+        line.setAttribute('y2', firstY - 12 * Math.sin((firstAngle - 30) * Math.PI / 180));
+        line.setAttribute('stroke', 'rgba(255,215,0,0.8)');
+        line.setAttribute('stroke-width', '2');
+        line.setAttribute('stroke-dasharray', '3,3');
+        line.setAttribute('marker-end', 'url(#circle-arrow)');
+        svg.appendChild(line);
+    }
+}
+
+function highlightCircularStage(stageId) {
+    // Remove existing highlights
+    document.querySelectorAll('.circular-stage-node').forEach(node => {
+        node.setAttribute('stroke-width', '2');
+        node.setAttribute('stroke', 'rgba(255,255,255,0.8)');
+    });
+    
+    // Highlight current stage
+    const currentNode = document.querySelector(`[data-stage-id="${stageId}"].circular-stage-node`);
+    if (currentNode) {
+        currentNode.setAttribute('stroke-width', '4');
+        currentNode.setAttribute('stroke', '#FFD700');
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCircularVisualization();
+});
+
 // Add CSS filters for mathematical functions (fallback)
 if (typeof Math.cos === 'undefined') {
     // Fallback positions if trigonometry isn't available
@@ -330,11 +472,30 @@ if (typeof Math.cos === 'undefined') {
 
 <!-- Custom CSS for MaLDReTH Stacked Visualization -->
 <style>
+/* Circular Overview Container */
+.circular-overview-container {
+    background: linear-gradient(135deg, #2C3E50 0%, #3498DB 50%, #9B59B6 100%);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    height: fit-content;
+}
+
+.circular-header {
+    text-align: center;
+}
+
+.circular-viz-wrapper {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 1rem;
+}
+
 /* Stacked Lifecycle Container */
 .stacked-lifecycle-container {
     background: linear-gradient(135deg, #2C3E50 0%, #3498DB 30%, #9B59B6 70%, #E74C3C 100%);
     border-radius: 15px;
-    padding: 2rem;
+    padding: 1.5rem;
     margin-bottom: 2rem;
 }
 
@@ -346,21 +507,99 @@ if (typeof Math.cos === 'undefined') {
 /* Stage Stack Styling */
 .stage-stack-container {
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    margin-bottom: 1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 0.5rem;
     transition: all 0.3s ease;
+    position: relative;
 }
 
 .stage-stack-container.expanded {
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .stage-header {
     padding: 1rem 1.5rem;
     border-left: 5px solid rgba(255, 255, 255, 0.3);
     transition: all 0.3s ease;
+}
+
+.stage-header.compact {
+    padding: 0.75rem 1rem;
+}
+
+/* Compact Stage Elements */
+.stage-title-compact {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.stage-desc-compact {
+    font-size: 11px;
+    opacity: 0.9;
+}
+
+.stage-number-compact {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.stage-stats-compact .badge-sm {
+    font-size: 10px;
+    padding: 0.2rem 0.4rem;
+}
+
+/* Stage Connectors */
+.stage-connector {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+.connector-line {
+    width: 2px;
+    height: 15px;
+    background: rgba(255, 255, 255, 0.6);
+    margin: 0 auto;
+}
+
+.connector-arrow {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    text-align: center;
+    margin-top: -3px;
+}
+
+.circular-connector {
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+.circular-line {
+    width: 40px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.6);
+    margin: 0 auto 5px;
+    border-radius: 1px;
+}
+
+.circular-text {
+    text-align: center;
+    font-size: 10px;
 }
 
 .clickable {
