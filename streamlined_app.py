@@ -162,17 +162,31 @@ def create_tool_from_csv(tool_name, import_source='CSV Import'):
             db.session.add(default_category)
             db.session.flush()  # Get the ID
         
-        # Create the new tool
-        new_tool = ExemplarTool(
-            name=tool_name,
-            description=f"Auto-created from {import_source}: {tool_name}",
-            stage_id=default_category.stage_id,
-            category_id=default_category.id,
-            is_active=True,
-            auto_created=True,
-            import_source=import_source,
-            provider="Unknown"
-        )
+        # Create the new tool with safe field handling
+        tool_data = {
+            'name': tool_name,
+            'description': f"Auto-created from {import_source}: {tool_name}",
+            'stage_id': default_category.stage_id,
+            'category_id': default_category.id,
+            'is_active': True
+        }
+        
+        # Add new fields only if they exist in the schema
+        try:
+            inspector = db.inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('exemplar_tools')]
+            
+            if 'auto_created' in columns:
+                tool_data['auto_created'] = True
+            if 'import_source' in columns:
+                tool_data['import_source'] = import_source
+            if 'provider' in columns:
+                tool_data['provider'] = "Unknown"
+                
+        except Exception as e:
+            logger.warning(f"Could not check schema for new fields: {e}")
+        
+        new_tool = ExemplarTool(**tool_data)
         
         db.session.add(new_tool)
         db.session.flush()  # Get the ID without committing
@@ -877,28 +891,43 @@ def api_get_tools():
         tools_data = []
         
         for tool in tools:
-            tools_data.append({
+            # Build tool data safely, handling missing fields
+            tool_data = {
                 'id': tool.id,
                 'name': tool.name,
                 'description': tool.description,
                 'url': tool.url,
-                'provider': tool.provider,
                 'is_open_source': tool.is_open_source,
-                'auto_created': tool.auto_created,
-                'import_source': tool.import_source,
-                'created_at': tool.created_at.isoformat() if tool.created_at else None,
-                'updated_at': tool.updated_at.isoformat() if tool.updated_at else None,
                 'stage': {
                     'id': tool.category.stage.id,
                     'name': tool.category.stage.name,
                     'position': tool.category.stage.position
                 },
-                'category': {
-                    'id': tool.category.id,
-                    'name': tool.category.name,
-                    'description': tool.category.description
-                }
-            })
+            }
+            
+            # Add new fields if they exist
+            try:
+                tool_data['provider'] = getattr(tool, 'provider', None)
+                tool_data['auto_created'] = getattr(tool, 'auto_created', False)
+                tool_data['import_source'] = getattr(tool, 'import_source', None)
+                tool_data['created_at'] = tool.created_at.isoformat() if hasattr(tool, 'created_at') and tool.created_at else None
+                tool_data['updated_at'] = tool.updated_at.isoformat() if hasattr(tool, 'updated_at') and tool.updated_at else None
+            except AttributeError:
+                # Fields don't exist in this schema version
+                tool_data['provider'] = None
+                tool_data['auto_created'] = False
+                tool_data['import_source'] = None
+                tool_data['created_at'] = None
+                tool_data['updated_at'] = None
+            
+            # Add category information
+            tool_data['category'] = {
+                'id': tool.category.id,
+                'name': tool.category.name,
+                'description': tool.category.description
+            }
+            
+            tools_data.append(tool_data)
         
         return jsonify({
             'success': True,
@@ -1042,23 +1071,77 @@ def export_csv():
 
 # --- Database Initialization ---
 
-def init_database_with_maldreth_data():
-    """Clear and initialize the database with MaLDReTH 1.0 final output data."""
+def migrate_database_schema():
+    """Safely migrate database schema to add new fields without data loss."""
     try:
-        # Drop all tables with cascade
-        db.session.execute(db.text('DROP TABLE IF EXISTS tool_interactions CASCADE'))
-        db.session.execute(db.text('DROP TABLE IF EXISTS exemplar_tools CASCADE'))
-        db.session.execute(db.text('DROP TABLE IF EXISTS tool_categories CASCADE'))
-        db.session.execute(db.text('DROP TABLE IF EXISTS maldreth_stages CASCADE'))
-        db.session.execute(db.text('DROP TABLE IF EXISTS research_tools CASCADE'))
-        db.session.execute(db.text('DROP TABLE IF EXISTS tools CASCADE'))
-        db.session.execute(db.text('DROP TABLE IF EXISTS interactions CASCADE'))
-        db.session.commit()
+        # Check if new columns exist and add them if they don't
+        inspector = db.inspect(db.engine)
+        
+        # Check if exemplar_tools table exists
+        tables = inspector.get_table_names()
+        if 'exemplar_tools' not in tables:
+            logger.info("exemplar_tools table doesn't exist, will be created")
+            return
+            
+        columns = [col['name'] for col in inspector.get_columns('exemplar_tools')]
+        
+        migrations_needed = []
+        
+        # Check for each new column and add SQL to create them
+        if 'provider' not in columns:
+            migrations_needed.append('ALTER TABLE exemplar_tools ADD COLUMN provider VARCHAR(200)')
+        if 'auto_created' not in columns:
+            migrations_needed.append('ALTER TABLE exemplar_tools ADD COLUMN auto_created BOOLEAN DEFAULT FALSE')
+        if 'import_source' not in columns:
+            migrations_needed.append('ALTER TABLE exemplar_tools ADD COLUMN import_source VARCHAR(100)')
+        if 'created_at' not in columns:
+            migrations_needed.append('ALTER TABLE exemplar_tools ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP')
+        if 'updated_at' not in columns:
+            migrations_needed.append('ALTER TABLE exemplar_tools ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP')
+        
+        # Execute migrations
+        for migration in migrations_needed:
+            logger.info(f"Executing migration: {migration}")
+            db.session.execute(db.text(migration))
+        
+        if migrations_needed:
+            db.session.commit()
+            logger.info(f"Successfully applied {len(migrations_needed)} schema migrations")
+        else:
+            logger.info("Database schema is up to date")
+            
     except Exception as e:
-        logger.info(f"Tables may not exist yet: {e}")
+        logger.error(f"Error during schema migration: {e}")
         db.session.rollback()
-    
-    db.create_all()
+
+def init_database_with_maldreth_data():
+    """Initialize the database with MaLDReTH 1.0 final output data."""
+    try:
+        # First, try to migrate existing schema (production)
+        migrate_database_schema()
+        
+        # Create any missing tables
+        db.create_all()
+        
+    except Exception as e:
+        logger.info(f"Database initialization error: {e}")
+        # If migration fails, try fresh creation (development only)
+        try:
+            # Only drop and recreate in development (SQLite)
+            if 'sqlite' in str(db.engine.url):
+                db.session.execute(db.text('DROP TABLE IF EXISTS tool_interactions CASCADE'))
+                db.session.execute(db.text('DROP TABLE IF EXISTS exemplar_tools CASCADE'))
+                db.session.execute(db.text('DROP TABLE IF EXISTS tool_categories CASCADE'))
+                db.session.execute(db.text('DROP TABLE IF EXISTS maldreth_stages CASCADE'))
+                db.session.execute(db.text('DROP TABLE IF EXISTS research_tools CASCADE'))
+                db.session.execute(db.text('DROP TABLE IF EXISTS tools CASCADE'))
+                db.session.execute(db.text('DROP TABLE IF EXISTS interactions CASCADE'))
+                db.session.commit()
+            
+            db.create_all()
+        except Exception as e2:
+            logger.error(f"Critical database error: {e2}")
+            return
 
     # 1. Create RDL Stages (only if they don't already exist)
     if MaldrethStage.query.count() == 0:
