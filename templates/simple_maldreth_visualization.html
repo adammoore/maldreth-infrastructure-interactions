@@ -173,6 +173,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% set stage_colors = ['#90C695', '#7FB3D3', '#4A90A4', '#90C695', '#7FB3D3', '#4A90A4', '#90C695', '#7FB3D3', '#4A90A4', '#90C695', '#7FB3D3', '#4A90A4'] %}
                         {% for stage in stages %}
                         {% set color = stage_colors[loop.index0 % stage_colors|length] %}
                         <tr style="border-left: 4px solid {{ color }};">
@@ -204,6 +205,7 @@
         <div class="col-12">
             <h3 class="text-primary mb-3">Tool Categories by Lifecycle Stage</h3>
             <div class="row">
+                {% set stage_colors = ['#90C695', '#7FB3D3', '#4A90A4', '#90C695', '#7FB3D3', '#4A90A4', '#90C695', '#7FB3D3', '#4A90A4', '#90C695', '#7FB3D3', '#4A90A4'] %}
                 {% for stage in stages %}
                 {% if stage.categories %}
                 {% set color = stage_colors[loop.index0 % stage_colors|length] %}
