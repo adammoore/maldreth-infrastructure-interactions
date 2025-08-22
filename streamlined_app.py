@@ -747,7 +747,7 @@ def rdl_visualization():
             visualization_data['interactions'].append(interaction_data)
         
         return render_template('rdl_visualization.html', 
-                             stages=stages, 
+                             stages=visualization_data['stages'], 
                              visualization_data=visualization_data)
     except Exception as e:
         logger.error(f"Error in RDL visualization: {e}")
