@@ -3,7 +3,35 @@
 {% block title %}D3.js Diagnostic - PRISM | MaLDReTH II RDA{% endblock %}
 
 {% block extra_head %}
-<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://d3js.org/d3.v7.min.js" 
+        onerror="loadD3Fallback()"></script>
+<script>
+function loadD3Fallback() {
+    logDiagnostic('D3.js primary CDN failed, trying fallback...', 'warning');
+    
+    // Try alternative CDN
+    const fallbackScript = document.createElement('script');
+    fallbackScript.src = 'https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js';
+    fallbackScript.onload = function() {
+        logDiagnostic('D3.js loaded successfully from fallback CDN', 'info');
+        // Re-run diagnostic tests
+        setTimeout(runD3Tests, 100);
+    };
+    fallbackScript.onerror = function() {
+        logDiagnostic('All D3.js CDNs failed to load - network or CSP issue', 'error');
+        document.getElementById('d3-status').innerHTML += '<div class="status-item error">❌ All D3.js CDNs blocked - check network/CSP settings</div>';
+    };
+    document.head.appendChild(fallbackScript);
+}
+
+function runD3Tests() {
+    // This function will be defined later in the diagnostic script
+    if (typeof d3 !== 'undefined') {
+        const d3Status = document.getElementById('d3-status');
+        d3Status.innerHTML += '<div class="status-item success">✅ D3.js loaded from fallback CDN</div>';
+    }
+}
+</script>
 <style>
     .diagnostic-container {
         background: #f8f9fa;

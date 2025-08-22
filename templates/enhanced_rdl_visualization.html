@@ -3,9 +3,23 @@
 {% block title %}Enhanced RDL Visualization - PRISM | MaLDReTH II RDA{% endblock %}
 
 {% block extra_head %}
-<!-- Enhanced D3.js and visualization libraries -->
-<script src="https://d3js.org/d3.v7.min.js"></script>
+<!-- Enhanced D3.js and visualization libraries with fallback -->
+<script src="https://d3js.org/d3.v7.min.js" 
+        onerror="console.error('Failed to load D3.js from CDN'); loadD3Fallback()"></script>
 <script src="https://unpkg.com/d3-force@3"></script>
+<script>
+function loadD3Fallback() {
+    console.log('Attempting D3.js fallback...');
+    // Try alternative CDN
+    const fallbackScript = document.createElement('script');
+    fallbackScript.src = 'https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js';
+    fallbackScript.onerror = function() {
+        console.error('All D3.js CDNs failed to load');
+        document.getElementById('d3-error-message').style.display = 'block';
+    };
+    document.head.appendChild(fallbackScript);
+}
+</script>
 <style>
     .visualization-container {
         background: linear-gradient(135deg, #2C3E50 0%, #3498DB 30%, #9B59B6 70%, #E74C3C 100%);
@@ -209,6 +223,13 @@
                         <div class="me-2" style="width: 20px; height: 2px; background: #ffc107;"></div>
                         <small>Tool Interaction</small>
                     </div>
+                </div>
+                
+                <!-- D3.js Error Message -->
+                <div id="d3-error-message" class="alert alert-warning" style="display: none;">
+                    <h5><i class="fas fa-exclamation-triangle"></i> D3.js Visualization Unavailable</h5>
+                    <p>The interactive D3.js visualization couldn't load. This might be due to network restrictions or browser compatibility issues.</p>
+                    <p>You can still access the <a href="{{ url_for('simple_maldreth_visualization') }}" class="alert-link">MaLDReTH Official Visualization</a> which works without external dependencies.</p>
                 </div>
                 
                 <!-- Network Visualization -->
