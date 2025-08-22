@@ -790,21 +790,39 @@ def enhanced_rdl_visualization():
             }
             tool_list.append(tool_data)
         
-        # Enhanced interaction data
+        # Enhanced interaction data with safer relationship access
         for interaction in interactions:
-            interaction_data = {
-                'id': interaction.id,
-                'source_tool_id': interaction.source_tool_id,
-                'target_tool_id': interaction.target_tool_id,
-                'source_tool_name': interaction.source_tool.name if interaction.source_tool else 'Unknown',
-                'target_tool_name': interaction.target_tool.name if interaction.target_tool else 'Unknown',
-                'interaction_type': interaction.interaction_type,
-                'lifecycle_stage': interaction.lifecycle_stage,
-                'description': interaction.description,
-                'priority': getattr(interaction, 'priority', 'Medium'),
-                'status': getattr(interaction, 'status', 'Active')
-            }
-            interaction_list.append(interaction_data)
+            try:
+                # Safer way to get tool names
+                source_tool_name = 'Unknown'
+                target_tool_name = 'Unknown'
+                
+                if interaction.source_tool_id:
+                    source_tool = ExemplarTool.query.get(interaction.source_tool_id)
+                    if source_tool:
+                        source_tool_name = source_tool.name
+                
+                if interaction.target_tool_id:
+                    target_tool = ExemplarTool.query.get(interaction.target_tool_id)
+                    if target_tool:
+                        target_tool_name = target_tool.name
+                
+                interaction_data = {
+                    'id': interaction.id,
+                    'source_tool_id': interaction.source_tool_id,
+                    'target_tool_id': interaction.target_tool_id,
+                    'source_tool_name': source_tool_name,
+                    'target_tool_name': target_tool_name,
+                    'interaction_type': interaction.interaction_type,
+                    'lifecycle_stage': interaction.lifecycle_stage,
+                    'description': interaction.description,
+                    'priority': getattr(interaction, 'priority', 'Medium'),
+                    'status': getattr(interaction, 'status', 'Active')
+                }
+                interaction_list.append(interaction_data)
+            except Exception as e:
+                logger.warning(f"Error processing interaction {interaction.id}: {e}")
+                continue
         
         # Calculate summary statistics
         total_tools = len(tool_list)
