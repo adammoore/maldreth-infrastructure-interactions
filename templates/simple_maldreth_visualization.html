@@ -26,21 +26,36 @@
             <div class="stacked-lifecycle-container">
                 <div class="lifecycle-header mb-4">
                     <h3 class="text-center text-white mb-0">MaLDReTH Research Data Lifecycle</h3>
-                    <p class="text-center text-light mb-0">Interactive nested visualization showing stages, categories, and tools</p>
+                    <p class="text-center text-light mb-0">Interactive nested visualization - click stages to expand categories and tools</p>
+                    
+                    <!-- Interactive Controls -->
+                    <div class="text-center mt-3">
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-light btn-sm" onclick="resetVisualization()">
+                                <i class="fas fa-undo me-1"></i>Reset
+                            </button>
+                            <button class="btn btn-outline-light btn-sm" onclick="expandAllCategories()">
+                                <i class="fas fa-expand-arrows-alt me-1"></i>Show All Categories
+                            </button>
+                            <button class="btn btn-outline-light btn-sm" onclick="expandAllTools()">
+                                <i class="fas fa-tools me-1"></i>Show All Tools
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 
                 {% for stage in stages %}
                 {% set stage_color = '#90C695' if stage.name in ['CONCEPTUALISE', 'PLAN', 'COLLECT', 'PROCESS', 'ANALYSE', 'STORE'] else '#7FB3D3' %}
                 {% set stage_color = '#4A90A4' if stage.name == 'FUND' else stage_color %}
                 
-                <div class="stage-stack-container mb-3">
-                    <!-- Stage Header -->
-                    <div class="stage-header" style="background-color: {{ stage_color }};">
+                <div class="stage-stack-container mb-3" data-stage-id="{{ stage.id }}">
+                    <!-- Stage Header - Clickable -->
+                    <div class="stage-header clickable" style="background-color: {{ stage_color }};" onclick="toggleStageExpansion({{ stage.id }})">
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center">
                                 <div class="stage-number me-3">{{ stage.position + 1 }}</div>
                                 <div>
-                                    <h5 class="mb-0 text-white">{{ stage.name.title() }}</h5>
+                                    <h5 class="mb-0 text-white">{{ stage.name.title() }} <i class="fas fa-chevron-down expand-icon ms-2"></i></h5>
                                     <small class="text-light">{{ stage.description[:50] if stage.description else 'Research data lifecycle stage' }}...</small>
                                 </div>
                             </div>
@@ -55,29 +70,35 @@
                     </div>
                     
                     <!-- Categories and Tools Nested Structure -->
-                    {% if stage.tool_categories %}
-                    <div class="categories-container">
-                        {% for category in stage.tool_categories %}
-                        <div class="category-row">
-                            <div class="category-header">
-                                <div class="category-connector"></div>
-                                <div class="category-name">{{ category.name }}</div>
-                            </div>
-                            <div class="tools-grid">
-                                {% for tool in category.tools if tool.is_active %}
-                                <div class="tool-item" title="{{ tool.description if tool.description else tool.name }}">
-                                    {{ tool.name }}
+                    <div class="expandable-content" id="stage-content-{{ stage.id }}" style="display: none;">
+                        {% if stage.tool_categories %}
+                        <div class="categories-container">
+                            {% for category in stage.tool_categories %}
+                            <div class="category-row" data-category-id="{{ category.id }}">
+                                <div class="category-header clickable" onclick="toggleCategoryExpansion({{ category.id }})">
+                                    <div class="category-connector"></div>
+                                    <div class="category-name">
+                                        {{ category.name }}
+                                        <i class="fas fa-chevron-down category-expand-icon ms-2"></i>
+                                        <small class="text-muted ms-2">({{ category.tools.count() }} tools)</small>
+                                    </div>
                                 </div>
-                                {% endfor %}
+                                <div class="tools-grid expandable-tools" id="category-tools-{{ category.id }}" style="display: none;">
+                                    {% for tool in category.tools if tool.is_active %}
+                                    <div class="tool-item" title="{{ tool.description if tool.description else tool.name }}">
+                                        {{ tool.name }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
                             </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
+                        {% else %}
+                        <div class="no-categories">
+                            <em class="text-muted">No categories defined for this stage</em>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <div class="no-categories">
-                        <em class="text-muted">No categories defined for this stage</em>
-                    </div>
-                    {% endif %}
                     
                     <!-- Flow Arrow to Next Stage -->
                     {% if not loop.last and stage.name != 'TRANSFORM' %}
@@ -200,6 +221,106 @@ function highlightStageConnections(stageNumber) {
     }
 }
 
+// Interactive Stacked Visualization Functions
+function toggleStageExpansion(stageId) {
+    const stageContainer = document.querySelector(`[data-stage-id="${stageId}"]`);
+    const contentElement = document.getElementById(`stage-content-${stageId}`);
+    const expandIcon = stageContainer.querySelector('.expand-icon');
+    
+    if (contentElement.style.display === 'none' || contentElement.style.display === '') {
+        contentElement.style.display = 'block';
+        stageContainer.classList.add('expanded');
+        expandIcon.classList.add('expanded');
+    } else {
+        contentElement.style.display = 'none';
+        stageContainer.classList.remove('expanded');
+        expandIcon.classList.remove('expanded');
+        
+        // Also collapse all categories in this stage
+        const categories = contentElement.querySelectorAll('.expandable-tools');
+        categories.forEach(cat => cat.style.display = 'none');
+        const categoryIcons = contentElement.querySelectorAll('.category-expand-icon');
+        categoryIcons.forEach(icon => icon.classList.remove('expanded'));
+    }
+}
+
+function toggleCategoryExpansion(categoryId) {
+    const toolsElement = document.getElementById(`category-tools-${categoryId}`);
+    const categoryRow = document.querySelector(`[data-category-id="${categoryId}"]`);
+    const expandIcon = categoryRow.querySelector('.category-expand-icon');
+    
+    if (toolsElement.style.display === 'none' || toolsElement.style.display === '') {
+        toolsElement.style.display = 'flex';
+        expandIcon.classList.add('expanded');
+    } else {
+        toolsElement.style.display = 'none';
+        expandIcon.classList.remove('expanded');
+    }
+}
+
+function resetVisualization() {
+    // Collapse all stages
+    document.querySelectorAll('.expandable-content').forEach(content => {
+        content.style.display = 'none';
+    });
+    
+    // Collapse all categories
+    document.querySelectorAll('.expandable-tools').forEach(tools => {
+        tools.style.display = 'none';
+    });
+    
+    // Reset all expand icons
+    document.querySelectorAll('.expand-icon, .category-expand-icon').forEach(icon => {
+        icon.classList.remove('expanded');
+    });
+    
+    // Reset stage containers
+    document.querySelectorAll('.stage-stack-container').forEach(container => {
+        container.classList.remove('expanded');
+    });
+}
+
+function expandAllCategories() {
+    // Show all stage content
+    document.querySelectorAll('.expandable-content').forEach(content => {
+        content.style.display = 'block';
+    });
+    
+    // Mark all stages as expanded
+    document.querySelectorAll('.stage-stack-container').forEach(container => {
+        container.classList.add('expanded');
+    });
+    
+    // Show all stage expand icons as expanded
+    document.querySelectorAll('.expand-icon').forEach(icon => {
+        icon.classList.add('expanded');
+    });
+    
+    // Keep tools collapsed
+    document.querySelectorAll('.expandable-tools').forEach(tools => {
+        tools.style.display = 'none';
+    });
+    
+    document.querySelectorAll('.category-expand-icon').forEach(icon => {
+        icon.classList.remove('expanded');
+    });
+}
+
+function expandAllTools() {
+    // Show all stage content and categories
+    expandAllCategories();
+    
+    // Show all tools
+    document.querySelectorAll('.expandable-tools').forEach(tools => {
+        tools.style.display = 'flex';
+    });
+    
+    // Show all category expand icons as expanded
+    document.querySelectorAll('.category-expand-icon').forEach(icon => {
+        icon.classList.add('expanded');
+    });
+}
+
 // Add CSS filters for mathematical functions (fallback)
 if (typeof Math.cos === 'undefined') {
     // Fallback positions if trigonometry isn't available
@@ -229,11 +350,36 @@ if (typeof Math.cos === 'undefined') {
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.stage-stack-container.expanded {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .stage-header {
     padding: 1rem 1.5rem;
     border-left: 5px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.clickable {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clickable:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.expand-icon, .category-expand-icon {
+    transition: transform 0.3s ease;
+    font-size: 12px;
+}
+
+.expand-icon.expanded, .category-expand-icon.expanded {
+    transform: rotate(180deg);
 }
 
 .stage-number {
@@ -270,6 +416,30 @@ if (typeof Math.cos === 'undefined') {
     display: flex;
     align-items: center;
     border-left: 3px solid #6c757d;
+    transition: background-color 0.3s ease;
+}
+
+.category-header:hover {
+    background: #dee2e6;
+}
+
+.expandable-content {
+    animation: slideDown 0.3s ease-out;
+}
+
+.expandable-tools {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 1000px;
+    }
 }
 
 .category-connector {
