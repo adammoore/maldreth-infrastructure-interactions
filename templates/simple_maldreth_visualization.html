@@ -1,0 +1,295 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}MaLDReTH Official Visualization - PRISM | MaLDReTH II RDA{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 text-primary mb-3">
+                <i class="fas fa-project-diagram me-3"></i>MaLDReTH Research Data Lifecycle
+            </h1>
+            <p class="lead text-muted">
+                Official visualization based on MaLDReTH deliverables showing the 12-stage research data lifecycle with tool mapping
+            </p>
+            <div class="alert alert-info">
+                <small><i class="fas fa-info-circle me-2"></i>
+                Based on MaLDReTH Deliverable D2.1 and D3.1 specifications - Circular lifecycle model with interconnected stages
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simple Circular Visualization -->
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div style="background: linear-gradient(135deg, #2C3E50 0%, #3498DB 30%, #9B59B6 70%, #E74C3C 100%); 
+                        border-radius: 15px; padding: 2rem; min-height: 600px; position: relative;">
+                
+                <!-- Central Circle - Official MaLDReTH Hub -->
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                           width: 180px; height: 180px; background: rgba(255,255,255,0.15); 
+                           border: 4px solid rgba(255,255,255,0.4); border-radius: 50%; 
+                           display: flex; flex-direction: column; align-items: center; justify-content: center;
+                           box-shadow: 0 0 30px rgba(255,255,255,0.2);">
+                    <div style="color: white; font-size: 20px; font-weight: bold; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+                        MaLDReTH<br/>
+                        <span style="font-size: 16px;">Research Data</span><br/>
+                        <span style="font-size: 16px;">Lifecycle</span><br/>
+                        <span style="font-size: 12px; opacity: 0.8;">12 Stages</span>
+                    </div>
+                </div>
+
+                <!-- Interconnection Lines (Based on Official Patterns) -->
+                <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                    {% for stage in stages %}
+                    {% set angle = ((loop.index0 / stages|length) * 360) - 90 %}
+                    {% set x1 = 50 + (25 * (angle | cos)) %}
+                    {% set y1 = 50 + (25 * (angle | sin)) %}
+                    {% set x2 = 50 + (35 * (angle | cos)) %}
+                    {% set y2 = 50 + (35 * (angle | sin)) %}
+                    <line x1="{{ x1 }}%" y1="{{ y1 }}%" x2="{{ x2 }}%" y2="{{ y2 }}%" 
+                          stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-dasharray="5,5"/>
+                    {% endfor %}
+                </svg>
+
+                <!-- Stage Circles -->
+                {% set stage_colors = ['#E74C3C', '#3498DB', '#F1C40F', '#2ECC71', '#F39C12', '#9B59B6', 
+                                      '#1ABC9C', '#E67E22', '#8E44AD', '#2980B9', '#27AE60', '#D35400'] %}
+                
+                {% for stage in stages %}
+                {% set angle = ((loop.index0 / stages|length) * 360) - 90 %}
+                {% set x = 50 + (35 * (angle | cos)) %}
+                {% set y = 50 + (35 * (angle | sin)) %}
+                {% set color = stage_colors[loop.index0 % stage_colors|length] %}
+                {% set stage_data = visualization_data.stages | selectattr('id', 'equalto', stage.id) | first %}
+                {% set tool_count = stage_data.tool_count if stage_data else 0 %}
+                
+                <!-- Stage Circle with Dynamic Sizing -->
+                <div style="position: absolute; 
+                           left: {{ x }}%; top: {{ y }}%; 
+                           transform: translate(-50%, -50%);
+                           width: {{ 70 + (tool_count * 2) if tool_count > 0 else 70 }}px; 
+                           height: {{ 70 + (tool_count * 2) if tool_count > 0 else 70 }}px; 
+                           background: {{ color }}; 
+                           border: 4px solid white; 
+                           border-radius: 50%; 
+                           display: flex; align-items: center; justify-content: center;
+                           cursor: pointer;
+                           transition: all 0.3s ease;
+                           box-shadow: 0 4px 15px rgba(0,0,0,0.3), inset 0 0 0 2px rgba(255,255,255,0.2);"
+                     onmouseover="this.style.transform='translate(-50%, -50%) scale(1.15)'; this.style.boxShadow='0 6px 25px rgba(0,0,0,0.4), inset 0 0 0 3px rgba(255,255,255,0.4)'"
+                     onmouseout="this.style.transform='translate(-50%, -50%) scale(1)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3), inset 0 0 0 2px rgba(255,255,255,0.2)'"
+                     onclick="focusStage('{{ stage.name }}', {{ loop.index }}, {{ tool_count }})"
+                     title="Stage {{ loop.index }}: {{ stage.name }} ({{ tool_count }} tools)">
+                    
+                    <div style="color: white; font-weight: bold; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">
+                        <div style="font-size: 18px;">{{ loop.index }}</div>
+                        {% if tool_count > 0 %}
+                        <div style="font-size: 10px; opacity: 0.9;">{{ tool_count }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Stage Labels -->
+                {% set label_angle = ((loop.index0 / stages|length) * 360) - 90 %}
+                {% set label_x = 50 + (45 * (label_angle | cos)) %}
+                {% set label_y = 50 + (45 * (label_angle | sin)) %}
+                
+                <div style="position: absolute; 
+                           left: {{ label_x }}%; top: {{ label_y }}%; 
+                           transform: translate(-50%, -50%);
+                           color: white; font-size: 12px; font-weight: bold; 
+                           text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+                           max-width: 100px;">
+                    {{ stage.name }}
+                    <br>
+                    <span style="font-size: 10px; color: {{ color }};">
+                        {% set stage_data = visualization_data.stages | selectattr('id', 'equalto', stage.id) | first %}
+                        {{ stage_data.tool_count if stage_data else 0 }} tools
+                    </span>
+                </div>
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Stage Details Table -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <h3 class="text-primary mb-3">Research Data Lifecycle Stages</h3>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Stage</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Tools</th>
+                            <th>Categories</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stage in stages %}
+                        {% set color = stage_colors[loop.index0 % stage_colors|length] %}
+                        <tr style="border-left: 4px solid {{ color }};">
+                            <td>
+                                <span class="badge rounded-pill" style="background-color: {{ color }};">
+                                    {{ stage.position + 1 }}
+                                </span>
+                            </td>
+                            <td><strong>{{ stage.name }}</strong></td>
+                            <td>{{ stage.description[:100] if stage.description else "Research data lifecycle stage" }}...</td>
+                            <td>
+                                {% set stage_data = visualization_data.stages | selectattr('id', 'equalto', stage.id) | first %}
+                                <span class="badge bg-primary">{{ stage_data.tool_count if stage_data else 0 }}</span>
+                            </td>
+                            <td>
+                                {% set categories = stage.categories %}
+                                <span class="badge bg-secondary">{{ categories.count() if categories else 0 }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tool Categories by Stage -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <h3 class="text-primary mb-3">Tool Categories by Lifecycle Stage</h3>
+            <div class="row">
+                {% for stage in stages %}
+                {% if stage.categories %}
+                {% set color = stage_colors[loop.index0 % stage_colors|length] %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100" style="border-left: 4px solid {{ color }};">
+                        <div class="card-header" style="background-color: {{ color }}20;">
+                            <h6 class="mb-0" style="color: {{ color }};">
+                                <strong>{{ stage.position + 1 }}. {{ stage.name }}</strong>
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% for category in stage.categories %}
+                            <div class="mb-2">
+                                <small class="fw-bold">{{ category.name }}</small>
+                                <br>
+                                <small class="text-muted">{{ category.tools.count() }} tools</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Enhanced JavaScript for MaLDReTH interactivity
+function focusStage(stageName, stageNumber, toolCount) {
+    const message = `MaLDReTH Stage ${stageNumber}: ${stageName}\n\nTools Available: ${toolCount}\n\nThis represents the ${stageName.toLowerCase()} phase of the research data lifecycle.\n\nBased on MaLDReTH deliverable specifications for comprehensive tool mapping.`;
+    alert(message);
+    
+    // Highlight connected stages (simplified version of official interconnections)
+    highlightStageConnections(stageNumber);
+}
+
+function highlightStageConnections(stageNumber) {
+    // Remove any existing highlights
+    document.querySelectorAll('.stage-highlight').forEach(el => el.classList.remove('stage-highlight'));
+    
+    // Add highlight class to current stage
+    const currentStage = document.querySelector(`[onclick*="focusStage"][onclick*="${stageNumber}"]`);
+    if (currentStage) {
+        currentStage.classList.add('stage-highlight');
+        
+        // Remove highlight after 3 seconds
+        setTimeout(() => {
+            currentStage.classList.remove('stage-highlight');
+        }, 3000);
+    }
+}
+
+// Add CSS filters for mathematical functions (fallback)
+if (typeof Math.cos === 'undefined') {
+    // Fallback positions if trigonometry isn't available
+    console.log('Using fallback positioning');
+}
+</script>
+
+<!-- Custom CSS for MaLDReTH Official Visualization -->
+<style>
+/* Official MaLDReTH visualization styles */
+.maldreth-stage {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.maldreth-stage:hover {
+    transform: scale(1.15) !important;
+    filter: brightness(1.2);
+}
+
+.stage-highlight {
+    animation: pulseHighlight 1s ease-in-out infinite alternate !important;
+    border: 6px solid #FFD700 !important;
+}
+
+@keyframes pulseHighlight {
+    0% { 
+        box-shadow: 0 6px 25px rgba(255, 215, 0, 0.6), inset 0 0 0 3px rgba(255, 255, 255, 0.8) !important;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    100% { 
+        box-shadow: 0 8px 35px rgba(255, 215, 0, 0.9), inset 0 0 0 5px rgba(255, 255, 255, 1) !important;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 1rem;
+    }
+    
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    /* Adjust stage circles for mobile */
+    [style*="width: 70px"] {
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    /* Adjust central circle for mobile */
+    [style*="width: 180px"] {
+        width: 120px !important;
+        height: 120px !important;
+    }
+}
+
+/* Print styles for academic use */
+@media print {
+    .alert {
+        display: none;
+    }
+    
+    .container-fluid {
+        background: white !important;
+    }
+    
+    [style*="background: linear-gradient"] {
+        background: #f8f9fa !important;
+        border: 2px solid #dee2e6;
+    }
+}
+</style>
+
+{% endblock %}

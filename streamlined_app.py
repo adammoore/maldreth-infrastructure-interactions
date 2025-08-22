@@ -843,6 +843,37 @@ def enhanced_rdl_visualization():
         logger.error(f"Error in enhanced RDL visualization: {e}")
         return render_template('error.html', error=str(e)), 500
 
+@app.route('/simple-maldreth-visualization')
+def simple_maldreth_visualization():
+    """Display simple MaLDReTH visualization based on official deliverable patterns."""
+    try:
+        stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
+        tools = ExemplarTool.query.filter_by(is_active=True).all()
+        
+        # Prepare simplified visualization data
+        visualization_data = {
+            'stages': [],
+            'total_stages': len(stages),
+            'total_tools': len(tools)
+        }
+        
+        # Simple stage data with tool counts
+        for stage in stages:
+            stage_tools = [t for t in tools if t.stage_id == stage.id]
+            stage_data = {
+                'id': stage.id,
+                'tool_count': len(stage_tools)
+            }
+            visualization_data['stages'].append(stage_data)
+        
+        return render_template('simple_maldreth_visualization.html',
+                             stages=stages,
+                             visualization_data=visualization_data)
+                             
+    except Exception as e:
+        logger.error(f"Error in simple MaLDReTH visualization: {e}")
+        return render_template('error.html', error=str(e)), 500
+
 # --- Tool Management Routes ---
 
 @app.route('/add-tool', methods=['GET', 'POST'])
