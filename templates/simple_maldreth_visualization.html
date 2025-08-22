@@ -20,139 +20,79 @@
         </div>
     </div>
 
-    <!-- Simple Circular Visualization -->
+    <!-- MaLDReTH Stacked Nested Visualization -->
     <div class="row justify-content-center">
         <div class="col-12">
-            <div style="background: linear-gradient(135deg, #2C3E50 0%, #3498DB 30%, #9B59B6 70%, #E74C3C 100%); 
-                        border-radius: 15px; padding: 2rem; min-height: 600px; position: relative;">
-                
-                <!-- Title Area (replacing central circle) -->
-                <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
-                           text-align: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                    <h4 style="margin: 0; font-size: 24px; font-weight: bold;">The MaLDReTH</h4>
-                    <h5 style="margin: 5px 0 0 0; font-size: 20px; font-weight: normal;">Research Data Lifecycle</h5>
+            <div class="stacked-lifecycle-container">
+                <div class="lifecycle-header mb-4">
+                    <h3 class="text-center text-white mb-0">MaLDReTH Research Data Lifecycle</h3>
+                    <p class="text-center text-light mb-0">Interactive nested visualization showing stages, categories, and tools</p>
                 </div>
-
-                <!-- Official MaLDReTH Flow Arrows -->
-                <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
-                    <defs>
-                        <marker id="arrowhead" markerWidth="10" markerHeight="7" 
-                                refX="9" refY="3.5" orient="auto">
-                            <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.7)" />
-                        </marker>
-                        <marker id="arrowhead-dashed" markerWidth="10" markerHeight="7" 
-                                refX="9" refY="3.5" orient="auto">
-                            <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.5)" />
-                        </marker>
-                    </defs>
-                    
-                    <!-- Main flow arrows following official MaLDReTH pattern -->
-                    <!-- Fund to Plan -->
-                    <line x1="42%" y1="14%" x2="42%" y2="21%" stroke="rgba(255,255,255,0.8)" stroke-width="3" marker-end="url(#arrowhead)"/>
-                    
-                    <!-- Plan to Collect -->
-                    <line x1="50%" y1="25%" x2="62%" y2="30%" stroke="rgba(255,255,255,0.8)" stroke-width="3" marker-end="url(#arrowhead)"/>
-                    
-                    <!-- Collect to Process -->
-                    <line x1="75%" y1="35%" x2="82%" y2="45%" stroke="rgba(255,255,255,0.8)" stroke-width="3" marker-end="url(#arrowhead)"/>
-                    
-                    <!-- Process to Analyse -->
-                    <line x1="85%" y1="55%" x2="85%" y2="65%" stroke="rgba(255,255,255,0.8)" stroke-width="3" marker-end="url(#arrowhead)"/>
-                    
-                    <!-- Analyse to Store -->
-                    <line x1="80%" y1="75%" x2="75%" y2="82%" stroke="rgba(255,255,255,0.8)" stroke-width="3" marker-end="url(#arrowhead)"/>
-                    
-                    <!-- Store to Publish -->
-                    <line x1="65%" y1="87%" x2="50%" y2="88%" stroke="rgba(255,255,255,0.8)" stroke-width="3" marker-end="url(#arrowhead)"/>
-                    
-                    <!-- Publish to Preserve -->
-                    <line x1="38%" y1="90%" x2="30%" y2="87%" stroke="rgba(255,255,255,0.8)" stroke-width="3" marker-end="url(#arrowhead)"/>
-                    
-                    <!-- Preserve to Share -->
-                    <line x1="22%" y1="82%" x2="17%" y2="75%" stroke="rgba(255,255,255,0.8)" stroke-width="3" marker-end="url(#arrowhead)"/>
-                    
-                    <!-- Share to Access -->
-                    <line x1="15%" y1="65%" x2="15%" y2="55%" stroke="rgba(255,255,255,0.8)" stroke-width="3" marker-end="url(#arrowhead)"/>
-                    
-                    <!-- Access to Transform -->
-                    <line x1="15%" y1="45%" x2="15%" y2="35%" stroke="rgba(255,255,255,0.8)" stroke-width="3" marker-end="url(#arrowhead)"/>
-                    
-                    <!-- Transform to Conceptualise -->
-                    <line x1="15%" y1="32%" x2="15%" y2="37%" stroke="rgba(255,255,255,0.8)" stroke-width="3" marker-end="url(#arrowhead)"/>
-                    
-                    <!-- Conceptualise to Plan -->
-                    <line x1="23%" y1="35%" x2="35%" y2="27%" stroke="rgba(255,255,255,0.8)" stroke-width="3" marker-end="url(#arrowhead)"/>
-                    
-                    <!-- Bidirectional arrows (official MaLDReTH pattern) -->
-                    <defs>
-                        <marker id="arrowhead-bi" markerWidth="8" markerHeight="6" 
-                                refX="4" refY="3" orient="auto">
-                            <polygon points="0 1.5, 8 3, 0 4.5" fill="rgba(255,215,0,0.9)" />
-                        </marker>
-                    </defs>
-                    
-                    <!-- Fund bidirectional connection to Conceptualise -->
-                    <line x1="35%" y1="12%" x2="20%" y2="30%" stroke="rgba(255,215,0,0.7)" stroke-width="2" stroke-dasharray="3,3" marker-start="url(#arrowhead-bi)" marker-end="url(#arrowhead-bi)"/>
-                    
-                    <!-- Store to Access bidirectional -->
-                    <line x1="62%" y1="82%" x2="22%" y2="55%" stroke="rgba(255,215,0,0.7)" stroke-width="2" stroke-dasharray="3,3" marker-start="url(#arrowhead-bi)" marker-end="url(#arrowhead-bi)"/>
-                    
-                    <!-- Process to Share bidirectional -->
-                    <line x1="78%" y1="45%" x2="22%" y2="65%" stroke="rgba(255,215,0,0.7)" stroke-width="2" stroke-dasharray="3,3" marker-start="url(#arrowhead-bi)" marker-end="url(#arrowhead-bi)"/>
-                    
-                    <!-- Analyse to Transform bidirectional -->
-                    <line x1="78%" y1="65%" x2="22%" y2="35%" stroke="rgba(255,215,0,0.7)" stroke-width="2" stroke-dasharray="3,3" marker-start="url(#arrowhead-bi)" marker-end="url(#arrowhead-bi)"/>
-                </svg>
-
-                <!-- Stage Boxes - Official MaLDReTH Layout -->
-                {% set stage_positions = {
-                    'FUND': {'x': 42, 'y': 10, 'color': '#4A90A4', 'text_color': '#FFFFFF'},
-                    'CONCEPTUALISE': {'x': 15, 'y': 35, 'color': '#7FB3D3', 'text_color': '#2C3E50'}, 
-                    'PLAN': {'x': 42, 'y': 25, 'color': '#90C695', 'text_color': '#2C3E50'},
-                    'COLLECT': {'x': 70, 'y': 30, 'color': '#90C695', 'text_color': '#2C3E50'},
-                    'PROCESS': {'x': 85, 'y': 50, 'color': '#90C695', 'text_color': '#2C3E50'},
-                    'ANALYSE': {'x': 85, 'y': 70, 'color': '#90C695', 'text_color': '#2C3E50'},
-                    'STORE': {'x': 70, 'y': 85, 'color': '#90C695', 'text_color': '#2C3E50'},
-                    'PUBLISH': {'x': 42, 'y': 90, 'color': '#7FB3D3', 'text_color': '#2C3E50'},
-                    'PRESERVE': {'x': 25, 'y': 85, 'color': '#7FB3D3', 'text_color': '#2C3E50'},
-                    'SHARE': {'x': 15, 'y': 70, 'color': '#7FB3D3', 'text_color': '#2C3E50'},
-                    'ACCESS': {'x': 15, 'y': 50, 'color': '#7FB3D3', 'text_color': '#2C3E50'},
-                    'TRANSFORM': {'x': 15, 'y': 30, 'color': '#7FB3D3', 'text_color': '#2C3E50'}
-                } %}
                 
                 {% for stage in stages %}
-                {% set pos = stage_positions.get(stage.name, {'x': 50, 'y': 50, 'color': '#90C695'}) %}
-                {% set stage_data = visualization_data.stages | selectattr('id', 'equalto', stage.id) | first %}
-                {% set tool_count = stage_data.tool_count if stage_data else 0 %}
+                {% set stage_color = '#90C695' if stage.name in ['CONCEPTUALISE', 'PLAN', 'COLLECT', 'PROCESS', 'ANALYSE', 'STORE'] else '#7FB3D3' %}
+                {% set stage_color = '#4A90A4' if stage.name == 'FUND' else stage_color %}
                 
-                <!-- Stage Box - Official MaLDReTH Style -->
-                <div style="position: absolute; 
-                           left: {{ pos.x }}%; top: {{ pos.y }}%; 
-                           transform: translate(-50%, -50%);
-                           width: 100px; 
-                           height: 60px; 
-                           background: {{ pos.color }}; 
-                           border: 2px solid #2C3E50; 
-                           border-radius: 8px; 
-                           display: flex; align-items: center; justify-content: center;
-                           cursor: pointer;
-                           transition: all 0.3s ease;
-                           box-shadow: 0 4px 12px rgba(0,0,0,0.2);"
-                     onmouseover="this.style.transform='translate(-50%, -50%) scale(1.05)'; this.style.boxShadow='0 6px 18px rgba(0,0,0,0.3)'"
-                     onmouseout="this.style.transform='translate(-50%, -50%) scale(1)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)'"
-                     onclick="focusStage('{{ stage.name }}', {{ loop.index }}, {{ tool_count }})"
-                     title="Stage {{ loop.index }}: {{ stage.name }} ({{ tool_count }} tools)">
-                    
-                    <div style="color: {{ pos.text_color if pos.text_color else '#2C3E50' }}; font-weight: bold; text-align: center; font-size: 14px;">
-                        {{ stage.name.title() if stage.name != 'FUND' else stage.name }}
-                        {% if tool_count > 0 %}
-                        <div style="font-size: 10px; opacity: 0.8;">({{ tool_count }})</div>
-                        {% endif %}
+                <div class="stage-stack-container mb-3">
+                    <!-- Stage Header -->
+                    <div class="stage-header" style="background-color: {{ stage_color }};">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div class="stage-number me-3">{{ stage.position + 1 }}</div>
+                                <div>
+                                    <h5 class="mb-0 text-white">{{ stage.name.title() }}</h5>
+                                    <small class="text-light">{{ stage.description[:50] if stage.description else 'Research data lifecycle stage' }}...</small>
+                                </div>
+                            </div>
+                            <div class="stage-stats text-white">
+                                <span class="badge bg-light text-dark me-2">
+                                    {% set stage_data = visualization_data.stages | selectattr('id', 'equalto', stage.id) | first %}
+                                    {{ stage_data.tool_count if stage_data else 0 }} tools
+                                </span>
+                                <span class="badge bg-light text-dark">{{ stage.categories.count() }} categories</span>
+                            </div>
+                        </div>
                     </div>
+                    
+                    <!-- Categories and Tools Nested Structure -->
+                    {% if stage.categories %}
+                    <div class="categories-container">
+                        {% for category in stage.categories %}
+                        <div class="category-row">
+                            <div class="category-header">
+                                <div class="category-connector"></div>
+                                <div class="category-name">{{ category.name }}</div>
+                            </div>
+                            <div class="tools-grid">
+                                {% for tool in category.tools if tool.is_active %}
+                                <div class="tool-item" title="{{ tool.description if tool.description else tool.name }}">
+                                    {{ tool.name }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="no-categories">
+                        <em class="text-muted">No categories defined for this stage</em>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Flow Arrow to Next Stage -->
+                    {% if not loop.last and stage.name != 'TRANSFORM' %}
+                    <div class="flow-arrow">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    {% elif stage.name == 'TRANSFORM' %}
+                    <div class="flow-arrow-back">
+                        <i class="fas fa-arrow-up"></i>
+                        <small class="text-muted">Back to Conceptualise</small>
+                    </div>
+                    {% endif %}
                 </div>
-
                 {% endfor %}
-
+                
             </div>
         </div>
     </div>
@@ -267,71 +207,203 @@ if (typeof Math.cos === 'undefined') {
 }
 </script>
 
-<!-- Custom CSS for MaLDReTH Official Visualization -->
+<!-- Custom CSS for MaLDReTH Stacked Visualization -->
 <style>
-/* Official MaLDReTH visualization styles */
-.maldreth-stage {
-    transition: all 0.3s ease;
+/* Stacked Lifecycle Container */
+.stacked-lifecycle-container {
+    background: linear-gradient(135deg, #2C3E50 0%, #3498DB 30%, #9B59B6 70%, #E74C3C 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.lifecycle-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* Stage Stack Styling */
+.stage-stack-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+.stage-header {
+    padding: 1rem 1.5rem;
+    border-left: 5px solid rgba(255, 255, 255, 0.3);
+}
+
+.stage-number {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+/* Categories Container */
+.categories-container {
+    background: #f8f9fa;
+    padding: 0;
+}
+
+.category-row {
+    border-bottom: 1px solid #e9ecef;
+    padding: 0;
+}
+
+.category-row:last-child {
+    border-bottom: none;
+}
+
+.category-header {
+    background: #e9ecef;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    border-left: 3px solid #6c757d;
+}
+
+.category-connector {
+    width: 20px;
+    height: 2px;
+    background: #6c757d;
+    margin-right: 10px;
+    position: relative;
+}
+
+.category-connector::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #6c757d;
+    border-radius: 50%;
+    background: white;
+}
+
+.category-name {
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+}
+
+/* Tools Grid */
+.tools-grid {
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tool-item {
+    background: #6c757d;
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
-.maldreth-stage:hover {
-    transform: scale(1.15) !important;
-    filter: brightness(1.2);
+.tool-item:hover {
+    background: #495057;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.stage-highlight {
-    animation: pulseHighlight 1s ease-in-out infinite alternate !important;
-    border: 6px solid #FFD700 !important;
+/* Flow Arrows */
+.flow-arrow, .flow-arrow-back {
+    text-align: center;
+    padding: 0.5rem;
+    color: white;
+    font-size: 20px;
 }
 
-@keyframes pulseHighlight {
-    0% { 
-        box-shadow: 0 6px 25px rgba(255, 215, 0, 0.6), inset 0 0 0 3px rgba(255, 255, 255, 0.8) !important;
-        transform: translate(-50%, -50%) scale(1.1);
-    }
-    100% { 
-        box-shadow: 0 8px 35px rgba(255, 215, 0, 0.9), inset 0 0 0 5px rgba(255, 255, 255, 1) !important;
-        transform: translate(-50%, -50%) scale(1.2);
-    }
+.flow-arrow-back {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0 0 12px 12px;
 }
 
-/* Responsive adjustments for mobile */
+.no-categories {
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    text-align: center;
+}
+
+/* Stage-specific colors for tools */
+.stage-stack-container:nth-child(odd) .tool-item {
+    background: #90C695;
+}
+
+.stage-stack-container:nth-child(even) .tool-item {
+    background: #7FB3D3;
+}
+
+.stage-stack-container:nth-child(odd) .tool-item:hover {
+    background: #7BA97D;
+}
+
+.stage-stack-container:nth-child(even) .tool-item:hover {
+    background: #6BA3C4;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
-    .container-fluid {
+    .stacked-lifecycle-container {
         padding: 1rem;
     }
     
-    .display-4 {
-        font-size: 2rem;
+    .stage-header {
+        padding: 0.75rem 1rem;
     }
     
-    /* Adjust stage circles for mobile */
-    [style*="width: 70px"] {
-        width: 50px !important;
-        height: 50px !important;
+    .category-header {
+        padding: 0.5rem 1rem;
     }
     
-    /* Adjust central circle for mobile */
-    [style*="width: 180px"] {
-        width: 120px !important;
-        height: 120px !important;
+    .tools-grid {
+        padding: 0.75rem 1rem;
+        gap: 0.3rem;
+    }
+    
+    .tool-item {
+        font-size: 11px;
+        padding: 0.3rem 0.6rem;
+    }
+    
+    .stage-stats {
+        display: none;
     }
 }
 
-/* Print styles for academic use */
+/* Print styles */
 @media print {
-    .alert {
-        display: none;
-    }
-    
-    .container-fluid {
+    .stacked-lifecycle-container {
         background: white !important;
+        border: 2px solid #dee2e6;
     }
     
-    [style*="background: linear-gradient"] {
+    .stage-header {
         background: #f8f9fa !important;
-        border: 2px solid #dee2e6;
+        color: #333 !important;
+    }
+    
+    .tool-item {
+        background: #6c757d !important;
+        color: white !important;
     }
 }
 </style>
