@@ -422,11 +422,12 @@ const stageData = {{ stages | tojson | safe }};
 const toolData = {{ tools | tojson | safe }};
 const interactionData = {{ interactions | tojson | safe }};
 
-// Initialize visualization on page load
+// Initialize insights calculation on page load (doesn't need D3.js)
 document.addEventListener('DOMContentLoaded', function() {
-    initializeVisualization();
     calculateNetworkInsights();
 });
+
+// Note: initializeVisualization() is called from D3.js loading callbacks
 
 function initializeVisualization() {
     // Set up SVG dimensions
@@ -444,6 +445,12 @@ function initializeVisualization() {
 }
 
 function updateVisualization() {
+    // Check if D3.js and SVG are ready
+    if (typeof d3 === 'undefined' || !svg) {
+        console.log('D3.js or SVG not ready yet, skipping visualization update');
+        return;
+    }
+    
     const mode = document.getElementById('view-mode').value;
     currentMode = mode;
     
@@ -791,6 +798,12 @@ function toggleToolDisplay() {
 }
 
 function filterByStage() {
+    // Check if D3.js is loaded
+    if (typeof d3 === 'undefined') {
+        console.log('D3.js not loaded yet, skipping stage filter');
+        return;
+    }
+    
     selectedStage = document.getElementById('filter-stage').value;
     updateVisualization();
 }

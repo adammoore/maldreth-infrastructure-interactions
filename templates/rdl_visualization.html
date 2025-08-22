@@ -552,6 +552,12 @@ function highlightStage(stageId) {
 }
 
 function updateVisualization() {
+    // Check if D3.js is loaded
+    if (typeof d3 === 'undefined') {
+        console.log('D3.js not loaded yet, skipping visualization update');
+        return;
+    }
+    
     const mode = document.getElementById('view-mode').value;
     console.log('Switching to view mode:', mode);
     
@@ -564,6 +570,12 @@ function updateVisualization() {
 }
 
 function filterByStage() {
+    // Check if D3.js is loaded
+    if (typeof d3 === 'undefined') {
+        console.log('D3.js not loaded yet, skipping stage filter');
+        return;
+    }
+    
     const stageId = document.getElementById('filter-stage').value;
     console.log('Filtering by stage:', stageId);
     
@@ -583,13 +595,17 @@ function resetVisualization() {
     document.getElementById('view-mode').value = 'stages';
     document.getElementById('filter-stage').value = '';
     
-    d3.selectAll('.stage-group').style('opacity', 1);
+    // Only reset D3.js elements if D3.js is loaded
+    if (typeof d3 !== 'undefined') {
+        d3.selectAll('.stage-group').style('opacity', 1);
+        initializeCircularVisualization();
+    }
+    
+    // Reset DOM elements (works without D3.js)
     document.querySelectorAll('.stage-node').forEach(node => {
         node.style.opacity = '1';
         node.style.transform = 'scale(1)';
     });
-    
-    initializeCircularVisualization();
 }
 
 function exportVisualization() {
@@ -605,14 +621,11 @@ function exportVisualization() {
     URL.revokeObjectURL(url);
 }
 
-// Initialize visualization on page load
+// Initialize non-D3.js functionality on page load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('RDL Visualization loaded');
+    console.log('RDL Visualization DOM loaded');
     
-    // Initialize circular visualization
-    setTimeout(initializeCircularVisualization, 100);
-    
-    // Add click handlers to stage cards
+    // Add click handlers to stage cards (doesn't need D3.js)
     document.querySelectorAll('.stage-node').forEach(card => {
         card.addEventListener('click', function() {
             const stageId = parseInt(this.getAttribute('data-stage-id'));
@@ -623,5 +636,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Note: initializeCircularVisualization() is called from D3.js loading callbacks
 </script>
 {% endblock %}
