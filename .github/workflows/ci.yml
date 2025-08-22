@@ -52,11 +52,8 @@ jobs:
       
       - name: Deploy to Heroku using API
         run: |
-          # Create a tarball of the source code
-          tar -czf source.tar.gz --exclude='.git' --exclude='node_modules' --exclude='venv' --exclude='__pycache__' .
-          
-          # Deploy using Heroku API
-          curl -X POST "https://api.heroku.com/apps/${{ secrets.HEROKU_APP_NAME }}/builds" \
+          # Deploy using Heroku API with GitHub archive
+          response=$(curl -s -X POST "https://api.heroku.com/apps/${{ secrets.HEROKU_APP_NAME }}/builds" \
             -H "Accept: application/vnd.heroku+json; version=3" \
             -H "Authorization: Bearer ${{ secrets.HEROKU_API_KEY }}" \
             -H "Content-Type: application/json" \
@@ -64,7 +61,15 @@ jobs:
               "source_blob": {
                 "url": "https://github.com/${{ github.repository }}/archive/${{ github.sha }}.tar.gz"
               }
-            }'
+            }')
           
-          echo "✅ Deployment initiated successfully"
-          echo "🌐 Application available at: https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com/"
+          # Check if deployment was successful
+          if echo "$response" | grep -q '"id"'; then
+            echo "✅ Deployment initiated successfully"
+            echo "📦 Build ID: $(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)"
+            echo "🌐 Application available at: https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com/"
+          else
+            echo "❌ Deployment failed"
+            echo "Response: $response"
+            exit 1
+          fi
