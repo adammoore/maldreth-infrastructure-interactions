@@ -15,10 +15,23 @@
         filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
     }
     .lifecycle-flow {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #2C3E50 0%, #3498DB 50%, #9B59B6 100%);
         border-radius: 15px;
         padding: 2rem;
         margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .lifecycle-flow::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>') repeat;
+        opacity: 0.3;
     }
     .stage-card {
         background: rgba(255,255,255,0.95);
@@ -105,20 +118,66 @@
                 </div>
                 
                 <div class="visualization-container" id="main-visualization">
-                    <!-- Stage Flow Visualization -->
+                    <!-- Circular RDL Visualization -->
+                    <div class="row justify-content-center mb-4">
+                        <div class="col-12">
+                            <svg id="lifecycle-circle" width="100%" height="500" viewBox="0 0 800 500">
+                                <!-- Research Data Lifecycle Circle -->
+                                <defs>
+                                    <!-- Define gradients for stages -->
+                                    <linearGradient id="conceptualise-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#E74C3C;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#C0392B;stop-opacity:1" />
+                                    </linearGradient>
+                                    <linearGradient id="plan-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#3498DB;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#2980B9;stop-opacity:1" />
+                                    </linearGradient>
+                                    <linearGradient id="collect-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#2ECC71;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#27AE60;stop-opacity:1" />
+                                    </linearGradient>
+                                    <linearGradient id="process-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#F39C12;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#E67E22;stop-opacity:1" />
+                                    </linearGradient>
+                                    <linearGradient id="analyse-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#9B59B6;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#8E44AD;stop-opacity:1" />
+                                    </linearGradient>
+                                    <linearGradient id="store-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#1ABC9C;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#16A085;stop-opacity:1" />
+                                    </linearGradient>
+                                    <!-- Central RDL circle -->
+                                    <circle id="central-circle" cx="400" cy="250" r="100" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-dasharray="5,5"/>
+                                    <text x="400" y="250" text-anchor="middle" fill="white" font-size="16" font-weight="bold">Research Data</text>
+                                    <text x="400" y="270" text-anchor="middle" fill="white" font-size="16" font-weight="bold">Lifecycle</text>
+                                </defs>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Stage Cards Grid -->
                     <div class="row">
                         {% for stage in stages %}
+                        {% set stage_colors = ['#E74C3C', '#3498DB', '#F1C40F', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C', '#E67E22', '#8E44AD', '#2980B9', '#27AE60', '#D35400'] %}
                         <div class="col-lg-2 col-md-3 col-6 mb-3">
                             <div class="stage-card text-center p-3 h-100 stage-node" 
                                  data-stage-id="{{ stage.id }}"
                                  data-stage-name="{{ stage.name }}"
-                                 data-stage-position="{{ stage.position }}">
+                                 data-stage-position="{{ stage.position }}"
+                                 data-stage-color="{{ stage_colors[loop.index0 % stage_colors|length] }}"
+                                 style="border-left: 4px solid {{ stage_colors[loop.index0 % stage_colors|length] }};">
                                 <div class="stage-number mb-2">
-                                    <span class="badge rounded-circle bg-primary fs-6 p-2" style="width: 40px; height: 40px; line-height: 1.5;">
+                                    <span class="badge rounded-circle fs-6 p-2" 
+                                          style="width: 40px; height: 40px; line-height: 1.5; background-color: {{ stage_colors[loop.index0 % stage_colors|length] }};">
                                         {{ stage.position + 1 }}
                                     </span>
                                 </div>
-                                <h6 class="mb-2 fw-bold text-primary">{{ stage.name }}</h6>
+                                <h6 class="mb-2 fw-bold" style="color: {{ stage_colors[loop.index0 % stage_colors|length] }};">
+                                    {{ stage.name }}
+                                </h6>
                                 <small class="text-muted d-block mb-2">
                                     {% set stage_data = visualization_data.stages | selectattr('id', 'equalto', stage.id) | first %}
                                     {% if stage_data %}
@@ -129,7 +188,7 @@
                                 </small>
                                 <div class="progress" style="height: 4px;">
                                     <div class="progress-bar" 
-                                         style="width: {{ ((loop.index / stages|length) * 100) }}%; background-color: {{ stage.color or '#007bff' }};"></div>
+                                         style="width: {{ ((loop.index / stages|length) * 100) }}%; background-color: {{ stage_colors[loop.index0 % stage_colors|length] }};"></div>
                                 </div>
                             </div>
                         </div>
@@ -256,15 +315,196 @@
     </div>
 </div>
 
-<!-- JavaScript for basic interactivity -->
+<!-- Enhanced JavaScript for RDL Visualization -->
 <script>
-// Placeholder functions for future development
+// Enhanced RDL Visualization with D3.js
+const stageColors = ['#E74C3C', '#3498DB', '#F1C40F', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C', '#E67E22', '#8E44AD', '#2980B9', '#27AE60', '#D35400'];
+
+// RDL stages data for visualization
+const stageData = [
+    {% for stage in stages %}
+    {
+        id: {{ stage.id }},
+        name: "{{ stage.name }}",
+        position: {{ stage.position }},
+        color: "{{ stage_colors[loop.index0 % stage_colors|length] if stage_colors else '#007bff' }}",
+        toolCount: {{ visualization_data.stages | selectattr('id', 'equalto', stage.id) | first | attr('tool_count') if visualization_data.stages | selectattr('id', 'equalto', stage.id) | first else 0 }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+function initializeCircularVisualization() {
+    const svg = d3.select("#lifecycle-circle");
+    const width = 800;
+    const height = 500;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = 180;
+    
+    // Clear existing elements
+    svg.selectAll("g").remove();
+    
+    // Create main group
+    const g = svg.append("g");
+    
+    // Draw central circle
+    g.append("circle")
+        .attr("cx", centerX)
+        .attr("cy", centerY)
+        .attr("r", 80)
+        .attr("fill", "rgba(255,255,255,0.1)")
+        .attr("stroke", "rgba(255,255,255,0.3)")
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", "5,5");
+    
+    // Central text
+    g.append("text")
+        .attr("x", centerX)
+        .attr("y", centerY - 5)
+        .attr("text-anchor", "middle")
+        .attr("fill", "white")
+        .attr("font-size", "16")
+        .attr("font-weight", "bold")
+        .text("Research Data");
+    
+    g.append("text")
+        .attr("x", centerX)
+        .attr("y", centerY + 15)
+        .attr("text-anchor", "middle")
+        .attr("fill", "white")
+        .attr("font-size", "16")
+        .attr("font-weight", "bold")
+        .text("Lifecycle");
+    
+    // Draw stages around the circle
+    stageData.forEach((stage, i) => {
+        const angle = (i / stageData.length) * 2 * Math.PI - Math.PI / 2; // Start from top
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+        
+        // Stage group
+        const stageGroup = g.append("g")
+            .attr("class", "stage-group")
+            .attr("data-stage-id", stage.id)
+            .style("cursor", "pointer");
+        
+        // Stage circle
+        stageGroup.append("circle")
+            .attr("cx", x)
+            .attr("cy", y)
+            .attr("r", 25 + (stage.toolCount * 2))
+            .attr("fill", stage.color)
+            .attr("stroke", "white")
+            .attr("stroke-width", 3)
+            .attr("opacity", 0.8)
+            .on("mouseover", function() {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("r", 35 + (stage.toolCount * 2))
+                    .attr("opacity", 1);
+            })
+            .on("mouseout", function() {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("r", 25 + (stage.toolCount * 2))
+                    .attr("opacity", 0.8);
+            })
+            .on("click", function() {
+                highlightStage(stage.id);
+            });
+        
+        // Stage number
+        stageGroup.append("text")
+            .attr("x", x)
+            .attr("y", y + 5)
+            .attr("text-anchor", "middle")
+            .attr("fill", "white")
+            .attr("font-size", "14")
+            .attr("font-weight", "bold")
+            .text(stage.position + 1);
+        
+        // Stage name (positioned outside circle)
+        const textRadius = radius + 50;
+        const textX = centerX + Math.cos(angle) * textRadius;
+        const textY = centerY + Math.sin(angle) * textRadius;
+        
+        stageGroup.append("text")
+            .attr("x", textX)
+            .attr("y", textY)
+            .attr("text-anchor", "middle")
+            .attr("fill", "white")
+            .attr("font-size", "12")
+            .attr("font-weight", "bold")
+            .text(stage.name.length > 15 ? stage.name.substring(0, 12) + "..." : stage.name);
+        
+        // Tool count badge
+        stageGroup.append("text")
+            .attr("x", textX)
+            .attr("y", textY + 15)
+            .attr("text-anchor", "middle")
+            .attr("fill", stage.color)
+            .attr("font-size", "10")
+            .text(stage.toolCount + " tools");
+        
+        // Connection line from center to stage
+        g.append("line")
+            .attr("x1", centerX + Math.cos(angle) * 85)
+            .attr("y1", centerY + Math.sin(angle) * 85)
+            .attr("x2", x - Math.cos(angle) * 30)
+            .attr("y2", y - Math.sin(angle) * 30)
+            .attr("stroke", "rgba(255,255,255,0.3)")
+            .attr("stroke-width", 1)
+            .attr("stroke-dasharray", "3,3");
+    });
+    
+    // Add interactive connections between adjacent stages
+    for (let i = 0; i < stageData.length; i++) {
+        const currentAngle = (i / stageData.length) * 2 * Math.PI - Math.PI / 2;
+        const nextAngle = ((i + 1) % stageData.length / stageData.length) * 2 * Math.PI - Math.PI / 2;
+        
+        const x1 = centerX + Math.cos(currentAngle) * radius;
+        const y1 = centerY + Math.sin(currentAngle) * radius;
+        const x2 = centerX + Math.cos(nextAngle) * radius;
+        const y2 = centerY + Math.sin(nextAngle) * radius;
+        
+        g.append("path")
+            .attr("d", `M ${x1} ${y1} Q ${centerX} ${centerY} ${x2} ${y2}`)
+            .attr("stroke", "rgba(255,255,255,0.2)")
+            .attr("stroke-width", 2)
+            .attr("fill", "none")
+            .attr("stroke-dasharray", "5,5");
+    }
+}
+
+function highlightStage(stageId) {
+    // Update dropdown
+    document.getElementById('filter-stage').value = stageId;
+    
+    // Highlight in circular visualization
+    d3.selectAll('.stage-group').style('opacity', 0.3);
+    d3.select(`[data-stage-id="${stageId}"]`).style('opacity', 1);
+    
+    // Highlight stage cards
+    document.querySelectorAll('.stage-node').forEach(node => {
+        if (node.dataset.stageId === stageId.toString()) {
+            node.style.opacity = '1';
+            node.style.transform = 'scale(1.05)';
+        } else {
+            node.style.opacity = '0.5';
+            node.style.transform = 'scale(0.95)';
+        }
+    });
+}
+
 function updateVisualization() {
     const mode = document.getElementById('view-mode').value;
     console.log('Switching to view mode:', mode);
     
-    // Show development notice
-    if (mode !== 'stages') {
+    if (mode === 'stages') {
+        initializeCircularVisualization();
+    } else {
         alert('This view mode is under development. Currently showing stage overview.');
         document.getElementById('view-mode').value = 'stages';
     }
@@ -274,44 +514,59 @@ function filterByStage() {
     const stageId = document.getElementById('filter-stage').value;
     console.log('Filtering by stage:', stageId);
     
-    // Basic highlighting for selected stage
-    document.querySelectorAll('.stage-node').forEach(node => {
-        if (stageId === '' || node.dataset.stageId === stageId) {
+    if (stageId) {
+        highlightStage(parseInt(stageId));
+    } else {
+        // Reset all highlighting
+        d3.selectAll('.stage-group').style('opacity', 1);
+        document.querySelectorAll('.stage-node').forEach(node => {
             node.style.opacity = '1';
             node.style.transform = 'scale(1)';
-        } else {
-            node.style.opacity = '0.5';
-            node.style.transform = 'scale(0.95)';
-        }
-    });
+        });
+    }
 }
 
 function resetVisualization() {
     document.getElementById('view-mode').value = 'stages';
     document.getElementById('filter-stage').value = '';
     
+    d3.selectAll('.stage-group').style('opacity', 1);
     document.querySelectorAll('.stage-node').forEach(node => {
         node.style.opacity = '1';
         node.style.transform = 'scale(1)';
     });
+    
+    initializeCircularVisualization();
 }
 
 function exportVisualization() {
-    alert('Export functionality is under development. Future versions will support PNG, SVG, and PDF exports.');
+    // Simple SVG export
+    const svgElement = document.getElementById('lifecycle-circle');
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const svgBlob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"});
+    const url = URL.createObjectURL(svgBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'maldreth-rdl-visualization.svg';
+    link.click();
+    URL.revokeObjectURL(url);
 }
 
-// Add click handlers to stage nodes
+// Initialize visualization on page load
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.stage-node').forEach(node => {
-        node.addEventListener('click', function() {
-            const stageName = this.dataset.stageName;
-            const stageId = this.dataset.stageId;
+    console.log('RDL Visualization loaded');
+    
+    // Initialize circular visualization
+    setTimeout(initializeCircularVisualization, 100);
+    
+    // Add click handlers to stage cards
+    document.querySelectorAll('.stage-node').forEach(card => {
+        card.addEventListener('click', function() {
+            const stageId = parseInt(this.getAttribute('data-stage-id'));
+            const stageName = this.getAttribute('data-stage-name');
             
-            // Future: Navigate to detailed stage view
-            console.log('Clicked stage:', stageName, 'ID:', stageId);
-            
-            // For now, show basic info
-            alert(`${stageName} (Stage ${parseInt(this.dataset.stagePosition) + 1})\\n\\nClick interaction coming in future development!`);
+            highlightStage(stageId);
+            console.log(`Selected stage: ${stageName} (ID: ${stageId})`);
         });
     });
 });

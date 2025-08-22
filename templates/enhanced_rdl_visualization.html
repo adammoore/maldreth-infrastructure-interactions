@@ -8,12 +8,24 @@
 <script src="https://unpkg.com/d3-force@3"></script>
 <style>
     .visualization-container {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #2C3E50 0%, #3498DB 30%, #9B59B6 70%, #E74C3C 100%);
         border-radius: 15px;
         padding: 2rem;
         margin-bottom: 2rem;
-        min-height: 600px;
+        min-height: 700px;
         position: relative;
+        overflow: hidden;
+    }
+    
+    .visualization-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="enhanced-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23enhanced-grid)"/></svg>') repeat;
+        opacity: 0.4;
     }
     
     .stage-node {
@@ -388,6 +400,36 @@ function createCircularLayout() {
     const centerY = height / 2;
     const radius = Math.min(width, height) / 3;
     
+    // MaLDReTH stage colors
+    const stageColors = ['#E74C3C', '#3498DB', '#F1C40F', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C', '#E67E22', '#8E44AD', '#2980B9', '#27AE60', '#D35400'];
+    
+    // Draw central RDL hub
+    svg.append('circle')
+        .attr('cx', centerX)
+        .attr('cy', centerY)
+        .attr('r', 60)
+        .attr('fill', 'rgba(255,255,255,0.1)')
+        .attr('stroke', 'rgba(255,255,255,0.3)')
+        .attr('stroke-width', 3)
+        .attr('stroke-dasharray', '5,5');
+    
+    svg.append('text')
+        .attr('x', centerX)
+        .attr('y', centerY - 5)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .attr('font-size', '14')
+        .attr('font-weight', 'bold')
+        .text('MaLDReTH');
+    
+    svg.append('text')
+        .attr('x', centerX)
+        .attr('y', centerY + 15)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .attr('font-size', '12')
+        .text('Lifecycle');
+    
     // Position stages in a circle
     const angleStep = (2 * Math.PI) / stageData.length;
     
@@ -395,6 +437,8 @@ function createCircularLayout() {
         const angle = index * angleStep - Math.PI / 2; // Start from top
         const x = centerX + radius * Math.cos(angle);
         const y = centerY + radius * Math.sin(angle);
+        const stageColor = stageColors[index % stageColors.length];
+        const toolCount = stage.tool_count || 0;
         
         // Create stage node
         const stageGroup = svg.append('g')
@@ -402,56 +446,97 @@ function createCircularLayout() {
             .attr('transform', `translate(${x}, ${y})`)
             .style('cursor', 'pointer')
             .on('click', () => focusOnStage(stage.id))
-            .on('mouseover', (event) => showTooltip(event, `${stage.name}: ${stage.tools ? stage.tools.length : 0} tools`))
+            .on('mouseover', (event) => showTooltip(event, `${stage.name}<br/>${toolCount} tools<br/>Stage ${stage.position + 1} of 12`))
             .on('mouseout', hideTooltip);
         
-        // Stage circle
+        // Stage circle with dynamic size based on tool count
         stageGroup.append('circle')
-            .attr('r', 25)
-            .attr('fill', stage.color || '#007bff')
+            .attr('r', 20 + Math.min(toolCount * 3, 25))
+            .attr('fill', stageColor)
             .attr('stroke', 'white')
-            .attr('stroke-width', 3);
+            .attr('stroke-width', 3)
+            .attr('opacity', 0.9)
+            .transition()
+            .duration(1000)
+            .delay(index * 100)
+            .attr('opacity', 0.8);
         
         // Stage number
         stageGroup.append('text')
-            .attr('class', 'stage-label')
-            .attr('y', 5)
+            .attr('text-anchor', 'middle')
+            .attr('dy', '0.35em')
+            .attr('fill', 'white')
+            .attr('font-size', '14')
+            .attr('font-weight', 'bold')
             .text(stage.position + 1);
         
-        // Stage name
-        stageGroup.append('text')
-            .attr('class', 'stage-label')
-            .attr('y', 45)
-            .attr('font-size', '10px')
-            .text(stage.name);
+        // Stage name around the outside
+        const labelRadius = radius + 80;
+        const labelX = centerX + labelRadius * Math.cos(angle);
+        const labelY = centerY + labelRadius * Math.sin(angle);
         
-        // Draw connections to next stage
-        if (index < stageData.length - 1) {
-            const nextAngle = (index + 1) * angleStep - Math.PI / 2;
-            const nextX = centerX + radius * Math.cos(nextAngle);
-            const nextY = centerY + radius * Math.sin(nextAngle);
-            
-            svg.append('line')
-                .attr('class', 'connection-line')
-                .attr('x1', x)
-                .attr('y1', y)
-                .attr('x2', nextX)
-                .attr('y2', nextY);
-        }
+        svg.append('text')
+            .attr('x', labelX)
+            .attr('y', labelY)
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'white')
+            .attr('font-size', '11')
+            .attr('font-weight', 'bold')
+            .text(stage.name.length > 15 ? stage.name.substring(0, 12) + "..." : stage.name)
+            .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.7)');
         
-        // Connect last stage to first
-        if (index === stageData.length - 1) {
-            const firstX = centerX + radius * Math.cos(-Math.PI / 2);
-            const firstY = centerY + radius * Math.sin(-Math.PI / 2);
-            
-            svg.append('line')
-                .attr('class', 'connection-line')
-                .attr('x1', x)
-                .attr('y1', y)
-                .attr('x2', firstX)
-                .attr('y2', firstY);
-        }
+        // Tool count indicator
+        svg.append('text')
+            .attr('x', labelX)
+            .attr('y', labelY + 15)
+            .attr('text-anchor', 'middle')
+            .attr('fill', stageColor)
+            .attr('font-size', '10')
+            .text(`${toolCount} tools`)
+            .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.7)');
+        
+        // Connection to center
+        svg.append('line')
+            .attr('x1', centerX + 65 * Math.cos(angle))
+            .attr('y1', centerY + 65 * Math.sin(angle))
+            .attr('x2', x - (25 + Math.min(toolCount * 3, 25)) * Math.cos(angle))
+            .attr('y2', y - (25 + Math.min(toolCount * 3, 25)) * Math.sin(angle))
+            .attr('stroke', 'rgba(255,255,255,0.3)')
+            .attr('stroke-width', 2)
+            .attr('stroke-dasharray', '3,3')
+            .attr('opacity', 0)
+            .transition()
+            .duration(1000)
+            .delay(index * 150)
+            .attr('opacity', 1);
     });
+    
+    // Draw lifecycle flow connections between adjacent stages
+    for (let i = 0; i < stageData.length; i++) {
+        const currentAngle = i * angleStep - Math.PI / 2;
+        const nextAngle = ((i + 1) % stageData.length) * angleStep - Math.PI / 2;
+        
+        const x1 = centerX + radius * Math.cos(currentAngle);
+        const y1 = centerY + radius * Math.sin(currentAngle);
+        const x2 = centerX + radius * Math.cos(nextAngle);
+        const y2 = centerY + radius * Math.sin(nextAngle);
+        
+        // Create curved path between stages
+        const midX = centerX + (radius * 0.7) * Math.cos((currentAngle + nextAngle) / 2);
+        const midY = centerY + (radius * 0.7) * Math.sin((currentAngle + nextAngle) / 2);
+        
+        svg.append('path')
+            .attr('d', `M ${x1} ${y1} Q ${midX} ${midY} ${x2} ${y2}`)
+            .attr('stroke', 'rgba(255,255,255,0.2)')
+            .attr('stroke-width', 2)
+            .attr('fill', 'none')
+            .attr('stroke-dasharray', '5,5')
+            .attr('opacity', 0)
+            .transition()
+            .duration(1500)
+            .delay(i * 200)
+            .attr('opacity', 1);
+    }
     
     // Add tools if enabled
     if (showToolsMode !== 'none') {
