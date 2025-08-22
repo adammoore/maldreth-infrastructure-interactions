@@ -52,21 +52,27 @@ jobs:
       
       - name: Install Heroku CLI
         run: |
-          curl https://cli-assets.heroku.com/install.sh | sh
+          curl https://cli-assets.heroku.com/install-ubuntu.sh | sh
           
-      - name: Login to Heroku
+      - name: Configure Heroku credentials
         run: |
-          echo "${{ secrets.HEROKU_API_KEY }}" | heroku auth:token
+          cat > ~/.netrc <<EOF
+          machine api.heroku.com
+            login ${{ secrets.HEROKU_EMAIL }}
+            password ${{ secrets.HEROKU_API_KEY }}
+          machine git.heroku.com
+            login ${{ secrets.HEROKU_EMAIL }}
+            password ${{ secrets.HEROKU_API_KEY }}
+          EOF
+          chmod 600 ~/.netrc
           
-      - name: Add Heroku remote
+      - name: Add Heroku remote and deploy
         run: |
           heroku git:remote --app ${{ secrets.HEROKU_APP_NAME }}
-          
-      - name: Deploy to Heroku
-        run: |
           git push heroku main --force
           
       - name: Verify deployment
         run: |
           heroku ps --app ${{ secrets.HEROKU_APP_NAME }}
           echo "✅ Deployment completed successfully"
+          echo "🌐 Application available at: https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com/"
