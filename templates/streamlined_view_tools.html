@@ -232,11 +232,60 @@
 </div>
 
 <script>
-// Auto-submit form when checkbox is changed
+// Auto-submit form when checkbox is changed and handle stage-category filtering
 document.addEventListener('DOMContentLoaded', function() {
     const autoCreatedCheckbox = document.getElementById('auto_created');
+    const stageSelect = document.getElementById('stage');
+    const categorySelect = document.getElementById('category');
+    
     if (autoCreatedCheckbox) {
         autoCreatedCheckbox.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    }
+    
+    // Handle stage selection change - filter categories and auto-submit
+    if (stageSelect && categorySelect) {
+        // Store all categories with their stage associations
+        const allCategories = [];
+        {% for category in all_categories %}
+            allCategories.push({
+                id: {{ category.id }},
+                name: "{{ category.name }}",
+                stage_id: {{ category.stage_id }}
+            });
+        {% endfor %}
+        
+        stageSelect.addEventListener('change', function() {
+            const selectedStageId = this.value;
+            
+            // Clear and repopulate category dropdown
+            categorySelect.innerHTML = '<option value="">All Categories</option>';
+            
+            if (selectedStageId) {
+                // Filter categories for selected stage
+                const filteredCategories = allCategories.filter(cat => 
+                    cat.stage_id == selectedStageId
+                );
+                
+                filteredCategories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    categorySelect.appendChild(option);
+                });
+            } else {
+                // Show all categories if no stage selected
+                allCategories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    categorySelect.appendChild(option);
+                });
+            }
+            
+            // Reset category selection and submit form
+            categorySelect.value = '';
             this.closest('form').submit();
         });
     }

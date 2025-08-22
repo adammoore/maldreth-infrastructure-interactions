@@ -1009,12 +1009,19 @@ def view_tools():
         
         tools = query.order_by(ExemplarTool.name).all()
         stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
-        categories = ToolCategory.query.all()
+        
+        # Get all categories for JavaScript filtering, but filter displayed ones
+        all_categories = ToolCategory.query.order_by(ToolCategory.name).all()
+        if stage_filter:
+            displayed_categories = [cat for cat in all_categories if str(cat.stage_id) == stage_filter]
+        else:
+            displayed_categories = all_categories
         
         return render_template('streamlined_view_tools.html',
                              tools=tools,
                              stages=stages,
-                             categories=categories,
+                             categories=displayed_categories,
+                             all_categories=all_categories,  # For JavaScript
                              current_stage=stage_filter,
                              current_category=category_filter,
                              current_search=search,
