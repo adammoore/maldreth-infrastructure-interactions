@@ -49,15 +49,15 @@
                                     {% set stage_data = visualization_data.stages | selectattr('id', 'equalto', stage.id) | first %}
                                     {{ stage_data.tool_count if stage_data else 0 }} tools
                                 </span>
-                                <span class="badge bg-light text-dark">{{ stage.categories.count() }} categories</span>
+                                <span class="badge bg-light text-dark">{{ stage.tool_categories.count() }} categories</span>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Categories and Tools Nested Structure -->
-                    {% if stage.categories %}
+                    {% if stage.tool_categories %}
                     <div class="categories-container">
-                        {% for category in stage.categories %}
+                        {% for category in stage.tool_categories %}
                         <div class="category-row">
                             <div class="category-header">
                                 <div class="category-connector"></div>
@@ -129,7 +129,7 @@
                                 <span class="badge bg-primary">{{ stage_data.tool_count if stage_data else 0 }}</span>
                             </td>
                             <td>
-                                {% set categories = stage.categories %}
+                                {% set categories = stage.tool_categories %}
                                 <span class="badge bg-secondary">{{ categories.count() if categories else 0 }}</span>
                             </td>
                         </tr>
@@ -147,7 +147,7 @@
             <div class="row">
                 {% set stage_colors = ['#90C695', '#7FB3D3', '#4A90A4', '#90C695', '#7FB3D3', '#4A90A4', '#90C695', '#7FB3D3', '#4A90A4', '#90C695', '#7FB3D3', '#4A90A4'] %}
                 {% for stage in stages %}
-                {% if stage.categories %}
+                {% if stage.tool_categories %}
                 {% set color = stage_colors[loop.index0 % stage_colors|length] %}
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="card h-100" style="border-left: 4px solid {{ color }};">
@@ -157,7 +157,7 @@
                             </h6>
                         </div>
                         <div class="card-body">
-                            {% for category in stage.categories %}
+                            {% for category in stage.tool_categories %}
                             <div class="mb-2">
                                 <small class="fw-bold">{{ category.name }}</small>
                                 <br>
