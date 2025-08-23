@@ -25,28 +25,35 @@
         <!-- Circular Overview -->
         <div class="col-lg-5">
             <div class="circular-overview-container">
-                <div class="circular-header mb-3">
-                    <h4 class="text-center text-white mb-0">Circular Lifecycle Overview</h4>
-                    <p class="text-center text-light mb-0 small">Click stages to explore in detail →</p>
+                <div class="circular-header mb-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="text-white mb-0">Official MaLDReTH Flow</h4>
+                        <p class="text-light mb-0 small">Based on deliverable diagram</p>
+                    </div>
+                    <button class="btn btn-outline-light btn-sm" onclick="toggleCircularView()" id="toggle-circular-btn">
+                        <i class="fas fa-eye-slash me-1"></i>Hide
+                    </button>
                 </div>
                 
                 <!-- Circular SVG Visualization -->
-                <div class="circular-viz-wrapper" style="position: relative; height: 400px;">
-                    <svg id="circular-lifecycle" width="100%" height="100%" viewBox="0 0 400 400">
+                <div id="circular-viz-container" class="circular-viz-wrapper" style="position: relative; height: 500px;">
+                    <svg id="circular-lifecycle" width="100%" height="100%" viewBox="0 0 500 500">
                         <defs>
-                            <marker id="circle-arrow" markerWidth="8" markerHeight="6" 
-                                    refX="7" refY="3" orient="auto">
-                                <polygon points="0 0, 8 3, 0 6" fill="rgba(255,255,255,0.8)" />
+                            <marker id="arrow-main" markerWidth="10" markerHeight="7" 
+                                    refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.9)" />
+                            </marker>
+                            <marker id="arrow-reverse" markerWidth="10" markerHeight="7" 
+                                    refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,215,0,0.9)" />
                             </marker>
                         </defs>
                         
-                        <!-- Central Circle -->
-                        <circle cx="200" cy="200" r="60" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-                        <text x="200" y="190" text-anchor="middle" fill="white" font-size="14" font-weight="bold">MaLDReTH</text>
-                        <text x="200" y="210" text-anchor="middle" fill="white" font-size="12">Research Data</text>
-                        <text x="200" y="225" text-anchor="middle" fill="white" font-size="12">Lifecycle</text>
+                        <!-- Title -->
+                        <text x="250" y="470" text-anchor="middle" fill="white" font-size="16" font-weight="bold">The MaLDReTH</text>
+                        <text x="250" y="490" text-anchor="middle" fill="white" font-size="14">Research Data Lifecycle</text>
                         
-                        <!-- Stage circles will be added by JavaScript -->
+                        <!-- Stage nodes and connections will be added by JavaScript -->
                     </svg>
                 </div>
             </div>
@@ -261,18 +268,24 @@ function highlightStageConnections(stageNumber) {
 
 // Interactive Stacked Visualization Functions
 function toggleStageExpansion(stageId) {
-    const stageContainer = document.querySelector(`[data-stage-id="${stageId}"]`);
+    const stageContainer = document.querySelector(`[data-stage-id="${stageId}"].stage-stack-container`);
     const contentElement = document.getElementById(`stage-content-${stageId}`);
+    
+    if (!stageContainer || !contentElement) {
+        console.warn(`Stage container or content not found for stage ID: ${stageId}`);
+        return;
+    }
+    
     const expandIcon = stageContainer.querySelector('.expand-icon');
     
     if (contentElement.style.display === 'none' || contentElement.style.display === '') {
         contentElement.style.display = 'block';
         stageContainer.classList.add('expanded');
-        expandIcon.classList.add('expanded');
+        if (expandIcon) expandIcon.classList.add('expanded');
     } else {
         contentElement.style.display = 'none';
         stageContainer.classList.remove('expanded');
-        expandIcon.classList.remove('expanded');
+        if (expandIcon) expandIcon.classList.remove('expanded');
         
         // Also collapse all categories in this stage
         const categories = contentElement.querySelectorAll('.expandable-tools');
@@ -359,88 +372,123 @@ function expandAllTools() {
     });
 }
 
-// Initialize circular visualization
+// Initialize circular visualization based on official MaLDReTH diagram
 function initializeCircularVisualization() {
     const stages = {{ stages_json | tojson | safe }};
     const svg = document.getElementById('circular-lifecycle');
     
+    if (!svg) {
+        console.error('SVG element not found');
+        return;
+    }
+    
+    // Official MaLDReTH stage positions matching the provided diagram
+    const stagePositions = {
+        'FUND': { x: 250, y: 80, width: 80, height: 50 },
+        'CONCEPTUALISE': { x: 80, y: 160, width: 100, height: 50 },
+        'PLAN': { x: 250, y: 140, width: 80, height: 50 },
+        'COLLECT': { x: 400, y: 160, width: 80, height: 50 },
+        'PROCESS': { x: 420, y: 240, width: 80, height: 50 },
+        'ANALYSE': { x: 420, y: 320, width: 80, height: 50 },
+        'STORE': { x: 400, y: 400, width: 80, height: 50 },
+        'PUBLISH': { x: 250, y: 420, width: 80, height: 50 },
+        'PRESERVE': { x: 150, y: 400, width: 80, height: 50 },
+        'SHARE': { x: 80, y: 350, width: 80, height: 50 },
+        'ACCESS': { x: 80, y: 270, width: 80, height: 50 },
+        'TRANSFORM': { x: 80, y: 200, width: 80, height: 50 }
+    };
+    
+    // Create stage rectangles with names
     stages.forEach((stage, index) => {
-        const angle = (index * 360 / stages.length) - 90; // Start from top
-        const radius = 130;
-        const centerX = 200;
-        const centerY = 200;
+        const pos = stagePositions[stage.name];
+        if (!pos) return;
         
-        const x = centerX + radius * Math.cos(angle * Math.PI / 180);
-        const y = centerY + radius * Math.sin(angle * Math.PI / 180);
+        const stageColor = stage.name === 'FUND' ? '#4A90A4' : 
+                          ['CONCEPTUALISE', 'PLAN', 'COLLECT', 'PROCESS', 'ANALYSE', 'STORE'].includes(stage.name) ? '#90C695' : '#7FB3D3';
         
-        // Stage circle
-        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('cx', x);
-        circle.setAttribute('cy', y);
-        circle.setAttribute('r', '15');
-        circle.setAttribute('fill', stage.name === 'FUND' ? '#4A90A4' : 
-                          ['CONCEPTUALISE', 'PLAN', 'COLLECT', 'PROCESS', 'ANALYSE', 'STORE'].includes(stage.name) ? '#90C695' : '#7FB3D3');
-        circle.setAttribute('stroke', 'rgba(255,255,255,0.8)');
-        circle.setAttribute('stroke-width', '2');
-        circle.setAttribute('class', 'circular-stage-node');
-        circle.setAttribute('data-stage-id', stage.id);
-        circle.style.cursor = 'pointer';
-        circle.onclick = () => {
+        // Stage rectangle
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', pos.x - pos.width/2);
+        rect.setAttribute('y', pos.y - pos.height/2);
+        rect.setAttribute('width', pos.width);
+        rect.setAttribute('height', pos.height);
+        rect.setAttribute('fill', stageColor);
+        rect.setAttribute('stroke', 'rgba(255,255,255,0.8)');
+        rect.setAttribute('stroke-width', '2');
+        rect.setAttribute('rx', '8');
+        rect.setAttribute('class', 'circular-stage-node');
+        rect.setAttribute('data-stage-id', stage.id);
+        rect.setAttribute('data-stage-name', stage.name);
+        rect.style.cursor = 'pointer';
+        rect.onclick = () => {
             highlightCircularStage(stage.id);
-            toggleStageExpansion(stage.id);
+            const stageElement = document.querySelector(`[data-stage-id="${stage.id}"].stage-stack-container`);
+            if (stageElement) {
+                toggleStageExpansion(stage.id);
+                stageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         };
-        svg.appendChild(circle);
+        svg.appendChild(rect);
         
-        // Stage number
+        // Stage name text
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', x);
-        text.setAttribute('y', y + 4);
+        text.setAttribute('x', pos.x);
+        text.setAttribute('y', pos.y + 5);
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('fill', 'white');
         text.setAttribute('font-size', '12');
         text.setAttribute('font-weight', 'bold');
-        text.textContent = stage.position + 1;
+        text.textContent = stage.name.charAt(0).toUpperCase() + stage.name.slice(1).toLowerCase();
         text.style.pointerEvents = 'none';
         svg.appendChild(text);
+    });
+    
+    // Add official flow connections
+    const connections = [
+        // Main flow (solid arrows)
+        { from: 'FUND', to: 'PLAN', type: 'main' },
+        { from: 'CONCEPTUALISE', to: 'PLAN', type: 'main' },
+        { from: 'PLAN', to: 'COLLECT', type: 'main' },
+        { from: 'COLLECT', to: 'PROCESS', type: 'main' },
+        { from: 'PROCESS', to: 'ANALYSE', type: 'main' },
+        { from: 'ANALYSE', to: 'STORE', type: 'main' },
+        { from: 'STORE', to: 'PUBLISH', type: 'main' },
+        { from: 'PUBLISH', to: 'PRESERVE', type: 'main' },
+        { from: 'PRESERVE', to: 'SHARE', type: 'main' },
+        { from: 'SHARE', to: 'ACCESS', type: 'main' },
+        { from: 'ACCESS', to: 'TRANSFORM', type: 'main' },
+        { from: 'TRANSFORM', to: 'CONCEPTUALISE', type: 'main' },
         
-        // Connection arrow to next stage
-        if (index < stages.length - 1) {
-            const nextAngle = ((index + 1) * 360 / stages.length) - 90;
-            const nextX = centerX + radius * Math.cos(nextAngle * Math.PI / 180);
-            const nextY = centerY + radius * Math.sin(nextAngle * Math.PI / 180);
-            
+        // Bidirectional connections (dashed arrows)
+        { from: 'COLLECT', to: 'PROCESS', type: 'bidirectional' },
+        { from: 'PROCESS', to: 'ANALYSE', type: 'bidirectional' },
+        { from: 'ANALYSE', to: 'STORE', type: 'bidirectional' }
+    ];
+    
+    connections.forEach(conn => {
+        const fromPos = stagePositions[conn.from];
+        const toPos = stagePositions[conn.to];
+        
+        if (fromPos && toPos) {
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', x + 12 * Math.cos((angle + 30) * Math.PI / 180));
-            line.setAttribute('y1', y + 12 * Math.sin((angle + 30) * Math.PI / 180));
-            line.setAttribute('x2', nextX - 12 * Math.cos((nextAngle - 30) * Math.PI / 180));
-            line.setAttribute('y2', nextY - 12 * Math.sin((nextAngle - 30) * Math.PI / 180));
-            line.setAttribute('stroke', 'rgba(255,255,255,0.6)');
+            line.setAttribute('x1', fromPos.x);
+            line.setAttribute('y1', fromPos.y);
+            line.setAttribute('x2', toPos.x);
+            line.setAttribute('y2', toPos.y);
+            
+            if (conn.type === 'bidirectional') {
+                line.setAttribute('stroke', 'rgba(255,215,0,0.8)');
+                line.setAttribute('stroke-dasharray', '5,5');
+                line.setAttribute('marker-end', 'url(#arrow-reverse)');
+            } else {
+                line.setAttribute('stroke', 'rgba(255,255,255,0.7)');
+                line.setAttribute('marker-end', 'url(#arrow-main)');
+            }
+            
             line.setAttribute('stroke-width', '2');
-            line.setAttribute('marker-end', 'url(#circle-arrow)');
             svg.appendChild(line);
         }
     });
-    
-    // Closing arrow from last to first stage
-    if (stages.length > 0) {
-        const firstAngle = -90;
-        const lastAngle = ((stages.length - 1) * 360 / stages.length) - 90;
-        const firstX = centerX + radius * Math.cos(firstAngle * Math.PI / 180);
-        const firstY = centerY + radius * Math.sin(firstAngle * Math.PI / 180);
-        const lastX = centerX + radius * Math.cos(lastAngle * Math.PI / 180);
-        const lastY = centerY + radius * Math.sin(lastAngle * Math.PI / 180);
-        
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', lastX + 12 * Math.cos((lastAngle + 30) * Math.PI / 180));
-        line.setAttribute('y1', lastY + 12 * Math.sin((lastAngle + 30) * Math.PI / 180));
-        line.setAttribute('x2', firstX - 12 * Math.cos((firstAngle - 30) * Math.PI / 180));
-        line.setAttribute('y2', firstY - 12 * Math.sin((firstAngle - 30) * Math.PI / 180));
-        line.setAttribute('stroke', 'rgba(255,215,0,0.8)');
-        line.setAttribute('stroke-width', '2');
-        line.setAttribute('stroke-dasharray', '3,3');
-        line.setAttribute('marker-end', 'url(#circle-arrow)');
-        svg.appendChild(line);
-    }
 }
 
 function highlightCircularStage(stageId) {
@@ -455,6 +503,21 @@ function highlightCircularStage(stageId) {
     if (currentNode) {
         currentNode.setAttribute('stroke-width', '4');
         currentNode.setAttribute('stroke', '#FFD700');
+    }
+}
+
+function toggleCircularView() {
+    const container = document.getElementById('circular-viz-container');
+    const button = document.getElementById('toggle-circular-btn');
+    
+    if (!container || !button) return;
+    
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        button.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide';
+    } else {
+        container.style.display = 'none';
+        button.innerHTML = '<i class="fas fa-eye me-1"></i>Show';
     }
 }
 
