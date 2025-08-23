@@ -44,8 +44,8 @@
                                 <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.9)" />
                             </marker>
                             <marker id="arrow-reverse" markerWidth="10" markerHeight="7" 
-                                    refX="1" refY="3.5" orient="auto">
-                                <polygon points="10 0, 0 3.5, 10 7" fill="rgba(255,215,0,0.9)" />
+                                    refX="9" refY="3.5" orient="auto-start-reverse">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,215,0,0.9)" />
                             </marker>
                         </defs>
                         
@@ -86,7 +86,7 @@
                 {% set stage_color = '#90C695' if stage.name in ['CONCEPTUALISE', 'PLAN', 'COLLECT', 'PROCESS', 'ANALYSE', 'STORE'] else '#7FB3D3' %}
                 {% set stage_color = '#4A90A4' if stage.name == 'FUND' else stage_color %}
                 
-                <div class="stage-stack-container mb-2" data-stage-id="{{ stage.id }}">
+                <div class="stage-stack-container mb-2 {{ 'fund-stage' if stage.name == 'FUND' else '' }}" data-stage-id="{{ stage.id }}">
                     <!-- Stage Connection Line -->
                     {% if not loop.first %}
                     <div class="stage-connector">
@@ -141,9 +141,10 @@
                                 </div>
                                 <div class="tools-grid expandable-tools" id="category-tools-{{ category.id }}" style="display: none;">
                                     {% for tool in category.tools if tool.is_active %}
-                                    <div class="tool-item" title="{{ tool.description if tool.description else tool.name }}">
+                                    <a href="{{ url_for('tool_detail', id=tool.id) }}" class="tool-item tool-link" title="{{ tool.description if tool.description else tool.name }}" target="_blank">
                                         {{ tool.name }}
-                                    </div>
+                                        <i class="fas fa-external-link-alt ms-1" style="font-size: 10px; opacity: 0.7;"></i>
+                                    </a>
                                     {% endfor %}
                                 </div>
                             </div>
@@ -447,6 +448,7 @@ function initializeCircularVisualization() {
     const connections = [
         // Main flow (solid arrows)
         { from: 'FUND', to: 'PLAN', type: 'main' },
+        { from: 'FUND', to: 'CONCEPTUALISE', type: 'main' },
         { from: 'CONCEPTUALISE', to: 'PLAN', type: 'main' },
         { from: 'PLAN', to: 'COLLECT', type: 'main' },
         { from: 'COLLECT', to: 'PROCESS', type: 'main' },
@@ -647,13 +649,48 @@ if (typeof Math.cos === 'undefined') {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
     transition: all 0.3s ease;
     position: relative;
 }
 
 .stage-stack-container.expanded {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Fund stage positioned out of line */
+.stage-stack-container.fund-stage {
+    margin-left: 2rem;
+    margin-right: 2rem;
+    position: relative;
+    border: 2px solid rgba(74, 144, 164, 0.3);
+    transform: translateX(-1rem);
+}
+
+.stage-stack-container.fund-stage::before {
+    content: '';
+    position: absolute;
+    left: -15px;
+    top: 50%;
+    width: 15px;
+    height: 2px;
+    background: rgba(74, 144, 164, 0.6);
+    transform: translateY(-50%);
+    border-radius: 1px;
+}
+
+.stage-stack-container.fund-stage::after {
+    content: 'External Funding';
+    position: absolute;
+    right: -120px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(74, 144, 164, 0.8);
+    padding: 2px 6px;
+    border-radius: 8px;
+    white-space: nowrap;
 }
 
 .stage-header {
@@ -695,61 +732,93 @@ if (typeof Math.cos === 'undefined') {
     padding: 0.2rem 0.4rem;
 }
 
-/* Stage Connectors */
+/* Stage Connectors - Positioned between pills */
 .stage-connector {
     position: absolute;
-    top: -25px;
+    top: -35px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 20;
     background: transparent;
-    padding: 5px;
+    padding: 8px;
+    width: 60px;
+    height: 35px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .connector-line {
-    width: 3px;
-    height: 20px;
-    background: rgba(255, 255, 255, 0.8);
-    margin: 0 auto;
+    width: 4px;
+    height: 25px;
+    background: linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.8) 20%, rgba(255, 255, 255, 0.8) 80%, transparent 100%);
+    margin: 0 auto 2px;
     border-radius: 2px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .connector-arrow {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 14px;
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 16px;
     text-align: center;
-    margin-top: -2px;
-    background: rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: -2px auto 0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    position: relative;
+    top: -2px;
 }
 
 .circular-connector {
     position: absolute;
-    bottom: -25px;
+    bottom: -40px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 10;
+    z-index: 30;
+    background: transparent;
+    padding: 10px;
+    width: 120px;
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .circular-line {
-    width: 40px;
-    height: 2px;
-    background: rgba(255, 255, 255, 0.6);
-    margin: 0 auto 5px;
-    border-radius: 1px;
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.9) 20%, rgba(255, 255, 255, 0.9) 80%, rgba(255, 255, 255, 0.2) 100%);
+    margin: 0 auto 8px;
+    border-radius: 3px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.circular-line::after {
+    content: '↺';
+    position: absolute;
+    right: -15px;
+    top: -8px;
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .circular-text {
     text-align: center;
-    font-size: 10px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.3);
+    padding: 3px 8px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .clickable {
@@ -881,6 +950,34 @@ if (typeof Math.cos === 'undefined') {
     background: #495057;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Tool links styling */
+.tool-item.tool-link {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+}
+
+.tool-item.tool-link:hover {
+    text-decoration: none;
+    color: white;
+    background: #343a40;
+}
+
+.tool-item.tool-link:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+.tool-item.tool-link .fas.fa-external-link-alt {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.tool-item.tool-link:hover .fas.fa-external-link-alt {
+    opacity: 0.8;
 }
 
 /* Flow Arrows */
