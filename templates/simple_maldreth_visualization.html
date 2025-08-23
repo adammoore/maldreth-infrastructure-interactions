@@ -88,10 +88,24 @@
                 
                 <div class="stage-stack-container mb-2 {{ 'fund-stage' if stage.name == 'FUND' else '' }}" data-stage-id="{{ stage.id }}">
                     <!-- Stage Connection Line -->
-                    {% if not loop.first %}
+                    {% if not loop.first and stage.name != 'FUND' %}
                     <div class="stage-connector">
                         <div class="connector-line"></div>
                         <div class="connector-arrow"><i class="fas fa-arrow-down"></i></div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Special Fund connections -->
+                    {% if stage.name == 'FUND' %}
+                    <div class="fund-connectors">
+                        <div class="fund-arrow fund-arrow-right">
+                            <i class="fas fa-arrow-right"></i>
+                            <span class="fund-target">Plan</span>
+                        </div>
+                        <div class="fund-arrow fund-arrow-left">
+                            <i class="fas fa-arrow-left"></i>
+                            <span class="fund-target">Conceptualise</span>
+                        </div>
                     </div>
                     {% endif %}
                     
@@ -99,8 +113,11 @@
                     {% if loop.last %}
                     <div class="circular-connector">
                         <div class="circular-line"></div>
+                        <div class="circular-arrow">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
                         <div class="circular-text">
-                            <small class="text-light"><i class="fas fa-redo me-1"></i>Circular Flow</small>
+                            <small class="text-light"><i class="fas fa-redo me-1"></i>Circular Flow to Start</small>
                         </div>
                     </div>
                     {% endif %}
@@ -190,7 +207,15 @@
                                 </span>
                             </td>
                             <td><strong>{{ stage.name }}</strong></td>
-                            <td>{{ stage.description[:100] if stage.description else "Research data lifecycle stage" }}...</td>
+                            <td class="expandable-description" onclick="toggleDescription({{ loop.index0 }})">
+                                <span class="description-short" id="desc-short-{{ loop.index0 }}">
+                                    {{ stage.description[:100] if stage.description else "Research data lifecycle stage" }}...
+                                </span>
+                                <span class="description-full" id="desc-full-{{ loop.index0 }}" style="display: none;">
+                                    {{ stage.description if stage.description else "Research data lifecycle stage" }}
+                                </span>
+                                <i class="fas fa-chevron-down expand-desc-icon ms-2" id="desc-icon-{{ loop.index0 }}"></i>
+                            </td>
                             <td>
                                 {% set stage_data = visualization_data.stages | selectattr('id', 'equalto', stage.id) | first %}
                                 <span class="badge bg-primary">{{ stage_data.tool_count if stage_data else 0 }}</span>
@@ -383,20 +408,20 @@ function initializeCircularVisualization() {
         return;
     }
     
-    // Official MaLDReTH stage positions matching the provided diagram
+    // Official MaLDReTH stage positions with improved spacing for better legibility
     const stagePositions = {
-        'FUND': { x: 250, y: 80, width: 80, height: 50 },
-        'CONCEPTUALISE': { x: 80, y: 160, width: 100, height: 50 },
-        'PLAN': { x: 250, y: 140, width: 80, height: 50 },
-        'COLLECT': { x: 400, y: 160, width: 80, height: 50 },
-        'PROCESS': { x: 420, y: 240, width: 80, height: 50 },
-        'ANALYSE': { x: 420, y: 320, width: 80, height: 50 },
-        'STORE': { x: 400, y: 400, width: 80, height: 50 },
-        'PUBLISH': { x: 250, y: 420, width: 80, height: 50 },
-        'PRESERVE': { x: 150, y: 400, width: 80, height: 50 },
-        'SHARE': { x: 80, y: 350, width: 80, height: 50 },
-        'ACCESS': { x: 80, y: 270, width: 80, height: 50 },
-        'TRANSFORM': { x: 80, y: 200, width: 80, height: 50 }
+        'FUND': { x: 250, y: 70, width: 85, height: 45 },
+        'CONCEPTUALISE': { x: 70, y: 150, width: 110, height: 45 },
+        'PLAN': { x: 250, y: 130, width: 85, height: 45 },
+        'COLLECT': { x: 410, y: 150, width: 85, height: 45 },
+        'PROCESS': { x: 435, y: 235, width: 85, height: 45 },
+        'ANALYSE': { x: 435, y: 325, width: 85, height: 45 },
+        'STORE': { x: 410, y: 410, width: 85, height: 45 },
+        'PUBLISH': { x: 250, y: 430, width: 85, height: 45 },
+        'PRESERVE': { x: 140, y: 410, width: 85, height: 45 },
+        'SHARE': { x: 70, y: 360, width: 85, height: 45 },
+        'ACCESS': { x: 70, y: 280, width: 85, height: 45 },
+        'TRANSFORM': { x: 70, y: 200, width: 85, height: 45 }
     };
     
     // Create stage rectangles with names
@@ -591,6 +616,25 @@ function toggleCircularView() {
     }
 }
 
+// Toggle description in table
+function toggleDescription(index) {
+    const shortDesc = document.getElementById(`desc-short-${index}`);
+    const fullDesc = document.getElementById(`desc-full-${index}`);
+    const icon = document.getElementById(`desc-icon-${index}`);
+    
+    if (fullDesc.style.display === 'none') {
+        shortDesc.style.display = 'none';
+        fullDesc.style.display = 'inline';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+    } else {
+        shortDesc.style.display = 'inline';
+        fullDesc.style.display = 'none';
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+    }
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeCircularVisualization();
@@ -649,7 +693,7 @@ if (typeof Math.cos === 'undefined') {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 1.5rem;
+    margin-bottom: 2.5rem;
     transition: all 0.3s ease;
     position: relative;
 }
@@ -691,6 +735,45 @@ if (typeof Math.cos === 'undefined') {
     padding: 2px 6px;
     border-radius: 8px;
     white-space: nowrap;
+}
+
+/* Fund special connectors */
+.fund-connectors {
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 25;
+}
+
+.fund-arrow {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(74, 144, 164, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 15px;
+    font-size: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+}
+
+.fund-arrow-right {
+    margin-left: 10px;
+}
+
+.fund-arrow-left {
+    margin-left: 10px;
+    flex-direction: row-reverse;
+}
+
+.fund-target {
+    font-size: 10px;
+    font-weight: 600;
 }
 
 .stage-header {
@@ -735,42 +818,44 @@ if (typeof Math.cos === 'undefined') {
 /* Stage Connectors - Positioned between pills */
 .stage-connector {
     position: absolute;
-    top: -35px;
+    top: -45px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 20;
-    background: transparent;
-    padding: 8px;
-    width: 60px;
-    height: 35px;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 12px;
+    width: 80px;
+    height: 45px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    border-radius: 10px;
+    backdrop-filter: blur(5px);
 }
 
 .connector-line {
-    width: 4px;
-    height: 25px;
-    background: linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.8) 20%, rgba(255, 255, 255, 0.8) 80%, transparent 100%);
-    margin: 0 auto 2px;
-    border-radius: 2px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    width: 6px;
+    height: 30px;
+    background: linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.9) 15%, rgba(255, 255, 255, 0.9) 85%, transparent 100%);
+    margin: 0 auto 4px;
+    border-radius: 3px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
 }
 
 .connector-arrow {
     color: rgba(255, 255, 255, 0.95);
-    font-size: 16px;
+    font-size: 18px;
     text-align: center;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8));
+    border: 3px solid rgba(255, 255, 255, 0.4);
     border-radius: 50%;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4);
     position: relative;
     top: -2px;
 }
@@ -809,6 +894,22 @@ if (typeof Math.cos === 'undefined') {
     font-size: 20px;
     color: rgba(255, 255, 255, 0.9);
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.circular-arrow {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 18px;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8));
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.4);
+    margin: 0 auto 8px;
 }
 
 .circular-text {
@@ -1045,6 +1146,37 @@ if (typeof Math.cos === 'undefined') {
     }
 }
 
+/* Expandable descriptions in table */
+.expandable-description {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.expandable-description:hover {
+    background: rgba(0, 123, 255, 0.1);
+    border-radius: 4px;
+}
+
+.expand-desc-icon {
+    font-size: 12px;
+    color: #6c757d;
+    transition: transform 0.3s ease;
+}
+
+.expand-desc-icon.fa-chevron-up {
+    transform: rotate(180deg);
+}
+
+.description-full {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 /* Print styles */
 @media print {
     .stacked-lifecycle-container {
@@ -1060,6 +1192,18 @@ if (typeof Math.cos === 'undefined') {
     .tool-item {
         background: #6c757d !important;
         color: white !important;
+    }
+    
+    .description-full {
+        display: inline !important;
+    }
+    
+    .description-short {
+        display: none !important;
+    }
+    
+    .expand-desc-icon {
+        display: none !important;
     }
 }
 </style>
