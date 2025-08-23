@@ -86,12 +86,11 @@
                 <div class="three-column-layout">
                     <!-- Left Arrow Strip -->
                     <div class="arrow-strip left-strip">
-                        <div class="return-flow-arrow">
-                            <div class="return-path"></div>
-                            <div class="return-arrow-icon">
+                        <div class="single-return-arrow">
+                            <div class="return-icon">
                                 <i class="fas fa-arrow-up"></i>
                             </div>
-                            <div class="return-label">Return</div>
+                            <div class="return-text">Return</div>
                         </div>
                     </div>
                     
@@ -159,21 +158,8 @@
                     </div>
                     
                     <!-- Right Arrow Strip -->
-                    <div class="arrow-strip right-strip">
-                        {% for stage in stages %}
-                        {% if not loop.first and stage.name != 'FUND' %}
-                        <div class="right-flow-arrow" data-stage-index="{{ loop.index0 }}">
-                            <div class="brace-lines">
-                                <div class="brace-h1"></div>
-                                <div class="brace-v"></div>
-                                <div class="brace-h2"></div>
-                            </div>
-                            <div class="flow-arrow-icon">
-                                <i class="fas fa-arrow-down"></i>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% endfor %}
+                    <div class="arrow-strip right-strip" id="dynamic-arrows-container">
+                        <!-- Dynamic arrows will be positioned here by JavaScript -->
                     </div>
                 </div>
                 
@@ -645,9 +631,61 @@ function toggleDescription(index) {
     }
 }
 
+// Dynamic Arrow Positioning
+function positionDynamicArrows() {
+    const arrowsContainer = document.getElementById('dynamic-arrows-container');
+    const stageContainers = document.querySelectorAll('.stage-stack-container');
+    
+    if (!arrowsContainer || !stageContainers.length) return;
+    
+    // Clear existing arrows
+    arrowsContainer.innerHTML = '';
+    
+    // Create arrows for each stage transition (except the last one and FUND)
+    stageContainers.forEach((container, index) => {
+        const stageName = container.querySelector('.stage-title-compact').textContent.trim().toUpperCase();
+        
+        // Skip FUND stage and last stage
+        if (stageName === 'FUND' || index === stageContainers.length - 1) return;
+        
+        // Get the position of current stage container
+        const containerRect = container.getBoundingClientRect();
+        const parentRect = arrowsContainer.getBoundingClientRect();
+        
+        // Calculate relative position
+        const topPosition = containerRect.top - parentRect.top + (containerRect.height / 2) - 20;
+        
+        // Create arrow element
+        const arrowElement = document.createElement('div');
+        arrowElement.className = 'dynamic-stage-arrow';
+        arrowElement.style.top = `${topPosition}px`;
+        
+        arrowElement.innerHTML = `
+            <div class="arrow-brace">
+                <div class="brace-top"></div>
+                <div class="brace-connector"></div>
+                <div class="brace-bottom"></div>
+            </div>
+            <div class="dynamic-arrow-icon">
+                <i class="fas fa-arrow-down"></i>
+            </div>
+        `;
+        
+        arrowsContainer.appendChild(arrowElement);
+    });
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeCircularVisualization();
+    
+    // Position arrows after a short delay to ensure layout is complete
+    setTimeout(positionDynamicArrows, 200);
+});
+
+// Reposition arrows on window resize
+window.addEventListener('resize', function() {
+    setTimeout(positionDynamicArrows, 100);
 });
 
 // Add CSS filters for mathematical functions (fallback)
@@ -854,70 +892,109 @@ if (typeof Math.cos === 'undefined') {
     }
 }
 
-/* Left Strip Return Arrow */
-.return-flow-arrow {
+/* Single Return Arrow at Bottom Left */
+.single-return-arrow {
     position: absolute;
-    bottom: 50px;
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 8px;
 }
 
-.return-path {
-    width: 4px;
-    height: 300px;
-    background: linear-gradient(to top, #e74c3c, #c0392b);
-    border-radius: 2px;
-    position: relative;
-}
-
-.return-path::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: -8px;
-    width: 20px;
-    height: 4px;
-    background: linear-gradient(to right, #e74c3c, #c0392b);
-    border-radius: 2px;
-}
-
-.return-arrow-icon {
+.return-icon {
     background: linear-gradient(135deg, #e74c3c, #c0392b);
     color: white;
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    font-size: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     border: 3px solid rgba(255, 255, 255, 0.9);
-    animation: return-flow-pulse 4s infinite;
-    margin-top: -320px;
+    animation: return-pulse 3s infinite;
 }
 
-.return-label {
-    color: white;
-    font-size: 12px;
+.return-text {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 11px;
     font-weight: bold;
-    margin-top: 8px;
     background: rgba(231, 76, 60, 0.8);
-    padding: 4px 8px;
+    padding: 3px 8px;
     border-radius: 6px;
+    text-align: center;
 }
 
-@keyframes return-flow-pulse {
+@keyframes return-pulse {
     0%, 100% { 
         transform: scale(1);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
     50% { 
-        transform: scale(1.2);
-        box-shadow: 0 6px 18px rgba(231, 76, 60, 0.5);
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
+    }
+}
+
+/* Dynamic Right Side Arrows */
+.dynamic-stage-arrow {
+    position: absolute;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10;
+}
+
+.arrow-brace {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    width: 40px;
+}
+
+.brace-top, .brace-bottom {
+    width: 30px;
+    height: 3px;
+    background: linear-gradient(to right, #3498db, #2980b9);
+    border-radius: 2px;
+}
+
+.brace-connector {
+    width: 3px;
+    height: 20px;
+    background: linear-gradient(to bottom, #2980b9, #3498db);
+    border-radius: 2px;
+    margin-left: 27px;
+}
+
+.dynamic-arrow-icon {
+    background: linear-gradient(135deg, #2980b9, #3498db);
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    animation: dynamic-arrow-pulse 3s infinite;
+}
+
+@keyframes dynamic-arrow-pulse {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    }
+    50% { 
+        transform: scale(1.1);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.5);
     }
 }
 
