@@ -141,7 +141,7 @@
                                 </div>
                                 <div class="tools-grid expandable-tools" id="category-tools-{{ category.id }}" style="display: none;">
                                     {% for tool in category.tools if tool.is_active %}
-                                    <a href="{{ url_for('tool_detail', id=tool.id) }}" class="tool-item tool-link" title="{{ tool.description if tool.description else tool.name }}" target="_blank">
+                                    <a href="{{ url_for('tool_detail', tool_id=tool.id) }}" class="tool-item tool-link" title="{{ tool.description if tool.description else tool.name }}" target="_blank">
                                         {{ tool.name }}
                                         <i class="fas fa-external-link-alt ms-1" style="font-size: 10px; opacity: 0.7;"></i>
                                     </a>
