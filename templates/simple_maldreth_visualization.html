@@ -44,8 +44,8 @@
                                 <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.9)" />
                             </marker>
                             <marker id="arrow-reverse" markerWidth="10" markerHeight="7" 
-                                    refX="9" refY="3.5" orient="auto">
-                                <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,215,0,0.9)" />
+                                    refX="1" refY="3.5" orient="auto">
+                                <polygon points="10 0, 0 3.5, 10 7" fill="rgba(255,215,0,0.9)" />
                             </marker>
                         </defs>
                         
@@ -459,10 +459,10 @@ function initializeCircularVisualization() {
         { from: 'ACCESS', to: 'TRANSFORM', type: 'main' },
         { from: 'TRANSFORM', to: 'CONCEPTUALISE', type: 'main' },
         
-        // Bidirectional connections (dashed arrows)
-        { from: 'COLLECT', to: 'PROCESS', type: 'bidirectional' },
-        { from: 'PROCESS', to: 'ANALYSE', type: 'bidirectional' },
-        { from: 'ANALYSE', to: 'STORE', type: 'bidirectional' }
+        // Bidirectional connections (dashed arrows) - reverse direction
+        { from: 'PROCESS', to: 'COLLECT', type: 'bidirectional' },
+        { from: 'ANALYSE', to: 'PROCESS', type: 'bidirectional' },
+        { from: 'STORE', to: 'ANALYSE', type: 'bidirectional' }
     ];
     
     connections.forEach(conn => {
@@ -574,6 +574,8 @@ function toggleCircularView() {
         overviewContainer.style.width = 'auto';
         if (headerDiv) headerDiv.style.display = 'block';
         button.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide';
+        // Reinitialize the circular visualization to ensure it renders properly
+        setTimeout(() => initializeCircularVisualization(), 100);
     } else {
         // Hide circular view and minimize container dimensions
         container.style.display = 'none';
@@ -696,24 +698,37 @@ if (typeof Math.cos === 'undefined') {
 /* Stage Connectors */
 .stage-connector {
     position: absolute;
-    top: -15px;
+    top: -25px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 10;
+    z-index: 20;
+    background: transparent;
+    padding: 5px;
 }
 
 .connector-line {
-    width: 2px;
-    height: 15px;
-    background: rgba(255, 255, 255, 0.6);
+    width: 3px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.8);
     margin: 0 auto;
+    border-radius: 2px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .connector-arrow {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
     text-align: center;
-    margin-top: -3px;
+    margin-top: -2px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: -2px auto 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .circular-connector {
