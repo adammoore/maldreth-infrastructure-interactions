@@ -36,8 +36,8 @@
                 </div>
                 
                 <!-- Circular SVG Visualization -->
-                <div id="circular-viz-container" class="circular-viz-wrapper" style="position: relative; height: 500px;">
-                    <svg id="circular-lifecycle" width="100%" height="100%" viewBox="0 0 500 500">
+                <div id="circular-viz-container" class="circular-viz-wrapper" style="position: relative; height: 600px;">
+                    <svg id="circular-lifecycle" width="100%" height="100%" viewBox="0 0 500 600">
                         <defs>
                             <marker id="arrow-main" markerWidth="10" markerHeight="7" 
                                     refX="9" refY="3.5" orient="auto">
@@ -50,8 +50,8 @@
                         </defs>
                         
                         <!-- Title -->
-                        <text x="250" y="470" text-anchor="middle" fill="white" font-size="16" font-weight="bold">The MaLDReTH</text>
-                        <text x="250" y="490" text-anchor="middle" fill="white" font-size="14">Research Data Lifecycle</text>
+                        <text x="250" y="570" text-anchor="middle" fill="white" font-size="16" font-weight="bold">The MaLDReTH</text>
+                        <text x="250" y="590" text-anchor="middle" fill="white" font-size="14">Research Data Lifecycle</text>
                         
                         <!-- Stage nodes and connections will be added by JavaScript -->
                     </svg>
@@ -410,8 +410,8 @@ function initializeCircularVisualization() {
     
     // Official MaLDReTH stage positions with improved spacing for better legibility
     const stagePositions = {
-        'FUND': { x: 250, y: 70, width: 85, height: 45 },
         'CONCEPTUALISE': { x: 70, y: 150, width: 110, height: 45 },
+        'FUND': { x: 160, y: 100, width: 85, height: 45 },
         'PLAN': { x: 250, y: 130, width: 85, height: 45 },
         'COLLECT': { x: 410, y: 150, width: 85, height: 45 },
         'PROCESS': { x: 435, y: 235, width: 85, height: 45 },
@@ -473,7 +473,7 @@ function initializeCircularVisualization() {
     const connections = [
         // Main flow (solid arrows)
         { from: 'FUND', to: 'PLAN', type: 'main' },
-        { from: 'FUND', to: 'CONCEPTUALISE', type: 'main' },
+        { from: 'CONCEPTUALISE', to: 'FUND', type: 'main' },
         { from: 'CONCEPTUALISE', to: 'PLAN', type: 'main' },
         { from: 'PLAN', to: 'COLLECT', type: 'main' },
         { from: 'COLLECT', to: 'PROCESS', type: 'main' },
@@ -601,8 +601,17 @@ function toggleCircularView() {
         overviewContainer.style.width = 'auto';
         if (headerDiv) headerDiv.style.display = 'block';
         button.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide';
-        // Reinitialize the circular visualization to ensure it renders properly
-        setTimeout(() => initializeCircularVisualization(), 100);
+        // Clear and reinitialize the circular visualization to ensure it renders properly
+        setTimeout(() => {
+            const svg = document.getElementById('circular-lifecycle');
+            if (svg) {
+                // Clear all existing elements except defs and title
+                const elementsToKeep = svg.querySelectorAll('defs, text');
+                svg.innerHTML = '';
+                elementsToKeep.forEach(el => svg.appendChild(el.cloneNode(true)));
+            }
+            initializeCircularVisualization();
+        }, 150);
     } else {
         // Hide circular view and minimize container dimensions
         container.style.display = 'none';
@@ -819,19 +828,19 @@ if (typeof Math.cos === 'undefined') {
 .stage-connector {
     position: absolute;
     top: -45px;
-    left: 50%;
-    transform: translateX(-50%);
+    right: -15px;
     z-index: 20;
-    background: rgba(0, 0, 0, 0.1);
-    padding: 12px;
-    width: 80px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    width: 60px;
     height: 45px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
+    border-radius: 8px;
     backdrop-filter: blur(5px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .connector-line {
