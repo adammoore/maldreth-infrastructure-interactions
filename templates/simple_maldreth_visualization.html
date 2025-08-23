@@ -470,22 +470,48 @@ function initializeCircularVisualization() {
         const toPos = stagePositions[conn.to];
         
         if (fromPos && toPos) {
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', fromPos.x);
-            line.setAttribute('y1', fromPos.y);
-            line.setAttribute('x2', toPos.x);
-            line.setAttribute('y2', toPos.y);
+            // Calculate edge-to-edge connection points
+            const deltaX = toPos.x - fromPos.x;
+            const deltaY = toPos.y - fromPos.y;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
             
+            if (distance === 0) return; // Skip if same position
+            
+            // Normalize direction vector
+            const dirX = deltaX / distance;
+            const dirY = deltaY / distance;
+            
+            // Calculate edge points
+            const fromEdgeX = fromPos.x + dirX * (fromPos.width / 2);
+            const fromEdgeY = fromPos.y + dirY * (fromPos.height / 2);
+            const toEdgeX = toPos.x - dirX * (toPos.width / 2);
+            const toEdgeY = toPos.y - dirY * (toPos.height / 2);
+            
+            // Add offset for bidirectional arrows to prevent overlap
+            let offsetX = 0, offsetY = 0;
             if (conn.type === 'bidirectional') {
-                line.setAttribute('stroke', 'rgba(255,215,0,0.8)');
-                line.setAttribute('stroke-dasharray', '5,5');
-                line.setAttribute('marker-end', 'url(#arrow-reverse)');
-            } else {
-                line.setAttribute('stroke', 'rgba(255,255,255,0.7)');
-                line.setAttribute('marker-end', 'url(#arrow-main)');
+                // Perpendicular offset (rotate direction 90 degrees)
+                offsetX = -dirY * 8; // Perpendicular to line direction
+                offsetY = dirX * 8;
             }
             
-            line.setAttribute('stroke-width', '2');
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', fromEdgeX + offsetX);
+            line.setAttribute('y1', fromEdgeY + offsetY);
+            line.setAttribute('x2', toEdgeX + offsetX);
+            line.setAttribute('y2', toEdgeY + offsetY);
+            
+            if (conn.type === 'bidirectional') {
+                line.setAttribute('stroke', 'rgba(255,215,0,0.9)');
+                line.setAttribute('stroke-dasharray', '4,4');
+                line.setAttribute('marker-end', 'url(#arrow-reverse)');
+                line.setAttribute('stroke-width', '2.5');
+            } else {
+                line.setAttribute('stroke', 'rgba(255,255,255,0.8)');
+                line.setAttribute('marker-end', 'url(#arrow-main)');
+                line.setAttribute('stroke-width', '2');
+            }
+            
             svg.appendChild(line);
         }
     });
@@ -507,16 +533,30 @@ function highlightCircularStage(stageId) {
 }
 
 function toggleCircularView() {
+    const circularCol = document.querySelector('.col-lg-5');
+    const stackedCol = document.querySelector('.col-lg-7');
+    const overviewContainer = document.querySelector('.circular-overview-container');
     const container = document.getElementById('circular-viz-container');
     const button = document.getElementById('toggle-circular-btn');
+    const headerDiv = button.closest('.circular-header').querySelector('div:first-child');
     
-    if (!container || !button) return;
+    if (!container || !button || !circularCol || !stackedCol || !overviewContainer) return;
     
     if (container.style.display === 'none') {
+        // Show circular view
         container.style.display = 'block';
+        circularCol.className = 'col-lg-5';
+        stackedCol.className = 'col-lg-7';
+        overviewContainer.classList.remove('collapsed');
+        if (headerDiv) headerDiv.style.display = 'block';
         button.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide';
     } else {
+        // Hide circular view and expand stacked view
         container.style.display = 'none';
+        circularCol.className = 'col-lg-1'; // Minimize to just show button
+        stackedCol.className = 'col-lg-11'; // Expand stacked view
+        overviewContainer.classList.add('collapsed');
+        if (headerDiv) headerDiv.style.display = 'none'; // Hide title when collapsed
         button.innerHTML = '<i class="fas fa-eye me-1"></i>Show';
     }
 }
@@ -542,6 +582,12 @@ if (typeof Math.cos === 'undefined') {
     padding: 1.5rem;
     margin-bottom: 2rem;
     height: fit-content;
+    transition: all 0.3s ease;
+}
+
+.circular-overview-container.collapsed {
+    padding: 0.5rem;
+    text-align: center;
 }
 
 .circular-header {
