@@ -361,7 +361,7 @@ function expandAllTools() {
 
 // Initialize circular visualization
 function initializeCircularVisualization() {
-    const stages = {{ stages | tojson | safe }};
+    const stages = {{ stages_json | tojson | safe }};
     const svg = document.getElementById('circular-lifecycle');
     
     stages.forEach((stage, index) => {

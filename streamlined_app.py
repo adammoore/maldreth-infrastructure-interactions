@@ -869,17 +869,22 @@ def simple_maldreth_visualization():
             'total_tools': len(tools)
         }
         
-        # Simple stage data with tool counts
+        # Create serializable stage data for JavaScript
         for stage in stages:
             stage_tools = [t for t in tools if t.stage_id == stage.id]
             stage_data = {
                 'id': stage.id,
+                'name': stage.name,
+                'description': stage.description,
+                'position': stage.position,
+                'color': stage.color,
                 'tool_count': len(stage_tools)
             }
             visualization_data['stages'].append(stage_data)
         
         return render_template('simple_maldreth_visualization.html',
                              stages=stages,
+                             stages_json=visualization_data['stages'],
                              visualization_data=visualization_data)
                              
     except Exception as e:
