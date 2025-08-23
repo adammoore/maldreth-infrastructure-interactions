@@ -891,6 +891,40 @@ def simple_maldreth_visualization():
         logger.error(f"Error in simple MaLDReTH visualization: {e}")
         return render_template('error.html', error=str(e)), 500
 
+@app.route('/css-rdl-visualization')
+def css_rdl_visualization():
+    """Display CSS-only RDL visualization - no external dependencies required."""
+    try:
+        stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
+        tools = ExemplarTool.query.filter_by(is_active=True).all()
+        
+        # Prepare visualization data
+        visualization_data = {
+            'stages': [],
+            'total_stages': len(stages),
+            'total_tools': len(tools)
+        }
+        
+        # Create serializable stage data
+        for stage in stages:
+            stage_tools = [t for t in tools if t.stage_id == stage.id]
+            stage_data = {
+                'id': stage.id,
+                'name': stage.name,
+                'description': stage.description,
+                'position': stage.position,
+                'tool_count': len(stage_tools)
+            }
+            visualization_data['stages'].append(stage_data)
+        
+        return render_template('css_rdl_visualization.html',
+                             stages=stages,
+                             visualization_data=visualization_data)
+                             
+    except Exception as e:
+        logger.error(f"Error in CSS RDL visualization: {e}")
+        return render_template('error.html', error=str(e)), 500
+
 # --- Tool Management Routes ---
 
 @app.route('/add-tool', methods=['GET', 'POST'])

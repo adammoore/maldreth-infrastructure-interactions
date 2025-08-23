@@ -3,45 +3,76 @@
 {% block title %}Enhanced RDL Visualization - PRISM | MaLDReTH II RDA{% endblock %}
 
 {% block extra_head %}
-<!-- Enhanced D3.js loading with proper fallback mechanism -->
+<!-- Advanced D3.js loading with multiple fallback strategies -->
 <script>
-function loadD3Enhanced() {
-    const primaryScript = document.createElement('script');
-    primaryScript.src = 'https://d3js.org/d3.v7.min.js';
-    
-    primaryScript.onload = function() {
-        console.log('D3.js loaded from primary CDN');
-        // Load d3-force extension after main D3.js loads
-        loadD3Force();
-    };
-    
-    primaryScript.onerror = function() {
-        console.log('Primary D3.js CDN failed, trying fallback...');
-        loadD3EnhancedFallback();
-    };
-    
-    document.head.appendChild(primaryScript);
-}
+// Final attempt at D3.js loading with comprehensive fallback  
+const D3_SOURCES = [
+    'https://d3js.org/d3.v7.min.js',
+    'https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js', 
+    'https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js',
+    'https://unpkg.com/d3@7/dist/d3.min.js'
+];
 
-function loadD3EnhancedFallback() {
-    const fallbackScript = document.createElement('script');
-    fallbackScript.src = 'https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js';
+function tryLoadD3Enhanced(sourceIndex = 0) {
+    if (sourceIndex >= D3_SOURCES.length) {
+        console.error('All D3.js sources failed for enhanced visualization');
+        initializeEnhancedSVGFallback();
+        return;
+    }
     
-    fallbackScript.onload = function() {
-        console.log('D3.js loaded from fallback CDN');
-        // Load d3-force extension after main D3.js loads
-        loadD3Force();
-    };
+    const script = document.createElement('script');
+    script.src = D3_SOURCES[sourceIndex];
+    script.async = true;
     
-    fallbackScript.onerror = function() {
-        console.error('All D3.js CDNs failed to load');
-        const errorDiv = document.getElementById('d3-error-message');
-        if (errorDiv) {
-            errorDiv.style.display = 'block';
+    const timeout = setTimeout(() => {
+        script.remove();
+        tryLoadD3Enhanced(sourceIndex + 1);
+    }, 8000);
+    
+    script.onload = function() {
+        clearTimeout(timeout);
+        if (typeof d3 !== 'undefined') {
+            console.log(`Enhanced D3.js loaded from source ${sourceIndex + 1}`);
+            setTimeout(() => {
+                if (typeof initializeEnhancedVisualization === 'function') {
+                    initializeEnhancedVisualization();
+                }
+            }, 100);
+        } else {
+            tryLoadD3Enhanced(sourceIndex + 1);
         }
     };
     
-    document.head.appendChild(fallbackScript);
+    script.onerror = () => {
+        clearTimeout(timeout);
+        script.remove();
+        tryLoadD3Enhanced(sourceIndex + 1);
+    };
+    
+    document.head.appendChild(script);
+}
+
+function initializeEnhancedSVGFallback() {
+    const container = document.getElementById('enhanced-network');
+    if (container) {
+        container.innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Enhanced Visualization Unavailable:</strong> D3.js required for network diagrams
+            </div>
+            <div class="text-center py-5">
+                <i class="fas fa-project-diagram fa-4x text-muted mb-3"></i>
+                <h5>Interactive Network Visualization</h5>
+                <p class="text-muted">Requires D3.js for advanced tool interaction mapping</p>
+                <a href="/simple-maldreth-visualization" class="btn btn-primary">
+                    <i class="fas fa-layer-group me-2"></i>View Stacked Visualization
+                </a>
+            </div>`;
+    }
+}
+
+function loadD3Enhanced() {
+    tryLoadD3Enhanced(0);
 }
 
 function loadD3Force() {
