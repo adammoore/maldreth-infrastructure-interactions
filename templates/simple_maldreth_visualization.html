@@ -87,10 +87,15 @@
                 {% set stage_color = '#4A90A4' if stage.name == 'FUND' else stage_color %}
                 
                 <div class="stage-stack-container mb-2 {{ 'fund-stage' if stage.name == 'FUND' else '' }}" data-stage-id="{{ stage.id }}">
-                    <!-- Stage Connection Arrow - New Simple Approach -->
+                    <!-- Brace-style Flow Arrow on Right Side -->
                     {% if not loop.first and stage.name != 'FUND' %}
-                    <div class="simple-arrow-connector">
-                        <i class="fas fa-arrow-down"></i>
+                    <div class="brace-arrow-connector">
+                        <div class="brace-line-horizontal"></div>
+                        <div class="brace-line-vertical"></div>
+                        <div class="brace-line-horizontal-down"></div>
+                        <div class="brace-arrow">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
                     </div>
                     {% endif %}
                     
@@ -108,15 +113,17 @@
                     </div>
                     {% endif %}
                     
-                    <!-- Special circular connection for last stage -->
+                    <!-- Circular return connector on left side for last stage -->
                     {% if loop.last %}
-                    <div class="circular-connector">
-                        <div class="circular-line"></div>
-                        <div class="circular-arrow">
-                            <i class="fas fa-arrow-up"></i>
+                    <div class="left-return-connector">
+                        <div class="return-line-horizontal"></div>
+                        <div class="return-line-vertical-long"></div>
+                        <div class="return-line-horizontal-top"></div>
+                        <div class="return-arrow">
+                            <i class="fas fa-arrow-right"></i>
                         </div>
-                        <div class="circular-text">
-                            <small class="text-light"><i class="fas fa-redo me-1"></i>Circular Flow to Start</small>
+                        <div class="return-text">
+                            <small class="text-light"><i class="fas fa-redo me-1"></i>Cycle Return</small>
                         </div>
                     </div>
                     {% endif %}
@@ -409,18 +416,18 @@ function initializeCircularVisualization() {
     
     // Official MaLDReTH stage positions with improved spacing for better legibility
     const stagePositions = {
-        'CONCEPTUALISE': { x: 70, y: 180, width: 110, height: 45 },
-        'FUND': { x: 160, y: 120, width: 85, height: 45 },
-        'PLAN': { x: 250, y: 160, width: 85, height: 45 },
-        'COLLECT': { x: 410, y: 180, width: 85, height: 45 },
-        'PROCESS': { x: 445, y: 270, width: 85, height: 45 },
-        'ANALYSE': { x: 445, y: 360, width: 85, height: 45 },
-        'STORE': { x: 410, y: 450, width: 85, height: 45 },
-        'PUBLISH': { x: 250, y: 480, width: 85, height: 45 },
-        'PRESERVE': { x: 140, y: 450, width: 85, height: 45 },
-        'SHARE': { x: 70, y: 420, width: 85, height: 45 },
-        'ACCESS': { x: 70, y: 340, width: 85, height: 45 },
-        'TRANSFORM': { x: 70, y: 260, width: 85, height: 45 }
+        'CONCEPTUALISE': { x: 60, y: 200, width: 120, height: 50 },
+        'FUND': { x: 180, y: 140, width: 90, height: 50 },
+        'PLAN': { x: 300, y: 180, width: 90, height: 50 },
+        'COLLECT': { x: 420, y: 200, width: 90, height: 50 },
+        'PROCESS': { x: 450, y: 290, width: 90, height: 50 },
+        'ANALYSE': { x: 450, y: 380, width: 90, height: 50 },
+        'STORE': { x: 420, y: 470, width: 90, height: 50 },
+        'PUBLISH': { x: 300, y: 500, width: 90, height: 50 },
+        'PRESERVE': { x: 180, y: 470, width: 90, height: 50 },
+        'SHARE': { x: 60, y: 440, width: 90, height: 50 },
+        'ACCESS': { x: 60, y: 360, width: 90, height: 50 },
+        'TRANSFORM': { x: 60, y: 280, width: 90, height: 50 }
     };
     
     // Create stage rectangles with names
@@ -823,41 +830,153 @@ if (typeof Math.cos === 'undefined') {
     padding: 0.2rem 0.4rem;
 }
 
-/* Simple Arrow Connectors - Completely new approach */
-.simple-arrow-connector {
+/* Brace-style Arrow Connectors on Right Side */
+.brace-arrow-connector {
     position: absolute;
-    top: -30px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 25;
-    background: linear-gradient(135deg, #2c3e50, #3498db);
-    color: white;
-    width: 50px;
+    top: -25px;
+    right: -30px;
+    width: 60px;
     height: 50px;
+    z-index: 25;
+}
+
+.brace-line-horizontal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30px;
+    height: 3px;
+    background: linear-gradient(to right, #3498db, #2980b9);
+    border-radius: 2px;
+}
+
+.brace-line-vertical {
+    position: absolute;
+    top: 0;
+    left: 27px;
+    width: 3px;
+    height: 25px;
+    background: linear-gradient(to bottom, #2980b9, #3498db);
+    border-radius: 2px;
+}
+
+.brace-line-horizontal-down {
+    position: absolute;
+    top: 22px;
+    left: 30px;
+    width: 30px;
+    height: 3px;
+    background: linear-gradient(to right, #3498db, #2980b9);
+    border-radius: 2px;
+}
+
+.brace-arrow {
+    position: absolute;
+    top: 15px;
+    right: -10px;
+    background: linear-gradient(135deg, #2980b9, #3498db);
+    color: white;
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    border: 3px solid rgba(255, 255, 255, 0.9);
-    animation: pulse 2s infinite;
+    font-size: 16px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    animation: flow-pulse 3s infinite;
 }
 
-.simple-arrow-connector:hover {
-    transform: translateX(-50%) scale(1.1);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+@keyframes flow-pulse {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    }
+    50% { 
+        transform: scale(1.1);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+    }
 }
 
-@keyframes pulse {
-    0% {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 0 rgba(52, 152, 219, 0.7);
+/* Left Return Connector - Cycle back to top */
+.left-return-connector {
+    position: absolute;
+    bottom: -30px;
+    left: -40px;
+    width: 80px;
+    height: 200px;
+    z-index: 30;
+}
+
+.return-line-horizontal {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(to left, #e74c3c, #c0392b);
+    border-radius: 2px;
+}
+
+.return-line-vertical-long {
+    position: absolute;
+    bottom: 0;
+    left: -3px;
+    width: 3px;
+    height: 180px;
+    background: linear-gradient(to top, #c0392b, #e74c3c);
+    border-radius: 2px;
+}
+
+.return-line-horizontal-top {
+    position: absolute;
+    top: 0;
+    left: -3px;
+    width: 50px;
+    height: 3px;
+    background: linear-gradient(to right, #e74c3c, #c0392b);
+    border-radius: 2px;
+}
+
+.return-arrow {
+    position: absolute;
+    top: -8px;
+    right: -10px;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    animation: return-pulse 4s infinite;
+}
+
+.return-text {
+    position: absolute;
+    top: -35px;
+    left: -20px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(231, 76, 60, 0.8);
+    padding: 2px 6px;
+    border-radius: 8px;
+    white-space: nowrap;
+}
+
+@keyframes return-pulse {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
     }
-    50% {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 8px rgba(52, 152, 219, 0);
-    }
-    100% {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 0 rgba(52, 152, 219, 0);
+    50% { 
+        transform: scale(1.15);
+        box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
     }
 }
 
@@ -1207,6 +1326,48 @@ if (typeof Math.cos === 'undefined') {
         display: none !important;
     }
 }
+
+/* Build Information Footer */
+.build-info-footer {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 8px 12px;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    border-radius: 8px 0 0 0;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-right: none;
+    border-bottom: none;
+}
+
+.build-info-footer:hover {
+    background: rgba(0, 0, 0, 0.9);
+    color: rgba(255, 255, 255, 1);
+}
 </style>
+
+<!-- Build Information Footer -->
+<div class="build-info-footer">
+    <div>Build: <span id="build-number">{{ build_number if build_number else '2024.003' }}</span></div>
+    <div>Date: <span id="build-date"></span></div>
+    <div>Time: <span id="build-time"></span></div>
+</div>
+
+<script>
+// Add build timestamp information
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    const buildDate = now.toISOString().split('T')[0];
+    const buildTime = now.toTimeString().split(' ')[0];
+    
+    document.getElementById('build-date').textContent = buildDate;
+    document.getElementById('build-time').textContent = buildTime;
+});
+</script>
 
 {% endblock %}
