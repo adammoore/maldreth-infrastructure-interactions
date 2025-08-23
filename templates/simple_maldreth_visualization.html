@@ -37,7 +37,7 @@
                 
                 <!-- Circular SVG Visualization -->
                 <div id="circular-viz-container" class="circular-viz-wrapper" style="position: relative; height: 600px;">
-                    <svg id="circular-lifecycle" width="100%" height="100%" viewBox="0 0 500 600">
+                    <svg id="circular-lifecycle" width="100%" height="100%" viewBox="0 0 600 700">
                         <defs>
                             <marker id="arrow-main" markerWidth="10" markerHeight="7" 
                                     refX="9" refY="3.5" orient="auto">
@@ -395,20 +395,20 @@ function initializeCircularVisualization() {
         return;
     }
     
-    // Official MaLDReTH stage positions with improved spacing for better legibility
+    // Enhanced MaLDReTH stage positions with expanded viewport and better spacing
     const stagePositions = {
-        'CONCEPTUALISE': { x: 60, y: 200, width: 120, height: 50 },
-        'FUND': { x: 180, y: 140, width: 90, height: 50 },
-        'PLAN': { x: 300, y: 180, width: 90, height: 50 },
-        'COLLECT': { x: 420, y: 200, width: 90, height: 50 },
-        'PROCESS': { x: 450, y: 290, width: 90, height: 50 },
-        'ANALYSE': { x: 450, y: 380, width: 90, height: 50 },
-        'STORE': { x: 420, y: 470, width: 90, height: 50 },
-        'PUBLISH': { x: 300, y: 500, width: 90, height: 50 },
-        'PRESERVE': { x: 180, y: 470, width: 90, height: 50 },
-        'SHARE': { x: 60, y: 440, width: 90, height: 50 },
-        'ACCESS': { x: 60, y: 360, width: 90, height: 50 },
-        'TRANSFORM': { x: 60, y: 280, width: 90, height: 50 }
+        'CONCEPTUALISE': { x: 80, y: 250, width: 130, height: 55 },
+        'FUND': { x: 220, y: 180, width: 100, height: 55 },
+        'PLAN': { x: 370, y: 220, width: 100, height: 55 },
+        'COLLECT': { x: 480, y: 250, width: 100, height: 55 },
+        'PROCESS': { x: 520, y: 350, width: 100, height: 55 },
+        'ANALYSE': { x: 520, y: 450, width: 100, height: 55 },
+        'STORE': { x: 480, y: 550, width: 100, height: 55 },
+        'PUBLISH': { x: 370, y: 580, width: 100, height: 55 },
+        'PRESERVE': { x: 220, y: 550, width: 100, height: 55 },
+        'SHARE': { x: 80, y: 520, width: 100, height: 55 },
+        'ACCESS': { x: 80, y: 420, width: 100, height: 55 },
+        'TRANSFORM': { x: 80, y: 330, width: 100, height: 55 }
     };
     
     // Create stage rectangles with names
@@ -633,46 +633,118 @@ function toggleDescription(index) {
 
 // Dynamic Arrow Positioning
 function positionDynamicArrows() {
-    const arrowsContainer = document.getElementById('dynamic-arrows-container');
+    const rightArrowsContainer = document.getElementById('dynamic-arrows-container');
+    const leftArrowsContainer = document.querySelector('.left-strip');
     const stageContainers = document.querySelectorAll('.stage-stack-container');
     
-    if (!arrowsContainer || !stageContainers.length) return;
+    if (!rightArrowsContainer || !leftArrowsContainer || !stageContainers.length) return;
     
     // Clear existing arrows
-    arrowsContainer.innerHTML = '';
+    rightArrowsContainer.innerHTML = '';
     
-    // Create arrows for each stage transition (except the last one and FUND)
+    // Clear existing return arrow (keep only the single one)
+    const existingReturn = leftArrowsContainer.querySelector('.dynamic-return-arrow');
+    if (existingReturn) existingReturn.remove();
+    
+    // Calculate total stack height and positions
+    const contentStrip = document.querySelector('.content-strip');
+    const contentRect = contentStrip.getBoundingClientRect();
+    const rightParentRect = rightArrowsContainer.getBoundingClientRect();
+    const leftParentRect = leftArrowsContainer.getBoundingClientRect();
+    
+    let previousBottom = 0;
+    
+    // Create right-side arrows with dynamic braces
     stageContainers.forEach((container, index) => {
         const stageName = container.querySelector('.stage-title-compact').textContent.trim().toUpperCase();
         
-        // Skip FUND stage and last stage
-        if (stageName === 'FUND' || index === stageContainers.length - 1) return;
+        // Skip FUND stage and last stage for right arrows
+        if (stageName === 'FUND' || index === stageContainers.length - 1) {
+            const containerRect = container.getBoundingClientRect();
+            previousBottom = containerRect.bottom - contentRect.top;
+            return;
+        }
         
-        // Get the position of current stage container
-        const containerRect = container.getBoundingClientRect();
-        const parentRect = arrowsContainer.getBoundingClientRect();
+        // Get current and next container positions
+        const currentRect = container.getBoundingClientRect();
+        const nextContainer = stageContainers[index + 1];
         
-        // Calculate relative position
-        const topPosition = containerRect.top - parentRect.top + (containerRect.height / 2) - 20;
+        if (!nextContainer) return;
         
-        // Create arrow element
+        const nextRect = nextContainer.getBoundingClientRect();
+        
+        // Calculate positions relative to right arrow container
+        const currentBottom = currentRect.bottom - rightParentRect.top;
+        const nextTop = nextRect.top - rightParentRect.top;
+        const gapHeight = nextTop - currentBottom;
+        const braceHeight = Math.max(gapHeight - 10, 30); // Minimum 30px height
+        
+        // Create dynamic brace arrow
         const arrowElement = document.createElement('div');
         arrowElement.className = 'dynamic-stage-arrow';
-        arrowElement.style.top = `${topPosition}px`;
+        arrowElement.style.top = `${currentBottom + 5}px`;
+        arrowElement.style.height = `${braceHeight}px`;
+        
+        // Enhanced colors for better visibility
+        const colors = {
+            primary: '#2E86C1',
+            secondary: '#3498DB',
+            accent: '#5DADE2',
+            highlight: '#AED6F1'
+        };
         
         arrowElement.innerHTML = `
-            <div class="arrow-brace">
-                <div class="brace-top"></div>
-                <div class="brace-connector"></div>
-                <div class="brace-bottom"></div>
+            <div class="dynamic-arrow-brace" style="height: 100%;">
+                <div class="dynamic-brace-top" style="background: linear-gradient(to right, ${colors.primary}, ${colors.accent});"></div>
+                <div class="dynamic-brace-connector" style="height: ${braceHeight - 20}px; background: linear-gradient(to bottom, ${colors.secondary}, ${colors.primary});"></div>
+                <div class="dynamic-brace-bottom" style="background: linear-gradient(to right, ${colors.accent}, ${colors.primary});"></div>
             </div>
-            <div class="dynamic-arrow-icon">
+            <div class="enhanced-arrow-icon" style="background: linear-gradient(135deg, ${colors.primary}, ${colors.secondary});">
                 <i class="fas fa-arrow-down"></i>
             </div>
         `;
         
-        arrowsContainer.appendChild(arrowElement);
+        rightArrowsContainer.appendChild(arrowElement);
+        previousBottom = nextRect.bottom - contentRect.top;
     });
+    
+    // Create dynamic return arrow on the left
+    const firstContainer = stageContainers[0];
+    const lastContainer = stageContainers[stageContainers.length - 1];
+    
+    if (firstContainer && lastContainer) {
+        const firstRect = firstContainer.getBoundingClientRect();
+        const lastRect = lastContainer.getBoundingClientRect();
+        
+        const returnTop = lastRect.bottom - leftParentRect.top;
+        const returnHeight = (firstRect.top - leftParentRect.top) - returnTop - 20;
+        
+        const returnArrow = document.createElement('div');
+        returnArrow.className = 'dynamic-return-arrow';
+        returnArrow.style.top = `${returnTop + 10}px`;
+        returnArrow.style.height = `${Math.max(returnHeight, 100)}px`;
+        
+        // Enhanced return arrow colors
+        const returnColors = {
+            primary: '#E74C3C',
+            secondary: '#C0392B',
+            accent: '#F1948A',
+            highlight: '#FADBD8'
+        };
+        
+        returnArrow.innerHTML = `
+            <div class="dynamic-return-brace" style="height: 100%;">
+                <div class="return-connector-line" style="height: ${Math.max(returnHeight - 80, 40)}px; background: linear-gradient(to top, ${returnColors.primary}, ${returnColors.secondary});"></div>
+                <div class="return-top-connector" style="background: linear-gradient(to left, ${returnColors.secondary}, ${returnColors.accent});"></div>
+            </div>
+            <div class="enhanced-return-icon" style="background: linear-gradient(135deg, ${returnColors.primary}, ${returnColors.secondary});">
+                <i class="fas fa-arrow-up"></i>
+            </div>
+            <div class="return-label-enhanced">Cycle Return</div>
+        `;
+        
+        leftArrowsContainer.appendChild(returnArrow);
+    }
 }
 
 // Initialize on page load
@@ -680,7 +752,14 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeCircularVisualization();
     
     // Position arrows after a short delay to ensure layout is complete
-    setTimeout(positionDynamicArrows, 200);
+    setTimeout(positionDynamicArrows, 300);
+    
+    // Re-position arrows when stages are expanded/collapsed
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.stage-header') || e.target.closest('.category-header')) {
+            setTimeout(positionDynamicArrows, 100);
+        }
+    });
 });
 
 // Reposition arrows on window resize
@@ -720,6 +799,8 @@ if (typeof Math.cos === 'undefined') {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     padding: 1rem;
+    min-height: 450px;
+    height: 450px;
 }
 
 /* Stacked Lifecycle Container */
@@ -940,61 +1021,138 @@ if (typeof Math.cos === 'undefined') {
     }
 }
 
-/* Dynamic Right Side Arrows */
+/* Enhanced Dynamic Right Side Arrows */
 .dynamic-stage-arrow {
     position: absolute;
-    right: 20px;
+    right: 15px;
     display: flex;
-    align-items: center;
-    gap: 10px;
-    z-index: 10;
+    align-items: flex-start;
+    gap: 12px;
+    z-index: 15;
+    width: 70px;
 }
 
-.arrow-brace {
+.dynamic-arrow-brace {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    width: 40px;
+    width: 45px;
+    position: relative;
 }
 
-.brace-top, .brace-bottom {
-    width: 30px;
-    height: 3px;
-    background: linear-gradient(to right, #3498db, #2980b9);
-    border-radius: 2px;
-}
-
-.brace-connector {
-    width: 3px;
-    height: 20px;
-    background: linear-gradient(to bottom, #2980b9, #3498db);
-    border-radius: 2px;
-    margin-left: 27px;
-}
-
-.dynamic-arrow-icon {
-    background: linear-gradient(135deg, #2980b9, #3498db);
-    color: white;
+.dynamic-brace-top, .dynamic-brace-bottom {
     width: 35px;
-    height: 35px;
+    height: 4px;
+    border-radius: 2px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.dynamic-brace-connector {
+    width: 4px;
+    border-radius: 2px;
+    margin-left: 31px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.enhanced-arrow-icon {
+    color: white;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    animation: dynamic-arrow-pulse 3s infinite;
+    font-size: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    border: 3px solid rgba(255, 255, 255, 0.95);
+    animation: enhanced-arrow-pulse 3.5s infinite;
+    margin-top: -5px;
 }
 
-@keyframes dynamic-arrow-pulse {
+@keyframes enhanced-arrow-pulse {
     0%, 100% { 
         transform: scale(1);
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     }
     50% { 
-        transform: scale(1.1);
-        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.5);
+        transform: scale(1.15);
+        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.6);
+    }
+}
+
+/* Enhanced Dynamic Return Arrow */
+.dynamic-return-arrow {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    z-index: 15;
+    width: 60px;
+}
+
+.dynamic-return-brace {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    position: relative;
+}
+
+.return-connector-line {
+    width: 5px;
+    border-radius: 3px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.return-top-connector {
+    width: 40px;
+    height: 5px;
+    border-radius: 3px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    margin-top: 2px;
+}
+
+.enhanced-return-icon {
+    color: white;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+    border: 3px solid rgba(255, 255, 255, 0.95);
+    animation: enhanced-return-pulse 4s infinite;
+    margin-top: 5px;
+}
+
+.return-label-enhanced {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 11px;
+    font-weight: bold;
+    background: rgba(231, 76, 60, 0.9);
+    padding: 4px 10px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+}
+
+@keyframes enhanced-return-pulse {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+    }
+    50% { 
+        transform: scale(1.2);
+        box-shadow: 0 8px 30px rgba(231, 76, 60, 0.7);
     }
 }
 

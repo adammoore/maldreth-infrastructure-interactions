@@ -103,13 +103,44 @@
     <footer class="bg-dark text-white text-center py-3 mt-auto">
         <div class="container">
             <p class="mb-1">&copy; 2024 <strong>PRISM</strong> - Platform for Research Infrastructure Synergy Mapping</p>
-            <p class="mb-0 small">
+            <p class="mb-1 small">
                 An output of <strong>MaLDReTH II</strong> (Mapping the Landscape of Digital Research Tools Harmonised) | 
                 <a href="https://www.rd-alliance.org/groups/mapping-the-landscape-of-digital-research-tools-ii-maldreth-ii" class="text-light text-decoration-none" target="_blank">
                     <i class="fas fa-external-link-alt me-1"></i>MaLDReTH II Working Group
                 </a>
             </p>
+            <p class="mb-0 small text-muted">
+                <i class="fas fa-code-branch me-1"></i>
+                <span id="deployment-info">Loading deployment info...</span>
+            </p>
         </div>
+        
+        <script>
+        // Add deployment information to footer
+        document.addEventListener('DOMContentLoaded', function() {
+            const deploymentInfo = document.getElementById('deployment-info');
+            if (deploymentInfo) {
+                const buildTime = new Date().toISOString();
+                const buildDate = new Date().toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short', 
+                    day: 'numeric'
+                });
+                const buildTimeFormatted = new Date().toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+                
+                deploymentInfo.innerHTML = `
+                    Build: ${buildDate} at ${buildTimeFormatted} | 
+                    <a href="https://github.com/adammoore/maldreth-infrastructure-interactions" class="text-muted text-decoration-none" target="_blank">
+                        <i class="fab fa-github me-1"></i>v3.1.0+
+                    </a>
+                `;
+            }
+        });
+        </script>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
