@@ -59,7 +59,7 @@
             </div>
         </div>
         
-        <!-- Stacked Interactive View -->
+        <!-- Stacked Interactive View with Three-Column Layout -->
         <div class="col-lg-7">
             <div class="stacked-lifecycle-container">
                 <div class="lifecycle-header mb-4">
@@ -82,51 +82,26 @@
                     </div>
                 </div>
                 
-                {% for stage in stages %}
-                {% set stage_color = '#90C695' if stage.name in ['CONCEPTUALISE', 'PLAN', 'COLLECT', 'PROCESS', 'ANALYSE', 'STORE'] else '#7FB3D3' %}
-                {% set stage_color = '#4A90A4' if stage.name == 'FUND' else stage_color %}
+                <!-- Three-Column Layout for Arrows and Content -->
+                <div class="three-column-layout">
+                    <!-- Left Arrow Strip -->
+                    <div class="arrow-strip left-strip">
+                        <div class="return-flow-arrow">
+                            <div class="return-path"></div>
+                            <div class="return-arrow-icon">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            <div class="return-label">Return</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Central Content Strip -->
+                    <div class="content-strip">
+                        {% for stage in stages %}
+                        {% set stage_color = '#90C695' if stage.name in ['CONCEPTUALISE', 'PLAN', 'COLLECT', 'PROCESS', 'ANALYSE', 'STORE'] else '#7FB3D3' %}
+                        {% set stage_color = '#4A90A4' if stage.name == 'FUND' else stage_color %}
                 
-                <div class="stage-stack-container mb-2 {{ 'fund-stage' if stage.name == 'FUND' else '' }}" data-stage-id="{{ stage.id }}">
-                    <!-- Brace-style Flow Arrow on Right Side -->
-                    {% if not loop.first and stage.name != 'FUND' %}
-                    <div class="brace-arrow-connector">
-                        <div class="brace-line-horizontal"></div>
-                        <div class="brace-line-vertical"></div>
-                        <div class="brace-line-horizontal-down"></div>
-                        <div class="brace-arrow">
-                            <i class="fas fa-arrow-down"></i>
-                        </div>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Special Fund connections -->
-                    {% if stage.name == 'FUND' %}
-                    <div class="fund-connectors">
-                        <div class="fund-arrow fund-arrow-right">
-                            <i class="fas fa-arrow-right"></i>
-                            <span class="fund-target">Plan</span>
-                        </div>
-                        <div class="fund-arrow fund-arrow-left">
-                            <i class="fas fa-arrow-left"></i>
-                            <span class="fund-target">Conceptualise</span>
-                        </div>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Circular return connector on left side for last stage -->
-                    {% if loop.last %}
-                    <div class="left-return-connector">
-                        <div class="return-line-horizontal"></div>
-                        <div class="return-line-vertical-long"></div>
-                        <div class="return-line-horizontal-top"></div>
-                        <div class="return-arrow">
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                        <div class="return-text">
-                            <small class="text-light"><i class="fas fa-redo me-1"></i>Cycle Return</small>
-                        </div>
-                    </div>
-                    {% endif %}
+                        <div class="stage-stack-container mb-2 {{ 'fund-stage' if stage.name == 'FUND' else '' }}" data-stage-id="{{ stage.id }}">
                     
                     <!-- Stage Header - Clickable, Compact -->
                     <div class="stage-header clickable compact" style="background-color: {{ stage_color }};" onclick="toggleStageExpansion({{ stage.id }}); highlightCircularStage({{ stage.id }})">
@@ -180,7 +155,27 @@
                         {% endif %}
                     </div>
                 </div>
-                {% endfor %}
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Right Arrow Strip -->
+                    <div class="arrow-strip right-strip">
+                        {% for stage in stages %}
+                        {% if not loop.first and stage.name != 'FUND' %}
+                        <div class="right-flow-arrow" data-stage-index="{{ loop.index0 }}">
+                            <div class="brace-lines">
+                                <div class="brace-h1"></div>
+                                <div class="brace-v"></div>
+                                <div class="brace-h2"></div>
+                            </div>
+                            <div class="flow-arrow-icon">
+                                <i class="fas fa-arrow-down"></i>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
                 
             </div>
         </div>
@@ -697,6 +692,41 @@ if (typeof Math.cos === 'undefined') {
     margin-bottom: 2rem;
 }
 
+/* Three-Column Layout for Arrows and Content */
+.three-column-layout {
+    display: grid;
+    grid-template-columns: 80px 1fr 80px;
+    gap: 0;
+    position: relative;
+    min-height: 600px;
+}
+
+/* Arrow Strips */
+.arrow-strip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.left-strip {
+    background: rgba(231, 76, 60, 0.1);
+    border-radius: 8px 0 0 8px;
+    padding: 20px 0;
+}
+
+.right-strip {
+    background: rgba(52, 152, 219, 0.1);
+    border-radius: 0 8px 8px 0;
+    padding: 20px 0;
+}
+
+/* Content Strip */
+.content-strip {
+    padding: 0 10px;
+    position: relative;
+}
+
 .lifecycle-header {
     text-align: center;
     margin-bottom: 2rem;
@@ -750,6 +780,145 @@ if (typeof Math.cos === 'undefined') {
     padding: 2px 6px;
     border-radius: 8px;
     white-space: nowrap;
+}
+
+/* Right Strip Flow Arrows */
+.right-flow-arrow {
+    position: relative;
+    margin: 60px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.brace-lines {
+    position: relative;
+    width: 60px;
+    height: 40px;
+}
+
+.brace-h1 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40px;
+    height: 4px;
+    background: linear-gradient(to right, #3498db, #2980b9);
+    border-radius: 2px;
+}
+
+.brace-v {
+    position: absolute;
+    top: 0;
+    left: 36px;
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(to bottom, #2980b9, #3498db);
+    border-radius: 2px;
+}
+
+.brace-h2 {
+    position: absolute;
+    top: 16px;
+    left: 40px;
+    width: 20px;
+    height: 4px;
+    background: linear-gradient(to right, #3498db, #2980b9);
+    border-radius: 2px;
+}
+
+.flow-arrow-icon {
+    background: linear-gradient(135deg, #2980b9, #3498db);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    animation: right-flow-pulse 3s infinite;
+    margin-top: 10px;
+}
+
+@keyframes right-flow-pulse {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    50% { 
+        transform: scale(1.15);
+        box-shadow: 0 6px 18px rgba(52, 152, 219, 0.5);
+    }
+}
+
+/* Left Strip Return Arrow */
+.return-flow-arrow {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.return-path {
+    width: 4px;
+    height: 300px;
+    background: linear-gradient(to top, #e74c3c, #c0392b);
+    border-radius: 2px;
+    position: relative;
+}
+
+.return-path::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -8px;
+    width: 20px;
+    height: 4px;
+    background: linear-gradient(to right, #e74c3c, #c0392b);
+    border-radius: 2px;
+}
+
+.return-arrow-icon {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    animation: return-flow-pulse 4s infinite;
+    margin-top: -320px;
+}
+
+.return-label {
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    margin-top: 8px;
+    background: rgba(231, 76, 60, 0.8);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+@keyframes return-flow-pulse {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    50% { 
+        transform: scale(1.2);
+        box-shadow: 0 6px 18px rgba(231, 76, 60, 0.5);
+    }
 }
 
 /* Fund special connectors */
