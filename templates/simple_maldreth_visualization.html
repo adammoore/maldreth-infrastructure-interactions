@@ -470,7 +470,7 @@ function initializeCircularVisualization() {
         const toPos = stagePositions[conn.to];
         
         if (fromPos && toPos) {
-            // Calculate edge-to-edge connection points
+            // Calculate edge-to-edge connection points with proper spacing
             const deltaX = toPos.x - fromPos.x;
             const deltaY = toPos.y - fromPos.y;
             const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -481,18 +481,38 @@ function initializeCircularVisualization() {
             const dirX = deltaX / distance;
             const dirY = deltaY / distance;
             
-            // Calculate edge points
-            const fromEdgeX = fromPos.x + dirX * (fromPos.width / 2);
-            const fromEdgeY = fromPos.y + dirY * (fromPos.height / 2);
-            const toEdgeX = toPos.x - dirX * (toPos.width / 2);
-            const toEdgeY = toPos.y - dirY * (toPos.height / 2);
+            // Calculate exact edge points with better edge detection
+            // Account for rectangle bounds properly
+            let fromEdgeX, fromEdgeY, toEdgeX, toEdgeY;
             
-            // Add offset for bidirectional arrows to prevent overlap
+            // From node edge calculation
+            if (Math.abs(dirX) > Math.abs(dirY)) {
+                // Horizontal-dominant direction - use left/right edges
+                fromEdgeX = fromPos.x + Math.sign(dirX) * (fromPos.width / 2);
+                fromEdgeY = fromPos.y + dirY * (fromPos.height / 2) * Math.abs(dirX);
+            } else {
+                // Vertical-dominant direction - use top/bottom edges
+                fromEdgeX = fromPos.x + dirX * (fromPos.width / 2) * Math.abs(dirY);
+                fromEdgeY = fromPos.y + Math.sign(dirY) * (fromPos.height / 2);
+            }
+            
+            // To node edge calculation
+            if (Math.abs(dirX) > Math.abs(dirY)) {
+                // Horizontal-dominant direction - use left/right edges
+                toEdgeX = toPos.x - Math.sign(dirX) * (toPos.width / 2);
+                toEdgeY = toPos.y - dirY * (toPos.height / 2) * Math.abs(dirX);
+            } else {
+                // Vertical-dominant direction - use top/bottom edges
+                toEdgeX = toPos.x - dirX * (toPos.width / 2) * Math.abs(dirY);
+                toEdgeY = toPos.y - Math.sign(dirY) * (toPos.height / 2);
+            }
+            
+            // Enhanced offset for bidirectional arrows to prevent overlap
             let offsetX = 0, offsetY = 0;
             if (conn.type === 'bidirectional') {
-                // Perpendicular offset (rotate direction 90 degrees)
-                offsetX = -dirY * 8; // Perpendicular to line direction
-                offsetY = dirX * 8;
+                // Larger perpendicular offset (rotate direction 90 degrees)
+                offsetX = -dirY * 12; // Increased offset for better visibility
+                offsetY = dirX * 12;
             }
             
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -502,14 +522,16 @@ function initializeCircularVisualization() {
             line.setAttribute('y2', toEdgeY + offsetY);
             
             if (conn.type === 'bidirectional') {
-                line.setAttribute('stroke', 'rgba(255,215,0,0.9)');
-                line.setAttribute('stroke-dasharray', '4,4');
+                line.setAttribute('stroke', 'rgba(255,215,0,0.95)');
+                line.setAttribute('stroke-dasharray', '5,3');
                 line.setAttribute('marker-end', 'url(#arrow-reverse)');
-                line.setAttribute('stroke-width', '2.5');
+                line.setAttribute('stroke-width', '3');
+                line.setAttribute('opacity', '0.9');
             } else {
-                line.setAttribute('stroke', 'rgba(255,255,255,0.8)');
+                line.setAttribute('stroke', 'rgba(255,255,255,0.85)');
                 line.setAttribute('marker-end', 'url(#arrow-main)');
-                line.setAttribute('stroke-width', '2');
+                line.setAttribute('stroke-width', '2.5');
+                line.setAttribute('opacity', '0.95');
             }
             
             svg.appendChild(line);
@@ -543,19 +565,23 @@ function toggleCircularView() {
     if (!container || !button || !circularCol || !stackedCol || !overviewContainer) return;
     
     if (container.style.display === 'none') {
-        // Show circular view
+        // Show circular view - restore full dimensions
         container.style.display = 'block';
         circularCol.className = 'col-lg-5';
         stackedCol.className = 'col-lg-7';
         overviewContainer.classList.remove('collapsed');
+        overviewContainer.style.height = 'fit-content';
+        overviewContainer.style.width = 'auto';
         if (headerDiv) headerDiv.style.display = 'block';
         button.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide';
     } else {
-        // Hide circular view and expand stacked view
+        // Hide circular view and minimize container dimensions
         container.style.display = 'none';
-        circularCol.className = 'col-lg-1'; // Minimize to just show button
+        circularCol.className = 'col-lg-1'; // Minimize column width
         stackedCol.className = 'col-lg-11'; // Expand stacked view
         overviewContainer.classList.add('collapsed');
+        overviewContainer.style.height = '80px'; // Reduce height significantly
+        overviewContainer.style.width = '100px'; // Reduce width as well
         if (headerDiv) headerDiv.style.display = 'none'; // Hide title when collapsed
         button.innerHTML = '<i class="fas fa-eye me-1"></i>Show';
     }
