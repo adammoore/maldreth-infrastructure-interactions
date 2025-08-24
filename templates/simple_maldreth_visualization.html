@@ -37,7 +37,7 @@
                 
                 <!-- Circular SVG Visualization -->
                 <div id="circular-viz-container" class="circular-viz-wrapper" style="position: relative; height: 600px;">
-                    <svg id="circular-lifecycle" width="100%" height="100%" viewBox="0 0 600 700">
+                    <svg id="circular-lifecycle" width="100%" height="100%" viewBox="0 0 650 720">
                         <defs>
                             <marker id="arrow-main" markerWidth="10" markerHeight="7" 
                                     refX="9" refY="3.5" orient="auto">
@@ -49,9 +49,9 @@
                             </marker>
                         </defs>
                         
-                        <!-- Title -->
-                        <text x="250" y="570" text-anchor="middle" fill="white" font-size="16" font-weight="bold">The MaLDReTH</text>
-                        <text x="250" y="590" text-anchor="middle" fill="white" font-size="14">Research Data Lifecycle</text>
+                        <!-- Title moved to bottom -->
+                        <text x="300" y="650" text-anchor="middle" fill="white" font-size="16" font-weight="bold">The MaLDReTH</text>
+                        <text x="300" y="670" text-anchor="middle" fill="white" font-size="14">Research Data Lifecycle</text>
                         
                         <!-- Stage nodes and connections will be added by JavaScript -->
                     </svg>
@@ -97,8 +97,18 @@
                     <!-- Central Content Strip -->
                     <div class="content-strip">
                         {% for stage in stages %}
-                        {% set stage_color = '#90C695' if stage.name in ['CONCEPTUALISE', 'PLAN', 'COLLECT', 'PROCESS', 'ANALYSE', 'STORE'] else '#7FB3D3' %}
-                        {% set stage_color = '#4A90A4' if stage.name == 'FUND' else stage_color %}
+                        {% set stage_color = '#2C5F6B' if stage.name == 'FUND' else 
+                                             '#27AE60' if stage.name == 'CONCEPTUALISE' else
+                                             '#2ECC71' if stage.name == 'PLAN' else
+                                             '#58D68D' if stage.name == 'COLLECT' else
+                                             '#1ABC9C' if stage.name == 'PROCESS' else
+                                             '#16A085' if stage.name == 'ANALYSE' else
+                                             '#3498DB' if stage.name == 'STORE' else
+                                             '#2980B9' if stage.name == 'PUBLISH' else
+                                             '#8E44AD' if stage.name == 'PRESERVE' else
+                                             '#9B59B6' if stage.name == 'SHARE' else
+                                             '#E67E22' if stage.name == 'ACCESS' else
+                                             '#D35400' if stage.name == 'TRANSFORM' else '#3498DB' %}
                 
                         <div class="stage-stack-container mb-2 {{ 'fund-stage' if stage.name == 'FUND' else '' }}" data-stage-id="{{ stage.id }}">
                     
@@ -395,20 +405,20 @@ function initializeCircularVisualization() {
         return;
     }
     
-    // Enhanced MaLDReTH stage positions with expanded viewport and better spacing
+    // Maximized MaLDReTH stage positions using full available space
     const stagePositions = {
-        'CONCEPTUALISE': { x: 80, y: 250, width: 130, height: 55 },
-        'FUND': { x: 220, y: 180, width: 100, height: 55 },
-        'PLAN': { x: 370, y: 220, width: 100, height: 55 },
-        'COLLECT': { x: 480, y: 250, width: 100, height: 55 },
-        'PROCESS': { x: 520, y: 350, width: 100, height: 55 },
-        'ANALYSE': { x: 520, y: 450, width: 100, height: 55 },
-        'STORE': { x: 480, y: 550, width: 100, height: 55 },
-        'PUBLISH': { x: 370, y: 580, width: 100, height: 55 },
-        'PRESERVE': { x: 220, y: 550, width: 100, height: 55 },
-        'SHARE': { x: 80, y: 520, width: 100, height: 55 },
-        'ACCESS': { x: 80, y: 420, width: 100, height: 55 },
-        'TRANSFORM': { x: 80, y: 330, width: 100, height: 55 }
+        'CONCEPTUALISE': { x: 90, y: 280, width: 140, height: 60 },
+        'FUND': { x: 250, y: 200, width: 110, height: 60 },
+        'PLAN': { x: 410, y: 240, width: 110, height: 60 },
+        'COLLECT': { x: 520, y: 280, width: 110, height: 60 },
+        'PROCESS': { x: 560, y: 390, width: 110, height: 60 },
+        'ANALYSE': { x: 560, y: 500, width: 110, height: 60 },
+        'STORE': { x: 520, y: 610, width: 110, height: 60 },
+        'PUBLISH': { x: 410, y: 650, width: 110, height: 60 },
+        'PRESERVE': { x: 250, y: 610, width: 110, height: 60 },
+        'SHARE': { x: 90, y: 580, width: 110, height: 60 },
+        'ACCESS': { x: 90, y: 470, width: 110, height: 60 },
+        'TRANSFORM': { x: 90, y: 360, width: 110, height: 60 }
     };
     
     // Create stage rectangles with names
@@ -416,8 +426,20 @@ function initializeCircularVisualization() {
         const pos = stagePositions[stage.name];
         if (!pos) return;
         
-        const stageColor = stage.name === 'FUND' ? '#4A90A4' : 
-                          ['CONCEPTUALISE', 'PLAN', 'COLLECT', 'PROCESS', 'ANALYSE', 'STORE'].includes(stage.name) ? '#90C695' : '#7FB3D3';
+        // Enhanced color scheme for better legibility - based on original but more vibrant
+        const stageColor = stage.name === 'FUND' ? '#2C5F6B' : // Deep teal for FUND (special position)
+            stage.name === 'CONCEPTUALISE' ? '#27AE60' : // Vibrant green for start
+            stage.name === 'PLAN' ? '#2ECC71' : // Bright green 
+            stage.name === 'COLLECT' ? '#58D68D' : // Light green
+            stage.name === 'PROCESS' ? '#1ABC9C' : // Turquoise 
+            stage.name === 'ANALYSE' ? '#16A085' : // Dark turquoise
+            stage.name === 'STORE' ? '#3498DB' : // Bright blue
+            stage.name === 'PUBLISH' ? '#2980B9' : // Medium blue
+            stage.name === 'PRESERVE' ? '#8E44AD' : // Purple
+            stage.name === 'SHARE' ? '#9B59B6' : // Light purple  
+            stage.name === 'ACCESS' ? '#E67E22' : // Orange
+            stage.name === 'TRANSFORM' ? '#D35400' : // Dark orange
+            '#3498DB'; // Default blue fallback
         
         // Stage rectangle
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -673,33 +695,39 @@ function positionDynamicArrows() {
         
         const nextRect = nextContainer.getBoundingClientRect();
         
-        // Calculate positions relative to right arrow container
-        const currentBottom = currentRect.bottom - rightParentRect.top;
-        const nextTop = nextRect.top - rightParentRect.top;
-        const gapHeight = nextTop - currentBottom;
-        const braceHeight = Math.max(gapHeight - 10, 30); // Minimum 30px height
+        // Link to the top of current pill (stage header area)
+        const currentHeader = container.querySelector('.stage-header');
+        const nextHeader = nextContainer.querySelector('.stage-header');
+        const currentHeaderRect = currentHeader.getBoundingClientRect();
+        const nextHeaderRect = nextHeader.getBoundingClientRect();
+        
+        // Calculate positions relative to right arrow container - link to stage name area
+        const currentHeaderBottom = currentHeaderRect.bottom - rightParentRect.top;
+        const nextHeaderTop = nextHeaderRect.top - rightParentRect.top;
+        const gapHeight = nextHeaderTop - currentHeaderBottom;
+        const braceHeight = Math.max(gapHeight - 5, 35); // Link exactly to headers
         
         // Create dynamic brace arrow
         const arrowElement = document.createElement('div');
         arrowElement.className = 'dynamic-stage-arrow';
-        arrowElement.style.top = `${currentBottom + 5}px`;
+        arrowElement.style.top = `${currentHeaderBottom + 2}px`;
         arrowElement.style.height = `${braceHeight}px`;
         
-        // Enhanced colors for better visibility
+        // High contrast colors for better visibility against gradient background
         const colors = {
-            primary: '#2E86C1',
-            secondary: '#3498DB',
-            accent: '#5DADE2',
-            highlight: '#AED6F1'
+            primary: '#1A5490',   // Darker blue for contrast
+            secondary: '#2E86C1', // Medium blue
+            accent: '#85C1E9',    // Light blue for highlights
+            highlight: '#FFFFFF'  // White highlights
         };
         
         arrowElement.innerHTML = `
             <div class="dynamic-arrow-brace" style="height: 100%;">
-                <div class="dynamic-brace-top" style="background: linear-gradient(to right, ${colors.primary}, ${colors.accent});"></div>
-                <div class="dynamic-brace-connector" style="height: ${braceHeight - 20}px; background: linear-gradient(to bottom, ${colors.secondary}, ${colors.primary});"></div>
-                <div class="dynamic-brace-bottom" style="background: linear-gradient(to right, ${colors.accent}, ${colors.primary});"></div>
+                <div class="dynamic-brace-top" style="background: linear-gradient(to right, ${colors.primary}, ${colors.secondary}); border-color: ${colors.highlight};"></div>
+                <div class="dynamic-brace-connector" style="height: ${braceHeight - 16}px; background: linear-gradient(to bottom, ${colors.primary}, ${colors.secondary}); border-color: ${colors.highlight};"></div>
+                <div class="dynamic-brace-bottom" style="background: linear-gradient(to right, ${colors.secondary}, ${colors.primary}); border-color: ${colors.highlight};"></div>
             </div>
-            <div class="enhanced-arrow-icon" style="background: linear-gradient(135deg, ${colors.primary}, ${colors.secondary});">
+            <div class="enhanced-arrow-icon" style="background: linear-gradient(135deg, ${colors.primary}, ${colors.secondary}); border-color: ${colors.highlight};">
                 <i class="fas fa-arrow-down"></i>
             </div>
         `;
@@ -708,39 +736,44 @@ function positionDynamicArrows() {
         previousBottom = nextRect.bottom - contentRect.top;
     });
     
-    // Create dynamic return arrow on the left
+    // Create dynamic return arrow on the left - from bottom to top
     const firstContainer = stageContainers[0];
     const lastContainer = stageContainers[stageContainers.length - 1];
     
     if (firstContainer && lastContainer) {
-        const firstRect = firstContainer.getBoundingClientRect();
-        const lastRect = lastContainer.getBoundingClientRect();
+        // Get header positions for precise linking
+        const firstHeader = firstContainer.querySelector('.stage-header');
+        const lastHeader = lastContainer.querySelector('.stage-header');
+        const firstHeaderRect = firstHeader.getBoundingClientRect();
+        const lastHeaderRect = lastHeader.getBoundingClientRect();
         
-        const returnTop = lastRect.bottom - leftParentRect.top;
-        const returnHeight = (firstRect.top - leftParentRect.top) - returnTop - 20;
+        // Calculate return path from last stage header to first stage header
+        const returnStart = lastHeaderRect.bottom - leftParentRect.top;
+        const returnEnd = firstHeaderRect.top - leftParentRect.top;
+        const returnHeight = Math.abs(returnStart - returnEnd) - 10;
         
         const returnArrow = document.createElement('div');
         returnArrow.className = 'dynamic-return-arrow';
-        returnArrow.style.top = `${returnTop + 10}px`;
-        returnArrow.style.height = `${Math.max(returnHeight, 100)}px`;
+        returnArrow.style.bottom = `${leftParentRect.height - returnStart + 5}px`;
+        returnArrow.style.height = `${Math.max(returnHeight, 120)}px`;
         
-        // Enhanced return arrow colors
+        // High contrast return arrow colors
         const returnColors = {
-            primary: '#E74C3C',
-            secondary: '#C0392B',
-            accent: '#F1948A',
-            highlight: '#FADBD8'
+            primary: '#B71C1C',   // Deep red for contrast
+            secondary: '#D32F2F', // Medium red
+            accent: '#EF5350',    // Light red
+            highlight: '#FFFFFF'  // White highlights
         };
         
         returnArrow.innerHTML = `
             <div class="dynamic-return-brace" style="height: 100%;">
-                <div class="return-connector-line" style="height: ${Math.max(returnHeight - 80, 40)}px; background: linear-gradient(to top, ${returnColors.primary}, ${returnColors.secondary});"></div>
-                <div class="return-top-connector" style="background: linear-gradient(to left, ${returnColors.secondary}, ${returnColors.accent});"></div>
+                <div class="return-connector-line" style="height: ${Math.max(returnHeight - 70, 50)}px; background: linear-gradient(to top, ${returnColors.primary}, ${returnColors.secondary}); border-color: ${returnColors.highlight};"></div>
+                <div class="return-top-connector" style="background: linear-gradient(to left, ${returnColors.secondary}, ${returnColors.accent}); border-color: ${returnColors.highlight};"></div>
             </div>
-            <div class="enhanced-return-icon" style="background: linear-gradient(135deg, ${returnColors.primary}, ${returnColors.secondary});">
+            <div class="enhanced-return-icon" style="background: linear-gradient(135deg, ${returnColors.primary}, ${returnColors.secondary}); border-color: ${returnColors.highlight};">
                 <i class="fas fa-arrow-up"></i>
             </div>
-            <div class="return-label-enhanced">Cycle Return</div>
+            <div class="return-label-enhanced">Return Flow</div>
         `;
         
         leftArrowsContainer.appendChild(returnArrow);
@@ -799,8 +832,8 @@ if (typeof Math.cos === 'undefined') {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     padding: 1rem;
-    min-height: 450px;
-    height: 450px;
+    min-height: 500px;
+    height: 500px;
 }
 
 /* Stacked Lifecycle Container */
@@ -817,7 +850,7 @@ if (typeof Math.cos === 'undefined') {
     grid-template-columns: 80px 1fr 80px;
     gap: 0;
     position: relative;
-    min-height: 600px;
+    min-height: 700px;
 }
 
 /* Arrow Strips */
@@ -1042,16 +1075,18 @@ if (typeof Math.cos === 'undefined') {
 
 .dynamic-brace-top, .dynamic-brace-bottom {
     width: 35px;
-    height: 4px;
+    height: 5px;
     border-radius: 2px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .dynamic-brace-connector {
-    width: 4px;
+    width: 5px;
     border-radius: 2px;
-    margin-left: 31px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    margin-left: 30px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     margin-top: 2px;
     margin-bottom: 2px;
 }
@@ -1104,17 +1139,19 @@ if (typeof Math.cos === 'undefined') {
 }
 
 .return-connector-line {
-    width: 5px;
+    width: 6px;
     border-radius: 3px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     position: relative;
 }
 
 .return-top-connector {
-    width: 40px;
-    height: 5px;
+    width: 45px;
+    height: 6px;
     border-radius: 3px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     margin-top: 2px;
 }
 
