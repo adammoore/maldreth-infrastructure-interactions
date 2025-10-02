@@ -45,7 +45,7 @@ INTERACTION_TYPES = [
 
 LIFECYCLE_STAGES = [
     'CONCEPTUALISE',
-    'PLAN', 
+    'PLAN',
     'FUND',
     'COLLECT',
     'PROCESS',
@@ -57,6 +57,175 @@ LIFECYCLE_STAGES = [
     'ACCESS',
     'TRANSFORM'
 ]
+
+# Interaction Type Definitions with examples and guidance
+INTERACTION_TYPE_DEFINITIONS = {
+    'API Integration': {
+        'definition': 'Direct programmatic connection between tools using Application Programming Interfaces',
+        'example': 'DMPTool connects to RSpace via REST API to sync data management plans',
+        'when_to_use': 'When tools communicate programmatically with structured data exchange',
+        'technical_indicators': ['REST API', 'GraphQL', 'SOAP', 'JSON', 'XML', 'OAuth'],
+        'common_protocols': ['HTTP/HTTPS', 'REST', 'SOAP', 'gRPC']
+    },
+    'Data Exchange': {
+        'definition': 'Transfer of research data files or datasets between tools',
+        'example': 'Zenodo receives data files exported from GitHub repositories',
+        'when_to_use': 'When the primary function is moving data content between systems',
+        'technical_indicators': ['file transfer', 'bulk data', 'datasets', 'repository sync'],
+        'common_protocols': ['FTP', 'SFTP', 'rsync', 'cloud storage APIs']
+    },
+    'Metadata Exchange': {
+        'definition': 'Transfer of descriptive information about data without moving the data itself',
+        'example': 'ORCID profile information linked to publications in Zenodo',
+        'when_to_use': 'When exchanging descriptions, citations, or contextual information',
+        'technical_indicators': ['metadata', 'schema', 'descriptive info', 'catalog'],
+        'common_protocols': ['OAI-PMH', 'SWORD', 'Dublin Core', 'DataCite']
+    },
+    'File Format Conversion': {
+        'definition': 'Transformation of data from one file format to another',
+        'example': 'Converting CSV data to Parquet format for analysis',
+        'when_to_use': 'When format transformation is the primary interaction purpose',
+        'technical_indicators': ['format change', 'conversion', 'transformation', 'encoding'],
+        'common_formats': ['CSV', 'JSON', 'XML', 'Parquet', 'HDF5', 'NetCDF']
+    },
+    'Workflow Integration': {
+        'definition': 'Tools combined into multi-step research workflows or pipelines',
+        'example': 'Jupyter Notebook packaged with Docker for reproducible analysis',
+        'when_to_use': 'When tools are orchestrated together in a sequence',
+        'technical_indicators': ['pipeline', 'workflow', 'orchestration', 'automation'],
+        'common_tools': ['Airflow', 'Nextflow', 'Snakemake', 'Galaxy', 'Taverna']
+    },
+    'Plugin/Extension': {
+        'definition': 'One tool extends functionality of another through add-ons or plugins',
+        'example': 'Zotero plugin installed in Microsoft Word for citation management',
+        'when_to_use': 'When one tool adds features directly into another tool\'s interface',
+        'technical_indicators': ['plugin', 'extension', 'add-on', 'module'],
+        'common_patterns': ['Browser extensions', 'IDE plugins', 'Office add-ins']
+    },
+    'Direct Database Connection': {
+        'definition': 'Tools query or write to shared database infrastructure',
+        'example': 'Analysis tool connects directly to PostgreSQL research database',
+        'when_to_use': 'When tools share underlying data storage layer',
+        'technical_indicators': ['database', 'SQL', 'NoSQL', 'direct connection'],
+        'common_databases': ['PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Elasticsearch']
+    },
+    'Web Service': {
+        'definition': 'Tools interact via web-based service endpoints (may include APIs)',
+        'example': 'Data repository accessed via OAI-PMH harvesting protocol',
+        'when_to_use': 'For web-protocol-based interactions like HTTP, SOAP, OAI-PMH',
+        'technical_indicators': ['web service', 'endpoint', 'WSDL', 'service oriented'],
+        'common_protocols': ['HTTP', 'SOAP', 'XML-RPC', 'OAI-PMH']
+    },
+    'Command Line Interface': {
+        'definition': 'Tools invoked or controlled via terminal commands or scripts',
+        'example': 'Python script calls FFmpeg via command line to process video data',
+        'when_to_use': 'When interaction happens through shell commands or scripts',
+        'technical_indicators': ['CLI', 'bash', 'shell script', 'command line'],
+        'common_contexts': ['Batch processing', 'Automation scripts', 'HPC jobs']
+    },
+    'Import/Export': {
+        'definition': 'Manual or semi-automated file-based data transfer between tools',
+        'example': 'Export CSV from REDCap, import into R for analysis',
+        'when_to_use': 'When users manually transfer files between systems',
+        'technical_indicators': ['export', 'import', 'download', 'upload', 'manual transfer'],
+        'common_formats': ['CSV', 'Excel', 'JSON', 'XML', 'text files']
+    },
+    'Other': {
+        'definition': 'Interaction types not covered by standard categories',
+        'example': 'Custom or novel integration approaches',
+        'when_to_use': 'When no other category fits; please describe in Technical Details',
+        'technical_indicators': ['custom', 'proprietary', 'novel', 'unique'],
+        'note': 'Please provide detailed description to help us improve categorization'
+    }
+}
+
+# Lifecycle Stage Definitions with detailed information
+LIFECYCLE_STAGE_DEFINITIONS = {
+    'CONCEPTUALISE': {
+        'definition': 'Initial research idea formation and hypothesis development',
+        'activities': ['Literature review', 'Hypothesis formation', 'Research question development'],
+        'typical_tools': ['Reference managers', 'Mind mapping tools', 'Literature databases'],
+        'duration': 'Weeks to months',
+        'outputs': ['Research questions', 'Hypotheses', 'Initial concepts']
+    },
+    'PLAN': {
+        'definition': 'Research design, methodology planning, and resource allocation',
+        'activities': ['Study design', 'Protocol development', 'Resource planning', 'DMP creation'],
+        'typical_tools': ['DMP tools', 'Project management', 'Protocol repositories'],
+        'duration': 'Weeks to months',
+        'outputs': ['Data Management Plans', 'Protocols', 'Study designs']
+    },
+    'FUND': {
+        'definition': 'Grant applications and resource acquisition',
+        'activities': ['Grant writing', 'Budget planning', 'Proposal submission'],
+        'typical_tools': ['Grant management systems', 'Budget calculators', 'Proposal tools'],
+        'duration': 'Months to years',
+        'outputs': ['Grant proposals', 'Budgets', 'Funding awards']
+    },
+    'COLLECT': {
+        'definition': 'Data gathering and experimental execution',
+        'activities': ['Experiments', 'Surveys', 'Observations', 'Measurements', 'Sampling'],
+        'typical_tools': ['Lab instruments', 'Survey platforms', 'Sensors', 'Data loggers'],
+        'duration': 'Days to years',
+        'outputs': ['Raw data', 'Observations', 'Measurements', 'Samples']
+    },
+    'PROCESS': {
+        'definition': 'Data cleaning, quality control, and preparation',
+        'activities': ['Data cleaning', 'Quality assurance', 'Normalization', 'Format conversion'],
+        'typical_tools': ['Data cleaning tools', 'ETL platforms', 'Quality control software'],
+        'duration': 'Days to months',
+        'outputs': ['Cleaned datasets', 'Quality reports', 'Processed data']
+    },
+    'ANALYSE': {
+        'definition': 'Statistical analysis and interpretation',
+        'activities': ['Statistical tests', 'Modeling', 'Visualization', 'Pattern discovery'],
+        'typical_tools': ['R', 'Python', 'SPSS', 'MATLAB', 'Jupyter', 'Statistical software'],
+        'duration': 'Weeks to months',
+        'outputs': ['Analysis results', 'Statistical models', 'Visualizations']
+    },
+    'STORE': {
+        'definition': 'Short-term data storage during active research',
+        'activities': ['Active storage', 'Backup', 'Version control', 'Collaboration'],
+        'typical_tools': ['Cloud storage', 'Version control', 'Lab servers', 'Collaborative platforms'],
+        'duration': 'Duration of project',
+        'outputs': ['Backed up data', 'Version history', 'Shared datasets']
+    },
+    'PUBLISH': {
+        'definition': 'Dissemination through journals, conferences, preprints',
+        'activities': ['Paper writing', 'Peer review', 'Conference presentations', 'Preprints'],
+        'typical_tools': ['Journal systems', 'Preprint servers', 'Writing tools', 'LaTeX'],
+        'duration': 'Months to years',
+        'outputs': ['Publications', 'Presentations', 'Preprints']
+    },
+    'PRESERVE': {
+        'definition': 'Long-term archival and curation',
+        'activities': ['Archiving', 'Format migration', 'Metadata enrichment', 'Curation'],
+        'typical_tools': ['Repositories', 'Archives', 'Preservation systems', 'Digital curation'],
+        'duration': 'Permanent',
+        'outputs': ['Archived datasets', 'DOIs', 'Preserved research outputs']
+    },
+    'SHARE': {
+        'definition': 'Making data accessible to others',
+        'activities': ['Publishing datasets', 'Access control', 'License assignment', 'Documentation'],
+        'typical_tools': ['Data repositories', 'Institutional repositories', 'Figshare', 'Zenodo'],
+        'duration': 'Ongoing',
+        'outputs': ['Shared datasets', 'Data publications', 'Access portals']
+    },
+    'ACCESS': {
+        'definition': 'Discovery and retrieval of data by users',
+        'activities': ['Data discovery', 'Search', 'Download', 'API access'],
+        'typical_tools': ['Data catalogs', 'Search engines', 'Repository interfaces', 'APIs'],
+        'duration': 'Ongoing',
+        'outputs': ['Downloaded data', 'Retrieved datasets', 'Access logs']
+    },
+    'TRANSFORM': {
+        'definition': 'Data reuse, repurposing, and derivative works',
+        'activities': ['Data reuse', 'Integration', 'Meta-analysis', 'Derivative creation'],
+        'typical_tools': ['Analysis tools', 'Integration platforms', 'Synthesis tools'],
+        'duration': 'Varies',
+        'outputs': ['Derived datasets', 'Integrated data', 'Meta-analyses']
+    }
+}
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -590,6 +759,34 @@ def upload_interactions_csv():
 def about():
     """About page with MaLDReTH II and RDA context."""
     return render_template('about.html')
+
+@app.route('/glossary')
+def glossary():
+    """Comprehensive glossary and terminology reference page."""
+    try:
+        # Get all stages with their definitions
+        stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
+
+        # Get statistics for context
+        total_interactions = ToolInteraction.query.count()
+        total_tools = ExemplarTool.query.count()
+
+        # Get interaction type usage statistics
+        interaction_type_stats = {}
+        for itype in INTERACTION_TYPES:
+            count = ToolInteraction.query.filter_by(interaction_type=itype).count()
+            interaction_type_stats[itype] = count
+
+        return render_template('glossary.html',
+                             interaction_types=INTERACTION_TYPE_DEFINITIONS,
+                             lifecycle_stages=LIFECYCLE_STAGE_DEFINITIONS,
+                             stages=stages,
+                             interaction_type_stats=interaction_type_stats,
+                             total_interactions=total_interactions,
+                             total_tools=total_tools)
+    except Exception as e:
+        logger.error(f"Error in glossary route: {e}")
+        return render_template('error.html', error=str(e)), 500
 
 @app.route('/information-structures')
 def information_structures():

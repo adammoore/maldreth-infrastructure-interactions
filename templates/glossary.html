@@ -1,0 +1,478 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}Glossary - PRISM{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 text-primary mb-3">
+                    <i class="fas fa-book me-3"></i>PRISM Glossary
+                </h1>
+                <p class="lead text-muted">
+                    Comprehensive definitions and guidance for using the Platform for Research Infrastructure Synergy Mapping
+                </p>
+            </div>
+
+            <!-- Quick Navigation -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Navigation</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <ul class="list-unstyled">
+                                <li><a href="#interaction-types"><i class="fas fa-link me-2"></i>Interaction Types</a></li>
+                                <li><a href="#lifecycle-stages"><i class="fas fa-recycle me-2"></i>Lifecycle Stages</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <ul class="list-unstyled">
+                                <li><a href="#maldreth-terms"><i class="fas fa-project-diagram me-2"></i>MaLDReTH Terms</a></li>
+                                <li><a href="#technical-terms"><i class="fas fa-code me-2"></i>Technical Terms</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <ul class="list-unstyled">
+                                <li><a href="#contributing"><i class="fas fa-hands-helping me-2"></i>Contributing Guide</a></li>
+                                <li><a href="#faq"><i class="fas fa-question-circle me-2"></i>FAQ</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interaction Types Section -->
+            <div id="interaction-types" class="mb-5">
+                <h2 class="border-bottom pb-3 mb-4">
+                    <i class="fas fa-link me-2 text-primary"></i>Interaction Types
+                </h2>
+                <p class="lead">
+                    PRISM categorizes tool interactions into {{ interaction_types|length }} distinct types.
+                    Understanding these helps you accurately describe how research tools connect and communicate.
+                </p>
+
+                {% for type_name, type_info in interaction_types.items() %}
+                <div class="card mb-3 border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h4 class="mb-0 text-primary">{{ type_name }}</h4>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="badge bg-info">
+                                    {{ interaction_type_stats.get(type_name, 0) }} interactions
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <p class="mb-2"><strong>Definition:</strong></p>
+                                <p>{{ type_info.definition }}</p>
+
+                                <p class="mb-2 mt-3"><strong>When to use:</strong></p>
+                                <p class="text-muted">{{ type_info.when_to_use }}</p>
+
+                                <p class="mb-2 mt-3"><strong>Example:</strong></p>
+                                <div class="alert alert-success border-0 mb-0">
+                                    <i class="fas fa-lightbulb me-2"></i>{{ type_info.example }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                {% if type_info.technical_indicators %}
+                                <p class="mb-2"><strong>Technical Indicators:</strong></p>
+                                <div class="d-flex flex-wrap gap-1 mb-3">
+                                    {% for indicator in type_info.technical_indicators %}
+                                    <span class="badge bg-secondary">{{ indicator }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                {% if type_info.get('common_protocols') or type_info.get('common_tools') or type_info.get('common_formats') or type_info.get('common_databases') or type_info.get('common_patterns') or type_info.get('common_contexts') %}
+                                <p class="mb-2"><strong>Common Technologies:</strong></p>
+                                <ul class="small">
+                                    {% for item in type_info.get('common_protocols', []) + type_info.get('common_tools', []) + type_info.get('common_formats', []) + type_info.get('common_databases', []) + type_info.get('common_patterns', []) + type_info.get('common_contexts', []) %}
+                                    <li>{{ item }}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+
+                                {% if type_info.get('note') %}
+                                <div class="alert alert-warning border-0 small">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>{{ type_info.note }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Lifecycle Stages Section -->
+            <div id="lifecycle-stages" class="mb-5">
+                <h2 class="border-bottom pb-3 mb-4">
+                    <i class="fas fa-recycle me-2 text-primary"></i>Research Data Lifecycle Stages
+                </h2>
+                <p class="lead">
+                    The MaLDReTH model defines 12 stages in the research data lifecycle,
+                    representing the complete journey of research data from conception to reuse.
+                </p>
+
+                <div class="alert alert-info border-0 mb-4">
+                    <h5 class="alert-heading">About the 12-Stage Model</h5>
+                    <p class="mb-0">
+                        This lifecycle model was developed by the MaLDReTH II RDA Working Group to provide
+                        a comprehensive framework for understanding research data workflows. The stages are
+                        sequential but can also be iterative and overlapping in practice.
+                    </p>
+                </div>
+
+                {% for stage_name, stage_info in lifecycle_stages.items() %}
+                {% set stage_obj = stages|selectattr('name', 'equalto', stage_name)|first %}
+                <div class="card mb-3 border-0 shadow-sm">
+                    <div class="card-header" style="background-color: {{ stage_obj.color if stage_obj else '#007bff' }}20;">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h4 class="mb-0">
+                                    <span class="badge" style="background-color: {{ stage_obj.color if stage_obj else '#007bff' }};">
+                                        {{ stage_obj.position + 1 if stage_obj else '?' }}
+                                    </span>
+                                    {{ stage_name }}
+                                </h4>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="badge bg-secondary">
+                                    Duration: {{ stage_info.duration }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Definition:</strong> {{ stage_info.definition }}</p>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Key Activities:</strong></p>
+                                <ul>
+                                    {% for activity in stage_info.activities %}
+                                    <li>{{ activity }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Typical Outputs:</strong></p>
+                                <ul>
+                                    {% for output in stage_info.outputs %}
+                                    <li>{{ output }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-light border-0 mt-3 mb-0">
+                            <p class="mb-1"><strong>Typical Tools:</strong></p>
+                            <p class="mb-0 text-muted">{{ stage_info.typical_tools|join(', ') }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- MaLDReTH Terminology -->
+            <div id="maldreth-terms" class="mb-5">
+                <h2 class="border-bottom pb-3 mb-4">
+                    <i class="fas fa-project-diagram me-2 text-primary"></i>MaLDReTH Terminology
+                </h2>
+
+                <dl class="row">
+                    <dt class="col-sm-3">MaLDReTH</dt>
+                    <dd class="col-sm-9">
+                        <strong>M</strong>apping the <strong>L</strong>andscape of <strong>D</strong>igital
+                        <strong>Re</strong>search <strong>T</strong>ools <strong>H</strong>armonised.
+                        An RDA Working Group initiative focused on creating a comprehensive categorization
+                        schema for digital research tools.
+                    </dd>
+
+                    <dt class="col-sm-3">PRISM</dt>
+                    <dd class="col-sm-9">
+                        <strong>P</strong>latform for <strong>R</strong>esearch <strong>I</strong>nfrastructure
+                        <strong>S</strong>ynergy <strong>M</strong>apping. This web application - a key output
+                        of the MaLDReTH II initiative.
+                    </dd>
+
+                    <dt class="col-sm-3">Exemplar Tool</dt>
+                    <dd class="col-sm-9">
+                        A representative tool within a category, demonstrating typical characteristics
+                        and capabilities. Currently PRISM contains {{ total_tools }} exemplar tools.
+                    </dd>
+
+                    <dt class="col-sm-3">Tool Category</dt>
+                    <dd class="col-sm-9">
+                        A classification group for similar tools within a lifecycle stage. Categories help
+                        organize tools by function and purpose.
+                    </dd>
+
+                    <dt class="col-sm-3">Tool Interaction</dt>
+                    <dd class="col-sm-9">
+                        A connection or integration between two research tools, describing how they
+                        communicate or work together. PRISM currently contains {{ total_interactions }}
+                        documented interactions.
+                    </dd>
+
+                    <dt class="col-sm-3">Research Data Lifecycle (RDL)</dt>
+                    <dd class="col-sm-9">
+                        The 12-stage model describing the complete journey of research data from initial
+                        concept through to reuse and transformation.
+                    </dd>
+
+                    <dt class="col-sm-3">GORC</dt>
+                    <dd class="col-sm-9">
+                        <strong>G</strong>lobal <strong>O</strong>pen <strong>R</strong>esearch
+                        <strong>C</strong>ommons. An RDA initiative that PRISM contributes to, focused on
+                        improving interoperability and FAIR data practices.
+                    </dd>
+                </dl>
+            </div>
+
+            <!-- Technical Terms -->
+            <div id="technical-terms" class="mb-5">
+                <h2 class="border-bottom pb-3 mb-4">
+                    <i class="fas fa-code me-2 text-primary"></i>Technical Terms
+                </h2>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl>
+                            <dt>API</dt>
+                            <dd><strong>A</strong>pplication <strong>P</strong>rogramming <strong>I</strong>nterface.
+                            A set of protocols for building software and enabling tool-to-tool communication.</dd>
+
+                            <dt>REST</dt>
+                            <dd><strong>RE</strong>presentational <strong>S</strong>tate <strong>T</strong>ransfer.
+                            An architectural style for web APIs using HTTP methods.</dd>
+
+                            <dt>OAuth</dt>
+                            <dd><strong>O</strong>pen <strong>Auth</strong>orization. A standard for secure
+                            authorization and authentication between applications.</dd>
+
+                            <dt>DOI</dt>
+                            <dd><strong>D</strong>igital <strong>O</strong>bject <strong>I</strong>dentifier.
+                            A persistent identifier for digital objects like datasets and publications.</dd>
+
+                            <dt>ORCID</dt>
+                            <dd><strong>O</strong>pen <strong>R</strong>esearcher and <strong>C</strong>ontributor
+                            <strong>ID</strong>. A unique identifier for researchers and scholars.</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl>
+                            <dt>FAIR</dt>
+                            <dd><strong>F</strong>indable, <strong>A</strong>ccessible, <strong>I</strong>nteroperable,
+                            <strong>R</strong>eusable. Principles for scientific data management and stewardship.</dd>
+
+                            <dt>OAI-PMH</dt>
+                            <dd><strong>O</strong>pen <strong>A</strong>rchives <strong>I</strong>nitiative
+                            <strong>P</strong>rotocol for <strong>M</strong>etadata <strong>H</strong>arvesting.
+                            A protocol for sharing metadata between repositories.</dd>
+
+                            <dt>JSON</dt>
+                            <dd><strong>J</strong>ava<strong>S</strong>cript <strong>O</strong>bject
+                            <strong>N</strong>otation. A lightweight data format for API communication.</dd>
+
+                            <dt>CSV</dt>
+                            <dd><strong>C</strong>omma-<strong>S</strong>eparated <strong>V</strong>alues.
+                            A simple file format for tabular data exchange.</dd>
+
+                            <dt>CLI</dt>
+                            <dd><strong>C</strong>ommand <strong>L</strong>ine <strong>I</strong>nterface.
+                            Text-based interface for interacting with software via commands.</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contributing Guide -->
+            <div id="contributing" class="mb-5">
+                <h2 class="border-bottom pb-3 mb-4">
+                    <i class="fas fa-hands-helping me-2 text-primary"></i>Contributing to PRISM
+                </h2>
+
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h5>How to Add an Interaction</h5>
+                        <ol>
+                            <li><strong>Identify the tools:</strong> Determine the source and target tools involved</li>
+                            <li><strong>Select interaction type:</strong> Review the definitions above to choose the most appropriate type</li>
+                            <li><strong>Choose lifecycle stage:</strong> Identify which research stage this interaction supports</li>
+                            <li><strong>Describe the interaction:</strong> Write 1-3 sentences explaining what happens and why it's useful</li>
+                            <li><strong>Add technical details:</strong> Include protocols, APIs, or technologies used (optional but recommended)</li>
+                            <li><strong>Provide examples:</strong> Share real-world use cases (optional but valuable)</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h5>What Makes a Good Interaction Description</h5>
+                        <ul>
+                            <li><strong>Clear and specific:</strong> Explain exactly what the interaction does</li>
+                            <li><strong>Accurate categorization:</strong> Use the correct interaction type and lifecycle stage</li>
+                            <li><strong>Technical depth:</strong> Include implementation details when known</li>
+                            <li><strong>Real examples:</strong> Reference actual use cases or institutions</li>
+                            <li><strong>Benefits and challenges:</strong> Help others understand trade-offs</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5>Bulk Upload via CSV</h5>
+                        <p>For adding multiple interactions:</p>
+                        <ol>
+                            <li>Download the <a href="{{ url_for('export_csv') }}">CSV template</a> to see the format</li>
+                            <li>Prepare your data following the same structure</li>
+                            <li>Ensure tool names match existing tools in PRISM (or new tools will be created)</li>
+                            <li>Use the <a href="{{ url_for('upload_csv') }}">CSV upload page</a> to submit your file</li>
+                            <li>Review the results and fix any errors reported</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ -->
+            <div id="faq" class="mb-5">
+                <h2 class="border-bottom pb-3 mb-4">
+                    <i class="fas fa-question-circle me-2 text-primary"></i>Frequently Asked Questions
+                </h2>
+
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                What is the difference between "API Integration" and "Web Service"?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <strong>API Integration</strong> refers to modern RESTful or GraphQL APIs with programmatic access,
+                                typically using JSON. <strong>Web Service</strong> is broader and includes older protocols like
+                                SOAP, XML-RPC, or domain-specific protocols like OAI-PMH. If in doubt, "API Integration" is
+                                usually the better choice for contemporary tools.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                Can one interaction belong to multiple lifecycle stages?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Currently, each interaction is assigned to one primary lifecycle stage. If an interaction
+                                genuinely supports multiple stages, choose the stage where it's most commonly used, and mention
+                                the other stages in the description or examples field.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                What if the tools I want to add aren't in PRISM yet?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                When you add an interaction via CSV upload, PRISM will automatically create any missing tools.
+                                For manual entry through the web form, please contact the MaLDReTH II working group to request
+                                tool additions, or use the CSV bulk upload feature.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                How is PRISM different from other tool catalogs?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                PRISM focuses specifically on <strong>interactions between tools</strong> rather than just
+                                cataloging individual tools. While many catalogs list research tools, PRISM maps how they
+                                connect, integrate, and work together across the research data lifecycle. This makes it
+                                uniquely valuable for understanding research infrastructure interoperability.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                Can I edit or update an interaction I submitted?
+                            </button>
+                        </h2>
+                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes! Every interaction has an "Edit" button on its detail page. You can update any field
+                                to improve accuracy or add additional information. All edits help improve the quality of
+                                PRISM's knowledge base.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                                Who maintains PRISM and how can I get involved?
+                            </button>
+                        </h2>
+                        <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                PRISM is maintained by the <a href="https://www.rd-alliance.org/groups/mapping-the-landscape-of-digital-research-tools-ii-maldreth-ii" target="_blank">
+                                MaLDReTH II RDA Working Group</a>. You can get involved by:
+                                <ul class="mt-2">
+                                    <li>Contributing interaction data through PRISM</li>
+                                    <li>Joining the MaLDReTH II working group</li>
+                                    <li>Participating in RDA plenary sessions</li>
+                                    <li>Providing feedback and suggestions</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Call to Action -->
+            <div class="card border-0 shadow bg-primary text-white">
+                <div class="card-body text-center py-4">
+                    <h3 class="mb-3">Ready to Contribute?</h3>
+                    <p class="mb-4">Use your new knowledge to help map the research infrastructure landscape</p>
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        <a href="{{ url_for('add_interaction') }}" class="btn btn-light btn-lg">
+                            <i class="fas fa-plus me-2"></i>Add Interaction
+                        </a>
+                        <a href="{{ url_for('view_interactions') }}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-list me-2"></i>Browse Interactions
+                        </a>
+                        <a href="{{ url_for('about') }}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-info-circle me-2"></i>About PRISM
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Back to Top Button -->
+<a href="#" class="btn btn-primary position-fixed bottom-0 end-0 m-4" style="z-index: 1000;">
+    <i class="fas fa-arrow-up"></i>
+</a>
+{% endblock %}
