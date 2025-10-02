@@ -511,10 +511,15 @@ def add_interaction():
 
 @app.route('/interactions')
 def view_interactions():
-    """View all interactions."""
+    """View all interactions with search and filter support."""
     try:
         interactions = ToolInteraction.query.order_by(ToolInteraction.submitted_at.desc()).all()
-        return render_template('streamlined_view_interactions.html', interactions=interactions)
+        stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
+
+        return render_template('streamlined_view_interactions.html',
+                             interactions=interactions,
+                             interaction_types=INTERACTION_TYPES,
+                             stages=stages)
     except Exception as e:
         logger.error(f"Error viewing interactions: {e}")
         return render_template('error.html', error=str(e)), 500

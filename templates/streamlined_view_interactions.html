@@ -5,6 +5,68 @@
 {% block content %}
 <h1 class="text-center mb-4">All Tool Interactions</h1>
 
+<!-- Search and Filter Controls -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">
+            <i class="fas fa-filter me-2"></i>Search & Filter Interactions
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <!-- Text Search -->
+            <div class="col-md-4">
+                <label for="search-input" class="form-label">
+                    Search
+                    <span class="text-muted ms-1"
+                          data-bs-toggle="tooltip"
+                          title="Search tool names, descriptions, and technical details">
+                        <i class="fas fa-question-circle"></i>
+                    </span>
+                </label>
+                <input type="text" class="form-control" id="search-input"
+                       placeholder="Search by tool name, description...">
+            </div>
+
+            <!-- Interaction Type Filter -->
+            <div class="col-md-3">
+                <label for="filter-type" class="form-label">Interaction Type</label>
+                <select class="form-select" id="filter-type">
+                    <option value="">All Types</option>
+                    {% for interaction_type in interaction_types %}
+                    <option value="{{ interaction_type }}">{{ interaction_type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Lifecycle Stage Filter -->
+            <div class="col-md-3">
+                <label for="filter-stage" class="form-label">Lifecycle Stage</label>
+                <select class="form-select" id="filter-stage">
+                    <option value="">All Stages</option>
+                    {% for stage in stages %}
+                    <option value="{{ stage.name }}">{{ stage.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Clear Button -->
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-outline-secondary w-100" id="clear-filters">
+                    <i class="fas fa-times me-1"></i>Clear Filters
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Count -->
+        <div class="mt-3">
+            <div class="alert alert-info border-0 mb-0 py-2" id="result-count-alert">
+                <small id="result-count">Loading interactions...</small>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
@@ -72,4 +134,133 @@
         <i class="fas fa-plus"></i> Add New Interaction
     </a>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all filter elements
+    const searchInput = document.getElementById('search-input');
+    const filterType = document.getElementById('filter-type');
+    const filterStage = document.getElementById('filter-stage');
+    const clearButton = document.getElementById('clear-filters');
+    const resultCountElement = document.getElementById('result-count');
+
+    // Get all table rows (excluding header)
+    const tableRows = document.querySelectorAll('tbody tr');
+    const totalRows = tableRows.length;
+
+    /**
+     * Main filter function - applies all active filters
+     */
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const selectedType = filterType.value.toLowerCase();
+        const selectedStage = filterStage.value.toLowerCase();
+
+        let visibleCount = 0;
+
+        tableRows.forEach(row => {
+            // Get row text content for searching
+            const rowText = row.textContent.toLowerCase();
+
+            // Apply search filter
+            const matchesSearch = !searchTerm || rowText.includes(searchTerm);
+
+            // Apply interaction type filter
+            const matchesType = !selectedType || rowText.includes(selectedType);
+
+            // Apply lifecycle stage filter
+            const matchesStage = !selectedStage || rowText.includes(selectedStage);
+
+            // Show row only if all filters match
+            if (matchesSearch && matchesType && matchesStage) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Update result count
+        updateResultCount(visibleCount, totalRows);
+    }
+
+    /**
+     * Update the result count display
+     */
+    function updateResultCount(visible, total) {
+        if (visible === total) {
+            resultCountElement.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                Showing all <strong>${total}</strong> interaction(s)
+            `;
+            document.getElementById('result-count-alert').className = 'alert alert-info border-0 mb-0 py-2';
+        } else {
+            resultCountElement.innerHTML = `
+                <i class="fas fa-filter me-2"></i>
+                Showing <strong>${visible}</strong> of <strong>${total}</strong> interaction(s)
+            `;
+            document.getElementById('result-count-alert').className = 'alert alert-success border-0 mb-0 py-2';
+        }
+    }
+
+    /**
+     * Clear all filters and show all rows
+     */
+    function clearFilters() {
+        searchInput.value = '';
+        filterType.value = '';
+        filterStage.value = '';
+        filterTable();
+    }
+
+    // Event listeners
+    searchInput.addEventListener('keyup', filterTable);
+    searchInput.addEventListener('search', filterTable); // For search input clear button
+    filterType.addEventListener('change', filterTable);
+    filterStage.addEventListener('change', filterTable);
+    clearButton.addEventListener('click', clearFilters);
+
+    // Initialize count on page load
+    updateResultCount(totalRows, totalRows);
+
+    // Persist filters across page navigation
+    // Save filter state to sessionStorage
+    function saveFilterState() {
+        sessionStorage.setItem('prism_search', searchInput.value);
+        sessionStorage.setItem('prism_filter_type', filterType.value);
+        sessionStorage.setItem('prism_filter_stage', filterStage.value);
+    }
+
+    // Restore filter state on page load
+    function restoreFilterState() {
+        const savedSearch = sessionStorage.getItem('prism_search');
+        const savedType = sessionStorage.getItem('prism_filter_type');
+        const savedStage = sessionStorage.getItem('prism_filter_stage');
+
+        if (savedSearch) searchInput.value = savedSearch;
+        if (savedType) filterType.value = savedType;
+        if (savedStage) filterStage.value = savedStage;
+
+        // Apply restored filters
+        if (savedSearch || savedType || savedStage) {
+            filterTable();
+        }
+    }
+
+    // Restore previous filters
+    restoreFilterState();
+
+    // Save filters when they change
+    searchInput.addEventListener('change', saveFilterState);
+    filterType.addEventListener('change', saveFilterState);
+    filterStage.addEventListener('change', saveFilterState);
+
+    // Clear saved state when clearing filters
+    clearButton.addEventListener('click', function() {
+        sessionStorage.removeItem('prism_search');
+        sessionStorage.removeItem('prism_filter_type');
+        sessionStorage.removeItem('prism_filter_stage');
+    });
+});
+</script>
 {% endblock %}
