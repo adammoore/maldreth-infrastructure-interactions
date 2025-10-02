@@ -28,6 +28,17 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Import editable glossary content
+try:
+    from config.glossary_content import FAQ_ITEMS, MALDRETH_TERMINOLOGY
+    GLOSSARY_CONFIG_LOADED = True
+except ImportError:
+    # Fallback to None if config not available
+    FAQ_ITEMS = None
+    MALDRETH_TERMINOLOGY = None
+    GLOSSARY_CONFIG_LOADED = False
+    logging.warning("Glossary config not found, using hardcoded values")
+
 # PRISM Configuration Constants
 INTERACTION_TYPES = [
     'API Integration',
@@ -142,88 +153,117 @@ INTERACTION_TYPE_DEFINITIONS = {
 # Lifecycle Stage Definitions with detailed information
 LIFECYCLE_STAGE_DEFINITIONS = {
     'CONCEPTUALISE': {
-        'definition': 'Initial research idea formation and hypothesis development',
-        'activities': ['Literature review', 'Hypothesis formation', 'Research question development'],
-        'typical_tools': ['Reference managers', 'Mind mapping tools', 'Literature databases'],
+        'definition': 'To formulate the initial research idea or hypothesis, and define the scope of the research project and the data component/requirements of that project.',
+        'activities': ['Literature review', 'Hypothesis formulation', 'Research question development', 'Defining data requirements', 'Scope definition'],
+        'typical_tools': ['Reference managers', 'Mind mapping tools', 'Literature databases', 'Ideation platforms'],
         'duration': 'Weeks to months',
-        'outputs': ['Research questions', 'Hypotheses', 'Initial concepts']
+        'outputs': ['Research questions', 'Hypotheses', 'Initial concepts', 'Data requirements'],
+        'source': 'RDA MaLDReTH Deliverable 1',
+        'verified': True
     },
     'PLAN': {
-        'definition': 'Research design, methodology planning, and resource allocation',
-        'activities': ['Study design', 'Protocol development', 'Resource planning', 'DMP creation'],
-        'typical_tools': ['DMP tools', 'Project management', 'Protocol repositories'],
+        'definition': 'To establish a structured strategic framework for management of the research project, outlining aims, objectives, methodologies, and resources required for data collection, management and analysis. Data management plans (DMP) should be established for this phase of the lifecycle.',
+        'activities': ['Study design', 'Protocol development', 'Resource planning', 'DMP creation', 'Defining methodologies', 'Resource identification'],
+        'typical_tools': ['DMP tools', 'Project management', 'Protocol repositories', 'DMPTool', 'DMPonline'],
         'duration': 'Weeks to months',
-        'outputs': ['Data Management Plans', 'Protocols', 'Study designs']
+        'outputs': ['Data Management Plans', 'Protocols', 'Study designs', 'Resource allocation plans'],
+        'source': 'RDA MaLDReTH Deliverable 1',
+        'verified': True
     },
     'FUND': {
-        'definition': 'Grant applications and resource acquisition',
-        'activities': ['Grant writing', 'Budget planning', 'Proposal submission'],
-        'typical_tools': ['Grant management systems', 'Budget calculators', 'Proposal tools'],
+        'definition': 'To identify and acquire financial resources to support the research project, including data collection, management, analysis, sharing, publishing and preservation.',
+        'activities': ['Grant writing', 'Budget planning', 'Proposal submission', 'Identifying funding sources', 'Financial planning'],
+        'typical_tools': ['Grant management systems', 'Budget calculators', 'Proposal tools', 'Funding databases'],
         'duration': 'Months to years',
-        'outputs': ['Grant proposals', 'Budgets', 'Funding awards']
+        'outputs': ['Grant proposals', 'Budgets', 'Funding awards', 'Financial plans'],
+        'source': 'RDA MaLDReTH Deliverable 1',
+        'verified': True,
+        'note': 'Note: Tools identified for FUND were omitted from tool categorisation as they were not classified as digital research tools'
     },
     'COLLECT': {
-        'definition': 'Data gathering and experimental execution',
-        'activities': ['Experiments', 'Surveys', 'Observations', 'Measurements', 'Sampling'],
-        'typical_tools': ['Lab instruments', 'Survey platforms', 'Sensors', 'Data loggers'],
+        'definition': 'To use predefined procedures, methodologies and instruments to acquire and store data that is reliable, fit for purpose and of sufficient quality to test the research hypothesis.',
+        'activities': ['Experiments', 'Surveys', 'Observations', 'Measurements', 'Sampling', 'Data acquisition'],
+        'typical_tools': ['Lab instruments', 'Survey platforms', 'Sensors', 'Data loggers', 'Electronic lab notebooks'],
         'duration': 'Days to years',
-        'outputs': ['Raw data', 'Observations', 'Measurements', 'Samples']
+        'outputs': ['Raw data', 'Observations', 'Measurements', 'Samples', 'Experimental data'],
+        'source': 'RDA MaLDReTH Deliverable 1',
+        'verified': True,
+        'note': 'COLLECT > PROCESS > ANALYSE > STORE may be a repeating cycle'
     },
     'PROCESS': {
-        'definition': 'Data cleaning, quality control, and preparation',
-        'activities': ['Data cleaning', 'Quality assurance', 'Normalization', 'Format conversion'],
-        'typical_tools': ['Data cleaning tools', 'ETL platforms', 'Quality control software'],
+        'definition': 'To make new and existing data analysis-ready. This may involve standardised pre-processing, cleaning, reformatting, structuring, filtering, and performing quality control checks on data. It may also involve the creation and definition of metadata for use during analysis, such as acquiring provenance from instruments and tools used during data collection.',
+        'activities': ['Data cleaning', 'Quality assurance', 'Normalization', 'Format conversion', 'Metadata creation', 'Filtering', 'Structuring'],
+        'typical_tools': ['Data cleaning tools', 'ETL platforms', 'Quality control software', 'OpenRefine', 'Data wrangling tools'],
         'duration': 'Days to months',
-        'outputs': ['Cleaned datasets', 'Quality reports', 'Processed data']
+        'outputs': ['Cleaned datasets', 'Quality reports', 'Processed data', 'Metadata', 'Analysis-ready data'],
+        'source': 'RDA MaLDReTH Deliverable 1',
+        'verified': True,
+        'note': 'COLLECT > PROCESS > ANALYSE > STORE may be a repeating cycle'
     },
     'ANALYSE': {
-        'definition': 'Statistical analysis and interpretation',
-        'activities': ['Statistical tests', 'Modeling', 'Visualization', 'Pattern discovery'],
-        'typical_tools': ['R', 'Python', 'SPSS', 'MATLAB', 'Jupyter', 'Statistical software'],
+        'definition': 'To derive insights, knowledge, and understanding from processed data. Data analysis involves iterative exploration and interpretation of experimental or computational results, often utilising mathematical models and formulae to investigate relationships between experimental variables. Distinct data analysis techniques and methodologies are applied according to the data type (quantitative vs qualitative).',
+        'activities': ['Statistical tests', 'Modeling', 'Visualization', 'Pattern discovery', 'Iterative exploration', 'Interpretation'],
+        'typical_tools': ['R', 'Python', 'SPSS', 'MATLAB', 'Jupyter', 'Statistical software', 'Analysis platforms'],
         'duration': 'Weeks to months',
-        'outputs': ['Analysis results', 'Statistical models', 'Visualizations']
+        'outputs': ['Analysis results', 'Statistical models', 'Visualizations', 'Insights', 'Interpretations'],
+        'source': 'RDA MaLDReTH Deliverable 1',
+        'verified': True,
+        'note': 'COLLECT > PROCESS > ANALYSE > STORE may be a repeating cycle'
     },
     'STORE': {
-        'definition': 'Short-term data storage during active research',
-        'activities': ['Active storage', 'Backup', 'Version control', 'Collaboration'],
-        'typical_tools': ['Cloud storage', 'Version control', 'Lab servers', 'Collaborative platforms'],
+        'definition': 'To record data using technological media appropriate for processing and analysis whilst maintaining data integrity and security.',
+        'activities': ['Active storage', 'Backup', 'Version control', 'Collaboration', 'Integrity maintenance', 'Security management'],
+        'typical_tools': ['Cloud storage', 'Version control', 'Lab servers', 'Collaborative platforms', 'Git', 'Institutional storage'],
         'duration': 'Duration of project',
-        'outputs': ['Backed up data', 'Version history', 'Shared datasets']
+        'outputs': ['Backed up data', 'Version history', 'Shared datasets', 'Secure storage'],
+        'source': 'RDA MaLDReTH Deliverable 1',
+        'verified': True,
+        'note': 'COLLECT > PROCESS > ANALYSE > STORE may be a repeating cycle'
     },
     'PUBLISH': {
-        'definition': 'Dissemination through journals, conferences, preprints',
-        'activities': ['Paper writing', 'Peer review', 'Conference presentations', 'Preprints'],
-        'typical_tools': ['Journal systems', 'Preprint servers', 'Writing tools', 'LaTeX'],
+        'definition': 'To release research data in published form for use by others with appropriate metadata for citation (including a unique persistent identifier) based on FAIR principles.',
+        'activities': ['Paper writing', 'Peer review', 'Conference presentations', 'Preprints', 'Data publication', 'Metadata creation', 'DOI assignment'],
+        'typical_tools': ['Journal systems', 'Preprint servers', 'Writing tools', 'LaTeX', 'Data journals', 'Repository platforms'],
         'duration': 'Months to years',
-        'outputs': ['Publications', 'Presentations', 'Preprints']
+        'outputs': ['Publications', 'Presentations', 'Preprints', 'Published datasets', 'DOIs'],
+        'source': 'RDA MaLDReTH Deliverable 1',
+        'verified': True
     },
     'PRESERVE': {
-        'definition': 'Long-term archival and curation',
-        'activities': ['Archiving', 'Format migration', 'Metadata enrichment', 'Curation'],
-        'typical_tools': ['Repositories', 'Archives', 'Preservation systems', 'Digital curation'],
+        'definition': 'To ensure the safety, integrity, and accessibility of data for as long as necessary so that data is as FAIR as possible. Data preservation is more than data storage and backup, since data can be stored and backed up without being preserved. Preservation should include curation activities such as data cleaning, validation, assigning preservation metadata, assigning representation information, and ensuring acceptable data structures and file formats. At a minimum, data and associated metadata should be published in a trustworthy digital repository and clearly cited in the accompanying journal article unless this is not possible (e.g. due to the privacy or safety concerns).',
+        'activities': ['Archiving', 'Format migration', 'Metadata enrichment', 'Curation', 'Data cleaning', 'Validation', 'Format standardization'],
+        'typical_tools': ['Repositories', 'Archives', 'Preservation systems', 'Digital curation tools', 'Trustworthy repositories'],
         'duration': 'Permanent',
-        'outputs': ['Archived datasets', 'DOIs', 'Preserved research outputs']
+        'outputs': ['Archived datasets', 'DOIs', 'Preserved research outputs', 'Preservation metadata', 'Curated collections'],
+        'source': 'RDA MaLDReTH Deliverable 1',
+        'verified': True
     },
     'SHARE': {
-        'definition': 'Making data accessible to others',
-        'activities': ['Publishing datasets', 'Access control', 'License assignment', 'Documentation'],
-        'typical_tools': ['Data repositories', 'Institutional repositories', 'Figshare', 'Zenodo'],
+        'definition': 'To make data available and accessible to humans and/or machines. Data may be shared with project collaborators or published to share it with the wider research community and society at large. Data sharing is not limited to open data or public data, and can be done during various stages of the research data lifecycle. At a minimum, data and associated metadata should be published in a trustworthy digital repository and clearly cited in the accompanying journal article.',
+        'activities': ['Publishing datasets', 'Access control', 'License assignment', 'Documentation', 'Collaboration', 'Community sharing'],
+        'typical_tools': ['Data repositories', 'Institutional repositories', 'Figshare', 'Zenodo', 'Dryad', 'Sharing platforms'],
         'duration': 'Ongoing',
-        'outputs': ['Shared datasets', 'Data publications', 'Access portals']
+        'outputs': ['Shared datasets', 'Data publications', 'Access portals', 'Collaborative workspaces'],
+        'source': 'RDA MaLDReTH Deliverable 1',
+        'verified': True
     },
     'ACCESS': {
-        'definition': 'Discovery and retrieval of data by users',
-        'activities': ['Data discovery', 'Search', 'Download', 'API access'],
-        'typical_tools': ['Data catalogs', 'Search engines', 'Repository interfaces', 'APIs'],
+        'definition': 'To control and manage data access by designated users and reusers. This may be in the form of publicly available published information. Necessary access control and authentication methods are applied.',
+        'activities': ['Data discovery', 'Search', 'Download', 'API access', 'Access control', 'Authentication management'],
+        'typical_tools': ['Data catalogs', 'Search engines', 'Repository interfaces', 'APIs', 'Access management systems'],
         'duration': 'Ongoing',
-        'outputs': ['Downloaded data', 'Retrieved datasets', 'Access logs']
+        'outputs': ['Downloaded data', 'Retrieved datasets', 'Access logs', 'Usage statistics'],
+        'source': 'RDA MaLDReTH Deliverable 1',
+        'verified': True
     },
     'TRANSFORM': {
-        'definition': 'Data reuse, repurposing, and derivative works',
-        'activities': ['Data reuse', 'Integration', 'Meta-analysis', 'Derivative creation'],
-        'typical_tools': ['Analysis tools', 'Integration platforms', 'Synthesis tools'],
+        'definition': 'To create new data from the original, for example: (i) by migration into a different format; (ii) by creating a subset, by selection or query, to create newly derived results, perhaps for publication; or, (iii) combining or appending with other data.',
+        'activities': ['Format conversion', 'Subset creation', 'Data integration', 'Reanalysis', 'Data migration', 'Query and selection'],
+        'typical_tools': ['Conversion tools', 'Query systems', 'Integration platforms', 'Analysis tools', 'Data transformation pipelines'],
         'duration': 'Varies',
-        'outputs': ['Derived datasets', 'Integrated data', 'Meta-analyses']
+        'outputs': ['Transformed data', 'Subsets', 'Integrated datasets', 'New research', 'Derived datasets'],
+        'source': 'RDA MaLDReTH Deliverable 1',
+        'verified': True
     }
 }
 
@@ -762,7 +802,12 @@ def about():
 
 @app.route('/glossary')
 def glossary():
-    """Comprehensive glossary and terminology reference page."""
+    """
+    Comprehensive glossary and terminology reference page.
+
+    FAQ and terminology can be updated in config/glossary_content.py
+    without modifying this code.
+    """
     try:
         # Get all stages with their definitions
         stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
@@ -783,7 +828,10 @@ def glossary():
                              stages=stages,
                              interaction_type_stats=interaction_type_stats,
                              total_interactions=total_interactions,
-                             total_tools=total_tools)
+                             total_tools=total_tools,
+                             faq_items=FAQ_ITEMS,
+                             maldreth_terminology=MALDRETH_TERMINOLOGY,
+                             glossary_config_loaded=GLOSSARY_CONFIG_LOADED)
     except Exception as e:
         logger.error(f"Error in glossary route: {e}")
         return render_template('error.html', error=str(e)), 500

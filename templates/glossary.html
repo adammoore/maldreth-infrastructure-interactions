@@ -350,102 +350,124 @@
                 </h2>
 
                 <div class="accordion" id="faqAccordion">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                                What is the difference between "API Integration" and "Web Service"?
-                            </button>
-                        </h2>
-                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                <strong>API Integration</strong> refers to modern RESTful or GraphQL APIs with programmatic access,
-                                typically using JSON. <strong>Web Service</strong> is broader and includes older protocols like
-                                SOAP, XML-RPC, or domain-specific protocols like OAI-PMH. If in doubt, "API Integration" is
-                                usually the better choice for contemporary tools.
+                    {% if faq_items %}
+                        {% for faq in faq_items %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button {% if not faq.expanded %}collapsed{% endif %}"
+                                        type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#{{ faq.id }}">
+                                    {{ faq.question }}
+                                </button>
+                            </h2>
+                            <div id="{{ faq.id }}"
+                                 class="accordion-collapse collapse {% if faq.expanded %}show{% endif %}"
+                                 data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    {{ faq.answer|safe }}
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Fallback hardcoded FAQ if config not loaded -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    What is the difference between "API Integration" and "Web Service"?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    <strong>API Integration</strong> refers to modern RESTful or GraphQL APIs with programmatic access,
+                                    typically using JSON. <strong>Web Service</strong> is broader and includes older protocols like
+                                    SOAP, XML-RPC, or domain-specific protocols like OAI-PMH. If in doubt, "API Integration" is
+                                    usually the better choice for contemporary tools.
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                                Can one interaction belong to multiple lifecycle stages?
-                            </button>
-                        </h2>
-                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Currently, each interaction is assigned to one primary lifecycle stage. If an interaction
-                                genuinely supports multiple stages, choose the stage where it's most commonly used, and mention
-                                the other stages in the description or examples field.
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Can one interaction belong to multiple lifecycle stages?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Currently, each interaction is assigned to one primary lifecycle stage. If an interaction
+                                    genuinely supports multiple stages, choose the stage where it's most commonly used, and mention
+                                    the other stages in the description or examples field.
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                                What if the tools I want to add aren't in PRISM yet?
-                            </button>
-                        </h2>
-                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                When you add an interaction via CSV upload, PRISM will automatically create any missing tools.
-                                For manual entry through the web form, please contact the MaLDReTH II working group to request
-                                tool additions, or use the CSV bulk upload feature.
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    What if the tools I want to add aren't in PRISM yet?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    When you add an interaction via CSV upload, PRISM will automatically create any missing tools.
+                                    For manual entry through the web form, please contact the MaLDReTH II working group to request
+                                    tool additions, or use the CSV bulk upload feature.
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                                How is PRISM different from other tool catalogs?
-                            </button>
-                        </h2>
-                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                PRISM focuses specifically on <strong>interactions between tools</strong> rather than just
-                                cataloging individual tools. While many catalogs list research tools, PRISM maps how they
-                                connect, integrate, and work together across the research data lifecycle. This makes it
-                                uniquely valuable for understanding research infrastructure interoperability.
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    How is PRISM different from other tool catalogs?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    PRISM focuses specifically on <strong>interactions between tools</strong> rather than just
+                                    cataloging individual tools. While many catalogs list research tools, PRISM maps how they
+                                    connect, integrate, and work together across the research data lifecycle. This makes it
+                                    uniquely valuable for understanding research infrastructure interoperability.
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
-                                Can I edit or update an interaction I submitted?
-                            </button>
-                        </h2>
-                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Yes! Every interaction has an "Edit" button on its detail page. You can update any field
-                                to improve accuracy or add additional information. All edits help improve the quality of
-                                PRISM's knowledge base.
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                    Can I edit or update an interaction I submitted?
+                                </button>
+                            </h2>
+                            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Yes! Every interaction has an "Edit" button on its detail page. You can update any field
+                                    to improve accuracy or add additional information. All edits help improve the quality of
+                                    PRISM's knowledge base.
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
-                                Who maintains PRISM and how can I get involved?
-                            </button>
-                        </h2>
-                        <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                PRISM is maintained by the <a href="https://www.rd-alliance.org/groups/mapping-the-landscape-of-digital-research-tools-ii-maldreth-ii" target="_blank">
-                                MaLDReTH II RDA Working Group</a>. You can get involved by:
-                                <ul class="mt-2">
-                                    <li>Contributing interaction data through PRISM</li>
-                                    <li>Joining the MaLDReTH II working group</li>
-                                    <li>Participating in RDA plenary sessions</li>
-                                    <li>Providing feedback and suggestions</li>
-                                </ul>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                                    Who maintains PRISM and how can I get involved?
+                                </button>
+                            </h2>
+                            <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    PRISM is maintained by the <a href="https://www.rd-alliance.org/groups/mapping-the-landscape-of-digital-research-tools-ii-maldreth-ii" target="_blank">
+                                    MaLDReTH II RDA Working Group</a>. You can get involved by:
+                                    <ul class="mt-2">
+                                        <li>Contributing interaction data through PRISM</li>
+                                        <li>Joining the MaLDReTH II working group</li>
+                                        <li>Participating in RDA plenary sessions</li>
+                                        <li>Providing feedback and suggestions</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
 
