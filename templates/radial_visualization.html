@@ -1,0 +1,354 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}Radial Visualization - PRISM | MaLDReTH II RDA{% endblock %}
+
+{% block extra_head %}
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+    .visualization-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin: 20px auto;
+    }
+
+    #radial-viz {
+        width: 100%;
+        height: 900px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: visible;
+        position: relative;
+    }
+
+    #radial-viz svg {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    .control-panel {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .info-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .stage-circle.active {
+        stroke: #ff6b6b !important;
+        stroke-width: 4 !important;
+    }
+
+    .connection-path {
+        mix-blend-mode: multiply;
+    }
+
+    .category-arc:hover {
+        filter: brightness(1.1);
+        cursor: pointer;
+    }
+
+    .tool-arc:hover {
+        filter: brightness(1.2);
+        cursor: pointer;
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .stats-number {
+        font-size: 2.5em;
+        font-weight: bold;
+        color: #667eea;
+    }
+
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        margin-right: 20px;
+        margin-bottom: 10px;
+    }
+
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 3px;
+        margin-right: 8px;
+        border: 1px solid #ddd;
+    }
+
+    #category-filters .btn {
+        margin: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="visualization-container">
+        <!-- Header -->
+        <div class="info-banner">
+            <h2><i class="fas fa-project-diagram me-2"></i>PRISM Radial Visualization</h2>
+            <p class="mb-0">
+                Interactive circular visualization showing tool interactions across the 12-stage MaLDReTH research data lifecycle
+            </p>
+        </div>
+
+        <!-- Statistics Row -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number">{{ total_stages }}</div>
+                    <div class="text-muted">Lifecycle Stages</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number">{{ total_categories }}</div>
+                    <div class="text-muted">Tool Categories</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number">{{ total_tools }}</div>
+                    <div class="text-muted">Exemplar Tools</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number">{{ total_interactions }}</div>
+                    <div class="text-muted">Interactions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Panel -->
+        <div class="alert alert-info mb-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><i class="fas fa-lightbulb me-2"></i>Visualization Features:</h6>
+                    <ul class="mb-0 small">
+                        <li><strong>Center Circle:</strong> 12 MaLDReTH lifecycle stages</li>
+                        <li><strong>Middle Ring:</strong> Tool categories grouped by stage</li>
+                        <li><strong>Outer Ring:</strong> Individual exemplar tools</li>
+                        <li><strong>Connections:</strong> Tool interactions shown as curved paths</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="fas fa-mouse-pointer me-2"></i>Interaction Tips:</h6>
+                    <ul class="mb-0 small">
+                        <li><strong>Hover:</strong> See details for stages, categories, and tools</li>
+                        <li><strong>Click:</strong> Filter by category to highlight connections</li>
+                        <li><strong>Zoom:</strong> Scroll to zoom in/out, drag to pan</li>
+                        <li><strong>Reset:</strong> Use reset button to return to initial view</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="btn-group" role="group">
+                        <button id="reset-viz" class="btn btn-primary">
+                            <i class="fas fa-undo me-1"></i>Reset View
+                        </button>
+                        <button id="show-all-connections" class="btn btn-success">
+                            <i class="fas fa-diagram-project me-1"></i>Show All Connections
+                        </button>
+                        <button id="hide-connections" class="btn btn-secondary">
+                            <i class="fas fa-eye-slash me-1"></i>Hide Connections
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Based on {{ total_interactions }} documented tool interactions
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Filter Panel -->
+        <div class="control-panel mt-3">
+            <h6><i class="fas fa-filter me-2"></i>Filter by Category:</h6>
+            <div id="category-filters" class="d-flex flex-wrap"></div>
+        </div>
+
+        <!-- Visualization Container -->
+        <div id="radial-viz"></div>
+
+        <!-- Help Section -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-layer-group text-primary me-2"></i>Visualization Layers
+                        </h5>
+                        <ul class="card-text small">
+                            <li><strong>Inner Hub:</strong> Central MaLDReTH logo and title</li>
+                            <li><strong>Stage Ring:</strong> 12 lifecycle stages in circular arrangement</li>
+                            <li><strong>Category Ring:</strong> Tool categories with dynamic arc coverage</li>
+                            <li><strong>Tool Ring:</strong> Individual tools positioned by category</li>
+                            <li><strong>Connection Lines:</strong> Curved paths showing tool interactions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-palette text-success me-2"></i>Color Coding
+                        </h5>
+                        <p class="card-text small">
+                            Each lifecycle stage has a unique color, and tool categories/tools inherit colors based on their primary stage association. Connection lines use gradient colors to show source→target relationships.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-network text-warning me-2"></i>About PRISM
+                        </h5>
+                        <p class="card-text small">
+                            PRISM (Platform for Research Infrastructure Synergy Mapping) visualizes how digital research tools interact across the MaLDReTH research data lifecycle, helping researchers understand tool interoperability.
+                        </p>
+                        <a href="{{ url_for('about') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-info-circle me-1"></i>Learn More
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Options -->
+        <div class="text-center mt-4">
+            <div class="btn-group" role="group">
+                <button id="export-svg" class="btn btn-outline-primary">
+                    <i class="fas fa-download me-1"></i>Export as SVG
+                </button>
+                <button id="export-png" class="btn btn-outline-primary">
+                    <i class="fas fa-image me-1"></i>Export as PNG
+                </button>
+                <a href="{{ url_for('view_interactions') }}" class="btn btn-outline-success">
+                    <i class="fas fa-list me-1"></i>View Interaction Data
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="{{ url_for('static', filename='js/radial-visualization.js') }}"></script>
+<script>
+    // Initialize the radial visualization
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if D3 is loaded
+        if (typeof d3 === 'undefined') {
+            document.getElementById('radial-viz').innerHTML =
+                '<div class="alert alert-danger">D3.js library failed to load. Please refresh the page.</div>';
+            return;
+        }
+
+        // Check if visualization class is loaded
+        if (typeof MaLDReTHRadialVisualization === 'undefined') {
+            console.error('MaLDReTHRadialVisualization class not loaded');
+            document.getElementById('radial-viz').innerHTML =
+                '<div class="alert alert-danger">Visualization script failed to load. Please refresh the page.</div>';
+            return;
+        }
+
+        // Fetch PRISM data and initialize visualization
+        fetch('/api/radial-visualization-data')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch visualization data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('PRISM radial data loaded:', data);
+
+                // Initialize the visualization
+                const viz = new MaLDReTHRadialVisualization('#radial-viz', data);
+
+                // Setup control buttons
+                document.getElementById('reset-viz').addEventListener('click', () => {
+                    viz.reset();
+                });
+
+                document.getElementById('show-all-connections').addEventListener('click', () => {
+                    viz.showAllConnections();
+                });
+
+                document.getElementById('hide-connections').addEventListener('click', () => {
+                    viz.hideConnections();
+                });
+
+                // Setup export buttons
+                document.getElementById('export-svg').addEventListener('click', () => {
+                    viz.exportAsSVG();
+                });
+
+                document.getElementById('export-png').addEventListener('click', () => {
+                    viz.exportAsPNG();
+                });
+
+                // Populate category filters
+                const filtersContainer = document.getElementById('category-filters');
+                data.gorcCategories.forEach(category => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-sm btn-outline-secondary';
+                    btn.textContent = category.name;
+                    btn.addEventListener('click', () => {
+                        viz.filterByCategory(category.name);
+                        // Toggle active state
+                        filtersContainer.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    });
+                    filtersContainer.appendChild(btn);
+                });
+
+                // Add "All" filter button at the start
+                const allBtn = document.createElement('button');
+                allBtn.className = 'btn btn-sm btn-primary active';
+                allBtn.textContent = 'All Categories';
+                allBtn.addEventListener('click', () => {
+                    viz.reset();
+                    filtersContainer.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                    allBtn.classList.add('active');
+                });
+                filtersContainer.prepend(allBtn);
+            })
+            .catch(error => {
+                console.error('Error loading visualization:', error);
+                document.getElementById('radial-viz').innerHTML =
+                    `<div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading visualization data: ${error.message}
+                    </div>`;
+            });
+    });
+</script>
+{% endblock %}

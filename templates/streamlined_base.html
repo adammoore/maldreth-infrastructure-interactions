@@ -36,8 +36,11 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="rdlDropdown">
                             <li><a class="dropdown-item" href="{{ url_for('rdl_overview') }}">RDL Overview</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('rdl_visualization') }}">RDL Visualization</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('enhanced_rdl_visualization') }}">Enhanced Visualization</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('radial_visualization') }}">
+                                <i class="fas fa-project-diagram me-1"></i>Radial Visualization
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('rdl_visualization') }}">Circular Visualization</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('enhanced_rdl_visualization') }}">Network Visualization</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('simple_maldreth_visualization') }}"><strong>MaLDReTH Official</strong></a></li>
                         </ul>

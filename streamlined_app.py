@@ -1275,6 +1275,116 @@ def css_rdl_visualization():
         logger.error(f"Error in CSS RDL visualization: {e}")
         return render_template('error.html', error=str(e)), 500
 
+@app.route('/radial-visualization')
+def radial_visualization():
+    """Advanced radial visualization showing tool interactions across the lifecycle."""
+    try:
+        stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
+        categories = ToolCategory.query.all()
+        tools = ExemplarTool.query.filter_by(is_active=True).all()
+        interactions = ToolInteraction.query.all()
+
+        return render_template('radial_visualization.html',
+                             total_stages=len(stages),
+                             total_categories=len(categories),
+                             total_tools=len(tools),
+                             total_interactions=len(interactions))
+    except Exception as e:
+        logger.error(f"Error in radial visualization: {e}")
+        return render_template('error.html', error=str(e)), 500
+
+@app.route('/api/radial-visualization-data')
+def radial_visualization_data():
+    """API endpoint providing data for the radial visualization."""
+    try:
+        # Get all stages in order
+        stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
+        stage_names = [stage.name for stage in stages]
+
+        # Get all categories with their tools
+        categories = ToolCategory.query.all()
+        gorc_categories = []
+
+        for category in categories:
+            category_data = {
+                'name': category.name,
+                'stage': category.stage.name if category.stage else 'Unknown',
+                'tools': []
+            }
+
+            # Get tools for this category
+            tools = ExemplarTool.query.filter_by(category_id=category.id, is_active=True).all()
+            for tool in tools:
+                category_data['tools'].append({
+                    'name': tool.name,
+                    'description': tool.description or '',
+                    'url': tool.url or '',
+                    'provider': tool.provider or ''
+                })
+
+            gorc_categories.append(category_data)
+
+        # Build correlations (which categories appear in which stages)
+        correlations = {}
+        for category in categories:
+            correlations[category.name] = {}
+            for stage_name in stage_names:
+                # Check if category belongs to this stage
+                if category.stage and category.stage.name == stage_name:
+                    correlations[category.name][stage_name] = {
+                        'marker': 'XX',  # Strong correlation (primary stage)
+                        'description': f'{category.name} tools for {stage_name}'
+                    }
+                else:
+                    # Check if any tools in this category have interactions with this stage
+                    has_interaction = False
+                    for tool in category.tools:
+                        if tool.is_active:
+                            # Check interactions as source or target
+                            source_interactions = ToolInteraction.query.filter_by(
+                                source_tool_id=tool.id,
+                                lifecycle_stage=stage_name
+                            ).count()
+                            target_interactions = ToolInteraction.query.filter_by(
+                                target_tool_id=tool.id,
+                                lifecycle_stage=stage_name
+                            ).count()
+
+                            if source_interactions > 0 or target_interactions > 0:
+                                has_interaction = True
+                                break
+
+                    if has_interaction:
+                        correlations[category.name][stage_name] = {
+                            'marker': 'X',  # Weak correlation (has interactions)
+                            'description': f'{category.name} has tool interactions in {stage_name}'
+                        }
+                    else:
+                        correlations[category.name][stage_name] = {
+                            'marker': '',
+                            'description': ''
+                        }
+
+        # Get tool counts per stage
+        stage_tools = {}
+        for stage in stages:
+            tools_count = ExemplarTool.query.filter_by(stage_id=stage.id, is_active=True).count()
+            stage_tools[stage.name] = tools_count
+
+        # Prepare response data
+        response_data = {
+            'stages': stage_names,
+            'gorcCategories': gorc_categories,
+            'correlations': correlations,
+            'stageTools': stage_tools
+        }
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        logger.error(f"Error generating radial visualization data: {e}")
+        return jsonify({'error': str(e)}), 500
+
 # --- Tool Management Routes ---
 
 @app.route('/add-tool', methods=['GET', 'POST'])
