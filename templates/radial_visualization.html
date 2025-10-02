@@ -3,7 +3,6 @@
 {% block title %}Radial Visualization - PRISM | MaLDReTH II RDA{% endblock %}
 
 {% block extra_head %}
-<script src="https://d3js.org/d3.v7.min.js"></script>
 <style>
     .visualization-container {
         background: white;
@@ -260,22 +259,75 @@
 </div>
 
 <!-- Scripts -->
-<script src="{{ url_for('static', filename='js/radial-visualization.js') }}"></script>
 <script>
-    // Initialize the radial visualization
-    document.addEventListener('DOMContentLoaded', function() {
-        // Check if D3 is loaded
-        if (typeof d3 === 'undefined') {
+    // Load D3.js with multiple fallbacks
+    const D3_SOURCES = [
+        'https://d3js.org/d3.v7.min.js',
+        'https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js',
+        'https://unpkg.com/d3@7/dist/d3.min.js'
+    ];
+
+    function tryLoadD3(sourceIndex = 0) {
+        if (sourceIndex >= D3_SOURCES.length) {
+            console.error('All D3.js sources failed');
             document.getElementById('radial-viz').innerHTML =
-                '<div class="alert alert-danger">D3.js library failed to load. Please refresh the page.</div>';
+                '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Failed to load D3.js library. Please check your internet connection and refresh.</div>';
             return;
         }
 
+        const script = document.createElement('script');
+        script.src = D3_SOURCES[sourceIndex];
+        script.async = false; // Load synchronously
+
+        const timeout = setTimeout(() => {
+            console.log(`D3.js source ${sourceIndex + 1} timed out`);
+            script.remove();
+            tryLoadD3(sourceIndex + 1);
+        }, 5000);
+
+        script.onload = function() {
+            clearTimeout(timeout);
+            if (typeof d3 !== 'undefined') {
+                console.log(`D3.js v${d3.version || '7'} loaded from source ${sourceIndex + 1}`);
+                // Now load the visualization script
+                loadVisualizationScript();
+            } else {
+                console.log(`D3.js script loaded but d3 object not available from source ${sourceIndex + 1}`);
+                tryLoadD3(sourceIndex + 1);
+            }
+        };
+
+        script.onerror = () => {
+            clearTimeout(timeout);
+            console.log(`D3.js source ${sourceIndex + 1} failed`);
+            script.remove();
+            tryLoadD3(sourceIndex + 1);
+        };
+
+        document.head.appendChild(script);
+    }
+
+    function loadVisualizationScript() {
+        const vizScript = document.createElement('script');
+        vizScript.src = '{{ url_for("static", filename="js/radial-visualization.js") }}';
+        vizScript.onload = function() {
+            console.log('Visualization script loaded');
+            initializeVisualization();
+        };
+        vizScript.onerror = function() {
+            document.getElementById('radial-viz').innerHTML =
+                '<div class="alert alert-danger">Visualization script failed to load. Please refresh the page.</div>';
+        };
+        document.head.appendChild(vizScript);
+    }
+
+    function initializeVisualization() {
         // Check if visualization class is loaded
         if (typeof MaLDReTHRadialVisualization === 'undefined') {
             console.error('MaLDReTHRadialVisualization class not loaded');
             document.getElementById('radial-viz').innerHTML =
-                '<div class="alert alert-danger">Visualization script failed to load. Please refresh the page.</div>';
+                '<div class="alert alert-danger">Visualization class failed to load. Please refresh the page.</div>';
             return;
         }
 
@@ -349,6 +401,13 @@
                         Error loading visualization data: ${error.message}
                     </div>`;
             });
-    });
+    }
+
+    // Start loading D3.js when page loads
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => tryLoadD3(0));
+    } else {
+        tryLoadD3(0);
+    }
 </script>
 {% endblock %}
