@@ -259,26 +259,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 $(document).ready(function() {
-    // Initialize Select2 on source tool dropdown
-    $('#source_tool_id').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Search for a source tool...',
-        allowClear: true,
-        width: '100%',
-        templateResult: formatToolOption,
-        templateSelection: formatToolSelection
-    });
-
-    // Initialize Select2 on target tool dropdown
-    $('#target_tool_id').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Search for a target tool...',
-        allowClear: true,
-        width: '100%',
-        templateResult: formatToolOption,
-        templateSelection: formatToolSelection
-    });
-
     // Custom formatting for tool options
     function formatToolOption(tool) {
         if (!tool.id) {
@@ -304,12 +284,64 @@ $(document).ready(function() {
         return tool.text;
     }
 
+    // Initialize Select2 on source tool dropdown
+    $('#source_tool_id').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Search for a source tool...',
+        allowClear: true,
+        width: '100%',
+        dropdownAutoWidth: true,
+        templateResult: formatToolOption,
+        templateSelection: formatToolSelection,
+        language: {
+            noResults: function() {
+                return "No tools found";
+            },
+            searching: function() {
+                return "Searching...";
+            }
+        }
+    });
+
+    // Initialize Select2 on target tool dropdown
+    $('#target_tool_id').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Search for a target tool...',
+        allowClear: true,
+        width: '100%',
+        dropdownAutoWidth: true,
+        templateResult: formatToolOption,
+        templateSelection: formatToolSelection,
+        language: {
+            noResults: function() {
+                return "No tools found";
+            },
+            searching: function() {
+                return "Searching...";
+            }
+        }
+    });
+
     // Listen for Select2 change events and trigger native change for lifecycle stage logic
-    $('#source_tool_id').on('select2:select', function() {
+    $('#source_tool_id').on('select2:select select2:clear', function() {
         this.dispatchEvent(new Event('change', { bubbles: true }));
     });
-    $('#target_tool_id').on('select2:select', function() {
+    $('#target_tool_id').on('select2:select select2:clear', function() {
         this.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    // Re-open dropdown after clearing to maintain search UX
+    $('#source_tool_id').on('select2:clear', function() {
+        var self = $(this);
+        setTimeout(function() {
+            self.select2('open');
+        }, 1);
+    });
+    $('#target_tool_id').on('select2:clear', function() {
+        var self = $(this);
+        setTimeout(function() {
+            self.select2('open');
+        }, 1);
     });
 });
 </script>
