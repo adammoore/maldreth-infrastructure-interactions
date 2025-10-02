@@ -8,6 +8,12 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-body">
+                <noscript>
+                    <div class="alert alert-warning">
+                        <strong>JavaScript Disabled:</strong> For the best experience, please enable JavaScript.
+                        Tool dropdowns will be basic without enhanced search.
+                    </div>
+                </noscript>
                 <form method="POST" action="{{ url_for('add_interaction') }}">
                     
                     <!-- Core Information -->
@@ -248,6 +254,63 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listeners to both tool selects
     sourceToolSelect.addEventListener('change', updateLifecycleStage);
     targetToolSelect.addEventListener('change', updateLifecycleStage);
+});
+</script>
+
+<script>
+$(document).ready(function() {
+    // Initialize Select2 on source tool dropdown
+    $('#source_tool_id').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Search for a source tool...',
+        allowClear: true,
+        width: '100%',
+        templateResult: formatToolOption,
+        templateSelection: formatToolSelection
+    });
+
+    // Initialize Select2 on target tool dropdown
+    $('#target_tool_id').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Search for a target tool...',
+        allowClear: true,
+        width: '100%',
+        templateResult: formatToolOption,
+        templateSelection: formatToolSelection
+    });
+
+    // Custom formatting for tool options
+    function formatToolOption(tool) {
+        if (!tool.id) {
+            return tool.text;
+        }
+
+        // Extract stage info from data attribute
+        var $tool = $(tool.element);
+        var stage = $tool.data('stage') || '';
+
+        // Build formatted option with icon and stage
+        var $result = $(
+            '<span>' +
+                '<i class="fas fa-tool me-2 text-muted"></i>' +
+                '<strong>' + tool.text.split(' (')[0] + '</strong>' +
+                (stage ? '<br><small class="text-muted ms-4">Stage: ' + stage + '</small>' : '') +
+            '</span>'
+        );
+        return $result;
+    }
+
+    function formatToolSelection(tool) {
+        return tool.text;
+    }
+
+    // Listen for Select2 change events and trigger native change for lifecycle stage logic
+    $('#source_tool_id').on('select2:select', function() {
+        this.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    $('#target_tool_id').on('select2:select', function() {
+        this.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 });
 </script>
 
