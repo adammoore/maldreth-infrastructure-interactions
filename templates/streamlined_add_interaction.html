@@ -13,7 +13,15 @@
                     <!-- Core Information -->
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="source_tool_id" class="form-label">Source Tool</label>
+                            <label for="source_tool_id" class="form-label">
+                                Source Tool
+                                <span class="text-muted ms-1"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title="The tool that initiates or provides data/functionality in this interaction">
+                                    <i class="fas fa-question-circle"></i>
+                                </span>
+                            </label>
                             <select class="form-select" id="source_tool_id" name="source_tool_id" required>
                                 <option value="">Select a source tool...</option>
                                 {% for tool in tools %}
@@ -22,7 +30,15 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label for="target_tool_id" class="form-label">Target Tool</label>
+                            <label for="target_tool_id" class="form-label">
+                                Target Tool
+                                <span class="text-muted ms-1"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title="The tool that receives data/functionality in this interaction">
+                                    <i class="fas fa-question-circle"></i>
+                                </span>
+                            </label>
                             <select class="form-select" id="target_tool_id" name="target_tool_id" required>
                                 <option value="">Select a target tool...</option>
                                 {% for tool in tools %}
@@ -33,7 +49,16 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="interaction_type" class="form-label">Interaction Type</label>
+                            <label for="interaction_type" class="form-label">
+                                Interaction Type
+                                <a href="{{ url_for('glossary') }}#interaction-types" target="_blank"
+                                   class="text-muted ms-1"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
+                                   title="View detailed definitions and examples in the glossary">
+                                    <i class="fas fa-question-circle"></i>
+                                </a>
+                            </label>
                             <select class="form-select" id="interaction_type" name="interaction_type" required>
                                 <option value="">Select interaction type...</option>
                                 {% for interaction_type in interaction_types %}
@@ -42,7 +67,16 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label for="lifecycle_stage" class="form-label">Lifecycle Stage</label>
+                            <label for="lifecycle_stage" class="form-label">
+                                Lifecycle Stage
+                                <a href="{{ url_for('glossary') }}#lifecycle-stages" target="_blank"
+                                   class="text-muted ms-1"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
+                                   title="Which research data lifecycle stage does this interaction primarily support?">
+                                    <i class="fas fa-question-circle"></i>
+                                </a>
+                            </label>
                             <select class="form-select" id="lifecycle_stage" name="lifecycle_stage" required>
                                 <option value="">Select a lifecycle stage...</option>
                                 {% for stage in stages %}
@@ -52,26 +86,66 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
+                        <label for="description" class="form-label">
+                            Description
+                            <span class="text-muted ms-1"
+                                  data-bs-toggle="tooltip"
+                                  data-bs-placement="top"
+                                  title="Describe what happens in this interaction and why it's useful (1-3 sentences)">
+                                <i class="fas fa-question-circle"></i>
+                            </span>
+                        </label>
                         <textarea class="form-control" id="description" name="description" rows="3" placeholder="Describe the interaction in detail." required></textarea>
                     </div>
 
                     <!-- Technical Details -->
                     <h5 class="mt-4">Technical Details</h5>
                     <div class="mb-3">
-                        <label for="technical_details" class="form-label">Technical Implementation</label>
+                        <label for="technical_details" class="form-label">
+                            Technical Implementation
+                            <span class="text-muted ms-1"
+                                  data-bs-toggle="tooltip"
+                                  data-bs-placement="top"
+                                  title="Mention protocols, APIs, standards, or technologies used (e.g., REST API, OAuth 2.0)">
+                                <i class="fas fa-question-circle"></i>
+                            </span>
+                        </label>
                         <textarea class="form-control" id="technical_details" name="technical_details" rows="2" placeholder="e.g., REST API, OAuth 2.0"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="benefits" class="form-label">Benefits</label>
+                        <label for="benefits" class="form-label">
+                            Benefits
+                            <span class="text-muted ms-1"
+                                  data-bs-toggle="tooltip"
+                                  data-bs-placement="top"
+                                  title="What advantages does this interaction provide?">
+                                <i class="fas fa-question-circle"></i>
+                            </span>
+                        </label>
                         <textarea class="form-control" id="benefits" name="benefits" rows="2" placeholder="Advantages of this interaction"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="challenges" class="form-label">Challenges</label>
+                        <label for="challenges" class="form-label">
+                            Challenges
+                            <span class="text-muted ms-1"
+                                  data-bs-toggle="tooltip"
+                                  data-bs-placement="top"
+                                  title="What limitations, difficulties, or trade-offs exist?">
+                                <i class="fas fa-question-circle"></i>
+                            </span>
+                        </label>
                         <textarea class="form-control" id="challenges" name="challenges" rows="2" placeholder="Limitations or difficulties"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="examples" class="form-label">Examples</label>
+                        <label for="examples" class="form-label">
+                            Examples
+                            <span class="text-muted ms-1"
+                                  data-bs-toggle="tooltip"
+                                  data-bs-placement="top"
+                                  title="Provide real-world examples of this interaction in use">
+                                <i class="fas fa-question-circle"></i>
+                            </span>
+                        </label>
                         <textarea class="form-control" id="examples" name="examples" rows="2" placeholder="Real-world examples"></textarea>
                     </div>
 
