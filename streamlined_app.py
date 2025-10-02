@@ -631,6 +631,106 @@ def export_interactions_csv():
         logger.error(f"Error exporting interactions to CSV: {e}")
         return render_template('error.html', error=str(e)), 500
 
+@app.route('/download/csv-template')
+def download_csv_template():
+    """
+    Provide a CSV template with example data to help users prepare bulk uploads.
+
+    This template includes:
+    - Proper column headers matching database schema
+    - Three example rows demonstrating good data quality
+    - Different interaction types and lifecycle stages for reference
+
+    Returns:
+        CSV file download response
+    """
+    try:
+        # Define template data with high-quality examples
+        template_data = [
+            {
+                'Source Tool': 'GitHub',
+                'Target Tool': 'Zenodo',
+                'Interaction Type': 'Data Exchange',
+                'Lifecycle Stage': 'PRESERVE',
+                'Description': 'GitHub repositories can be automatically archived to Zenodo with DOI assignment, creating permanent records of research software and datasets.',
+                'Technical Details': 'GitHub webhook integration, automatic metadata transfer via Zenodo API',
+                'Benefits': 'Permanent preservation, citable software versions with DOIs, enhanced reproducibility',
+                'Challenges': 'Large repository size limits, selective file archiving complexity, metadata mapping',
+                'Examples': 'Software packages automatically archived with each GitHub release; Research code preserved with version-specific DOIs',
+                'Contact Person': 'Your Name',
+                'Organization': 'Your Institution',
+                'Email': 'your.email@example.com',
+                'Priority': 'medium',
+                'Complexity': 'simple',
+                'Status': 'implemented',
+                'Submitted By': 'Template Example'
+            },
+            {
+                'Source Tool': 'REDCap',
+                'Target Tool': 'R',
+                'Interaction Type': 'API Integration',
+                'Lifecycle Stage': 'ANALYSE',
+                'Description': 'REDCap provides direct export capabilities to R for statistical analysis, streamlining the transition from data collection to analysis workflows.',
+                'Technical Details': 'REDCap API with R packages (REDCapR, redcapAPI), OAuth authentication, automated data synchronization',
+                'Benefits': 'Seamless data workflow, reduced manual errors, reproducible analysis pipelines, real-time data access',
+                'Challenges': 'Data format conversion complexity, access control management, API rate limits, authentication setup',
+                'Examples': 'Clinical trial data exported from REDCap for statistical analysis in R; Longitudinal study data automatically synced for ongoing analysis',
+                'Contact Person': '',
+                'Organization': '',
+                'Email': '',
+                'Priority': 'high',
+                'Complexity': 'moderate',
+                'Status': 'implemented',
+                'Submitted By': 'Template Example'
+            },
+            {
+                'Source Tool': 'Jupyter Notebook',
+                'Target Tool': 'Docker',
+                'Interaction Type': 'Workflow Integration',
+                'Lifecycle Stage': 'ANALYSE',
+                'Description': 'Jupyter notebooks can be containerized using Docker to ensure reproducible computational environments across different systems and platforms.',
+                'Technical Details': 'Docker containerization, Jupyter Docker stacks, environment specification via Dockerfile',
+                'Benefits': 'Reproducible environments, easy deployment, consistent dependencies across systems, version-controlled infrastructure',
+                'Challenges': 'Container size optimization, security considerations, learning curve for container technology',
+                'Examples': 'Data analysis notebooks packaged as Docker containers for reproducible research; Machine learning workflows containerized for deployment',
+                'Contact Person': '',
+                'Organization': '',
+                'Email': '',
+                'Priority': 'medium',
+                'Complexity': 'complex',
+                'Status': 'implemented',
+                'Submitted By': 'Template Example'
+            }
+        ]
+
+        # Create CSV in memory
+        output = StringIO()
+
+        # Define fieldnames matching database schema
+        fieldnames = [
+            'Source Tool', 'Target Tool', 'Interaction Type', 'Lifecycle Stage',
+            'Description', 'Technical Details', 'Benefits', 'Challenges', 'Examples',
+            'Contact Person', 'Organization', 'Email', 'Priority', 'Complexity',
+            'Status', 'Submitted By'
+        ]
+
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(template_data)
+
+        # Prepare response
+        csv_content = output.getvalue()
+        response = make_response(csv_content)
+        response.headers['Content-Type'] = 'text/csv'
+        response.headers['Content-Disposition'] = 'attachment; filename=prism_interaction_template.csv'
+
+        logger.info("CSV template downloaded successfully")
+        return response
+
+    except Exception as e:
+        logger.error(f"Error generating CSV template: {e}")
+        return render_template('error.html', error=str(e)), 500
+
 @app.route('/upload/interactions/csv', methods=['GET', 'POST'])
 def upload_interactions_csv():
     """Upload interactions from CSV file (without overwriting existing entries)."""

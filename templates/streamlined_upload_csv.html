@@ -110,16 +110,25 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-info border-0">
+                    <div class="alert alert-success border-0">
                         <h6 class="alert-heading">
-                            <i class="fas fa-download me-2"></i>Get Template
+                            <i class="fas fa-download me-2"></i>Download CSV Template with Examples
                         </h6>
                         <p class="mb-2">
-                            Download the current data as CSV to see the exact format and column names:
+                            Download a pre-formatted CSV template with example interactions to guide your data preparation:
                         </p>
-                        <a href="{{ url_for('export_interactions_csv') }}" class="btn btn-sm btn-outline-info">
-                            <i class="fas fa-download me-1"></i>Download Template CSV
-                        </a>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="{{ url_for('download_csv_template') }}" class="btn btn-success">
+                                <i class="fas fa-file-download me-2"></i>Download Template with Examples
+                            </a>
+                            <a href="{{ url_for('export_interactions_csv') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-database me-2"></i>Export Current Data
+                            </a>
+                        </div>
+                        <div class="mt-2 small text-muted">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            <strong>Tip:</strong> The template includes 3 real-world examples showing different interaction types and lifecycle stages.
+                        </div>
                     </div>
                     
                     <div class="table-responsive">
