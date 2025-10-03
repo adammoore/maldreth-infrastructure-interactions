@@ -345,26 +345,46 @@
                 // Initialize the visualization
                 const viz = new MaLDReTHRadialVisualization('#radial-viz', data);
 
+                // Store viz globally for controls
+                window.radialViz = viz;
+
                 // Setup control buttons
                 document.getElementById('reset-viz').addEventListener('click', () => {
-                    viz.reset();
+                    if (viz.resetView) {
+                        viz.resetView();
+                    } else {
+                        location.reload();
+                    }
                 });
 
                 document.getElementById('show-all-connections').addEventListener('click', () => {
-                    viz.showAllConnections();
+                    // Show all connections by resetting filters
+                    d3.selectAll('.connection-path').style('opacity', 0.4);
+                    d3.selectAll('.category-arc, .tool-arc').style('opacity', 1);
                 });
 
                 document.getElementById('hide-connections').addEventListener('click', () => {
-                    viz.hideConnections();
+                    // Hide all connection lines
+                    d3.selectAll('.connection-path').style('opacity', 0);
                 });
 
-                // Setup export buttons
+                // Setup export buttons - Simple SVG download
                 document.getElementById('export-svg').addEventListener('click', () => {
-                    viz.exportAsSVG();
+                    const svgElement = document.querySelector('#radial-viz svg');
+                    if (svgElement) {
+                        const svgData = new XMLSerializer().serializeToString(svgElement);
+                        const blob = new Blob([svgData], {type: 'image/svg+xml'});
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = 'prism-radial-visualization.svg';
+                        link.click();
+                        URL.revokeObjectURL(url);
+                    }
                 });
 
                 document.getElementById('export-png').addEventListener('click', () => {
-                    viz.exportAsPNG();
+                    alert('PNG export requires additional setup. Please use SVG export for now.');
                 });
 
                 // Populate category filters
@@ -373,8 +393,11 @@
                     const btn = document.createElement('button');
                     btn.className = 'btn btn-sm btn-outline-secondary';
                     btn.textContent = category.name;
+                    btn.setAttribute('data-category', category.name);
                     btn.addEventListener('click', () => {
-                        viz.filterByCategory(category.name);
+                        if (viz.highlightCategory) {
+                            viz.highlightCategory(category.name);
+                        }
                         // Toggle active state
                         filtersContainer.querySelectorAll('button').forEach(b => b.classList.remove('active'));
                         btn.classList.add('active');
@@ -387,7 +410,11 @@
                 allBtn.className = 'btn btn-sm btn-primary active';
                 allBtn.textContent = 'All Categories';
                 allBtn.addEventListener('click', () => {
-                    viz.reset();
+                    if (viz.resetView) {
+                        viz.resetView();
+                    }
+                    // Reset all visual states
+                    d3.selectAll('.category-arc, .tool-arc, .connection-path').style('opacity', null);
                     filtersContainer.querySelectorAll('button').forEach(b => b.classList.remove('active'));
                     allBtn.classList.add('active');
                 });
