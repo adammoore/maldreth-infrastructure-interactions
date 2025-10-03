@@ -1365,11 +1365,19 @@ def radial_visualization_data():
                             'description': ''
                         }
 
-        # Get tool counts per stage
+        # Get actual tools per stage (not just counts) for visualization
         stage_tools = {}
         for stage in stages:
-            tools_count = ExemplarTool.query.filter_by(stage_id=stage.id, is_active=True).count()
-            stage_tools[stage.name] = tools_count
+            tools = ExemplarTool.query.filter_by(stage_id=stage.id, is_active=True).all()
+            stage_tools[stage.name] = []
+            for tool in tools:
+                stage_tools[stage.name].append({
+                    'name': tool.name,
+                    'category': tool.category.name if tool.category else 'Uncategorized',
+                    'description': tool.description or '',
+                    'url': tool.url or '',
+                    'provider': tool.provider or ''
+                })
 
         # Prepare response data
         response_data = {
