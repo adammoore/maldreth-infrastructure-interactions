@@ -516,37 +516,69 @@ class MaLDReTHRadialVisualization {
         const toolGroup = this.g.append('g')
             .attr('class', 'tool-arcs');
 
-        // Create tool segments aligned with their stages
+        // First, create a continuous outer ring background
+        const outerRing = d3.arc()
+            .innerRadius(this.toolRadius - 35)
+            .outerRadius(this.toolRadius)
+            .startAngle(0)
+            .endAngle(2 * Math.PI);
+
+        toolGroup.append('path')
+            .attr('d', outerRing())
+            .attr('fill', '#f0f0f0')
+            .attr('stroke', '#ddd')
+            .attr('stroke-width', 1)
+            .attr('opacity', 0.3);
+
+        // Now place tool segments within their stage sectors
         const angleStep = (2 * Math.PI) / this.data.stages.length;
 
         this.data.stages.forEach((stage, stageIndex) => {
             const tools = this.data.stageTools[stage] || [];
+            const stageColor = this.colors.stages(stage);
 
             if (tools.length > 0) {
                 // Calculate the stage's full sector boundaries
-                // Each stage sector spans from (index - 0.5)*angleStep to (index + 0.5)*angleStep
                 const sectorStartAngle = ((stageIndex - 0.5) * angleStep) - Math.PI / 2;
                 const sectorEndAngle = ((stageIndex + 0.5) * angleStep) - Math.PI / 2;
                 const sectorWidth = sectorEndAngle - sectorStartAngle;
 
-                // Divide the sector among tools with small gaps
+                // Create a colored arc for this stage's sector in the outer ring
+                const stageArc = d3.arc()
+                    .innerRadius(this.toolRadius - 35)
+                    .outerRadius(this.toolRadius)
+                    .startAngle(sectorStartAngle)
+                    .endAngle(sectorEndAngle);
+
+                toolGroup.append('path')
+                    .attr('d', stageArc())
+                    .attr('fill', stageColor)
+                    .attr('stroke', '#fff')
+                    .attr('stroke-width', 2)
+                    .attr('opacity', 0.6)
+                    .attr('class', 'stage-tool-arc')
+                    .attr('data-stage', stage);
+
+                // Divide the sector among tools with small gaps for visual indicators
                 const toolArcWidth = sectorWidth / tools.length;
-                const gapWidth = toolArcWidth * 0.05; // 5% gap between tools
+                const gapWidth = toolArcWidth * 0.1;
 
                 tools.forEach((tool, toolIndex) => {
                     const startAngle = sectorStartAngle + (toolIndex * toolArcWidth) + gapWidth;
                     const endAngle = sectorStartAngle + ((toolIndex + 1) * toolArcWidth) - gapWidth;
 
-                    const arcGenerator = d3.arc()
-                        .innerRadius(this.toolRadius - 30)
+                    // Create small indicator markers for individual tools
+                    const toolMarker = d3.arc()
+                        .innerRadius(this.toolRadius - 8)
                         .outerRadius(this.toolRadius)
                         .startAngle(startAngle)
-                        .endAngle(endAngle)
-                        .cornerRadius(2);
+                        .endAngle(endAngle);
 
-                    const toolArc = toolGroup.append('path')
-                        .attr('d', arcGenerator())
-                        .attr('fill', this.colors.tools(tool.category))
+                    const midAngle = (startAngle + endAngle) / 2;
+
+                    toolGroup.append('path')
+                        .attr('d', toolMarker())
+                        .attr('fill', stageColor)
                         .attr('stroke', '#fff')
                         .attr('stroke-width', 0.5)
                         .attr('class', 'tool-arc')
@@ -554,7 +586,9 @@ class MaLDReTHRadialVisualization {
                         .attr('data-stage', stage)
                         .attr('data-category', tool.category)
                         .style('cursor', 'pointer')
-                        .style('opacity', 0.8);
+                        .style('opacity', 0.9)
+                        .append('title')
+                        .text(`${tool.name} (${stage})`);
                 });
             }
         });
