@@ -533,30 +533,35 @@ class MaLDReTHRadialVisualization {
             // Use same color scheme as stage circles
             const stageColor = d3.schemeCategory10[stageIndex % 10];
 
+            // Calculate the stage's full sector boundaries
+            // Stage circles are at: i * angleStep - Math.PI / 2
+            // So sectors should span from that angle ± half a step
+            const stageCenterAngle = (stageIndex * angleStep) - Math.PI / 2;
+            const sectorStartAngle = stageCenterAngle - (angleStep / 2);
+            const sectorEndAngle = stageCenterAngle + (angleStep / 2);
+            const sectorWidth = sectorEndAngle - sectorStartAngle;
+
+            // Debug logging
+            console.log(`Stage ${stageIndex}: ${stage}, angle=${(stageCenterAngle * 180 / Math.PI).toFixed(1)}°, tools=${tools.length}, color index=${stageIndex % 10}`);
+
+            // Create a colored arc for this stage's sector in the outer ring
+            const stageArc = d3.arc()
+                .innerRadius(this.toolRadius - 35)
+                .outerRadius(this.toolRadius)
+                .startAngle(sectorStartAngle)
+                .endAngle(sectorEndAngle);
+
+            toolGroup.append('path')
+                .attr('d', stageArc())
+                .attr('fill', stageColor)
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 2)
+                .attr('opacity', tools.length > 0 ? 0.6 : 0.2)
+                .attr('class', 'stage-tool-arc')
+                .attr('data-stage', stage);
+
+            // Only draw individual tool markers if there are tools
             if (tools.length > 0) {
-                // Calculate the stage's full sector boundaries
-                // Stage circles are at: i * angleStep - Math.PI / 2
-                // So sectors should span from that angle ± half a step
-                const stageCenterAngle = (stageIndex * angleStep) - Math.PI / 2;
-                const sectorStartAngle = stageCenterAngle - (angleStep / 2);
-                const sectorEndAngle = stageCenterAngle + (angleStep / 2);
-                const sectorWidth = sectorEndAngle - sectorStartAngle;
-
-                // Create a colored arc for this stage's sector in the outer ring
-                const stageArc = d3.arc()
-                    .innerRadius(this.toolRadius - 35)
-                    .outerRadius(this.toolRadius)
-                    .startAngle(sectorStartAngle)
-                    .endAngle(sectorEndAngle);
-
-                toolGroup.append('path')
-                    .attr('d', stageArc())
-                    .attr('fill', stageColor)
-                    .attr('stroke', '#fff')
-                    .attr('stroke-width', 2)
-                    .attr('opacity', 0.6)
-                    .attr('class', 'stage-tool-arc')
-                    .attr('data-stage', stage);
 
                 // Divide the sector among tools with small gaps for visual indicators
                 const toolArcWidth = sectorWidth / tools.length;
