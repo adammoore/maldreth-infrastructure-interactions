@@ -434,11 +434,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Enhanced JavaScript for RDL Visualization -->
 <script>
 // Enhanced RDL Visualization with D3.js
-const stageColors = d3.schemeCategory10;
 const stageData = {{ stages | tojson | safe }};
 const visualizationData = {{ visualization_data | tojson | safe }};
 
 function initializeCircularVisualization() {
+    const stageColors = d3.schemeCategory10;
     const svg = d3.select("#lifecycle-circle");
     const width = 800;
     const height = 500;
