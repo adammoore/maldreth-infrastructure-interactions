@@ -58,6 +58,56 @@
             </div>
         </div>
 
+        <!-- Advanced Filters (Collapsible) -->
+        <div class="mt-3">
+            <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
+                <i class="fas fa-sliders-h me-1"></i>Advanced Filters
+            </button>
+        </div>
+
+        <div class="collapse mt-3" id="advancedFilters">
+            <div class="row g-3">
+                <!-- Priority Filter -->
+                <div class="col-md-3">
+                    <label for="filter-priority" class="form-label">Priority</label>
+                    <select class="form-select" id="filter-priority">
+                        <option value="">All Priorities</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+
+                <!-- Complexity Filter -->
+                <div class="col-md-3">
+                    <label for="filter-complexity" class="form-label">Complexity</label>
+                    <select class="form-select" id="filter-complexity">
+                        <option value="">All Complexities</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="col-md-3">
+                    <label for="filter-status" class="form-label">Status</label>
+                    <select class="form-select" id="filter-status">
+                        <option value="">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Planned">Planned</option>
+                        <option value="Deprecated">Deprecated</option>
+                    </select>
+                </div>
+
+                <!-- Organization Filter -->
+                <div class="col-md-3">
+                    <label for="filter-organization" class="form-label">Organization</label>
+                    <input type="text" class="form-control" id="filter-organization" placeholder="Filter by organization...">
+                </div>
+            </div>
+        </div>
+
         <!-- Results Count -->
         <div class="mt-3">
             <div class="alert alert-info border-0 mb-0 py-2" id="result-count-alert">
@@ -141,6 +191,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search-input');
     const filterType = document.getElementById('filter-type');
     const filterStage = document.getElementById('filter-stage');
+    const filterPriority = document.getElementById('filter-priority');
+    const filterComplexity = document.getElementById('filter-complexity');
+    const filterStatus = document.getElementById('filter-status');
+    const filterOrganization = document.getElementById('filter-organization');
     const clearButton = document.getElementById('clear-filters');
     const resultCountElement = document.getElementById('result-count');
 
@@ -155,6 +209,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const searchTerm = searchInput.value.toLowerCase().trim();
         const selectedType = filterType.value.toLowerCase();
         const selectedStage = filterStage.value.toLowerCase();
+        const selectedPriority = filterPriority.value.toLowerCase();
+        const selectedComplexity = filterComplexity.value.toLowerCase();
+        const selectedStatus = filterStatus.value.toLowerCase();
+        const selectedOrganization = filterOrganization.value.toLowerCase().trim();
 
         let visibleCount = 0;
 
@@ -171,8 +229,21 @@ document.addEventListener('DOMContentLoaded', function() {
             // Apply lifecycle stage filter
             const matchesStage = !selectedStage || rowText.includes(selectedStage);
 
+            // Apply priority filter
+            const matchesPriority = !selectedPriority || rowText.includes(selectedPriority);
+
+            // Apply complexity filter
+            const matchesComplexity = !selectedComplexity || rowText.includes(selectedComplexity);
+
+            // Apply status filter
+            const matchesStatus = !selectedStatus || rowText.includes(selectedStatus);
+
+            // Apply organization filter
+            const matchesOrganization = !selectedOrganization || rowText.includes(selectedOrganization);
+
             // Show row only if all filters match
-            if (matchesSearch && matchesType && matchesStage) {
+            if (matchesSearch && matchesType && matchesStage && matchesPriority &&
+                matchesComplexity && matchesStatus && matchesOrganization) {
                 row.style.display = '';
                 visibleCount++;
             } else {
@@ -210,6 +281,10 @@ document.addEventListener('DOMContentLoaded', function() {
         searchInput.value = '';
         filterType.value = '';
         filterStage.value = '';
+        filterPriority.value = '';
+        filterComplexity.value = '';
+        filterStatus.value = '';
+        filterOrganization.value = '';
         filterTable();
     }
 
@@ -218,6 +293,10 @@ document.addEventListener('DOMContentLoaded', function() {
     searchInput.addEventListener('search', filterTable); // For search input clear button
     filterType.addEventListener('change', filterTable);
     filterStage.addEventListener('change', filterTable);
+    filterPriority.addEventListener('change', filterTable);
+    filterComplexity.addEventListener('change', filterTable);
+    filterStatus.addEventListener('change', filterTable);
+    filterOrganization.addEventListener('keyup', filterTable);
     clearButton.addEventListener('click', clearFilters);
 
     // Initialize count on page load
@@ -229,6 +308,10 @@ document.addEventListener('DOMContentLoaded', function() {
         sessionStorage.setItem('prism_search', searchInput.value);
         sessionStorage.setItem('prism_filter_type', filterType.value);
         sessionStorage.setItem('prism_filter_stage', filterStage.value);
+        sessionStorage.setItem('prism_filter_priority', filterPriority.value);
+        sessionStorage.setItem('prism_filter_complexity', filterComplexity.value);
+        sessionStorage.setItem('prism_filter_status', filterStatus.value);
+        sessionStorage.setItem('prism_filter_organization', filterOrganization.value);
     }
 
     // Restore filter state on page load
@@ -236,13 +319,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const savedSearch = sessionStorage.getItem('prism_search');
         const savedType = sessionStorage.getItem('prism_filter_type');
         const savedStage = sessionStorage.getItem('prism_filter_stage');
+        const savedPriority = sessionStorage.getItem('prism_filter_priority');
+        const savedComplexity = sessionStorage.getItem('prism_filter_complexity');
+        const savedStatus = sessionStorage.getItem('prism_filter_status');
+        const savedOrganization = sessionStorage.getItem('prism_filter_organization');
 
         if (savedSearch) searchInput.value = savedSearch;
         if (savedType) filterType.value = savedType;
         if (savedStage) filterStage.value = savedStage;
+        if (savedPriority) filterPriority.value = savedPriority;
+        if (savedComplexity) filterComplexity.value = savedComplexity;
+        if (savedStatus) filterStatus.value = savedStatus;
+        if (savedOrganization) filterOrganization.value = savedOrganization;
 
-        // Apply restored filters
-        if (savedSearch || savedType || savedStage) {
+        // Apply restored filters and expand advanced section if any advanced filters are active
+        if (savedSearch || savedType || savedStage || savedPriority || savedComplexity || savedStatus || savedOrganization) {
+            if (savedPriority || savedComplexity || savedStatus || savedOrganization) {
+                // Show advanced filters if any are set
+                const advancedCollapse = document.getElementById('advancedFilters');
+                if (advancedCollapse) {
+                    advancedCollapse.classList.add('show');
+                }
+            }
             filterTable();
         }
     }
@@ -254,12 +352,20 @@ document.addEventListener('DOMContentLoaded', function() {
     searchInput.addEventListener('change', saveFilterState);
     filterType.addEventListener('change', saveFilterState);
     filterStage.addEventListener('change', saveFilterState);
+    filterPriority.addEventListener('change', saveFilterState);
+    filterComplexity.addEventListener('change', saveFilterState);
+    filterStatus.addEventListener('change', saveFilterState);
+    filterOrganization.addEventListener('change', saveFilterState);
 
     // Clear saved state when clearing filters
     clearButton.addEventListener('click', function() {
         sessionStorage.removeItem('prism_search');
         sessionStorage.removeItem('prism_filter_type');
         sessionStorage.removeItem('prism_filter_stage');
+        sessionStorage.removeItem('prism_filter_priority');
+        sessionStorage.removeItem('prism_filter_complexity');
+        sessionStorage.removeItem('prism_filter_status');
+        sessionStorage.removeItem('prism_filter_organization');
     });
 });
 </script>
