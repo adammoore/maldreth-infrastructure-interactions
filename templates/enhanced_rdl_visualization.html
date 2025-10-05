@@ -98,8 +98,12 @@ function loadD3Force() {
     document.head.appendChild(forceScript);
 }
 
-// Load D3.js immediately
-loadD3Enhanced();
+// Load D3.js when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => loadD3Enhanced());
+} else {
+    loadD3Enhanced();
+}
 </script>
 <style>
     .visualization-container {

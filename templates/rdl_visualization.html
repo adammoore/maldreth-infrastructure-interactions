@@ -93,8 +93,12 @@ function initializeSVGFallback() {
     }
 }
 
-// Start loading process immediately
-tryLoadD3(0);
+// Start loading D3.js when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => tryLoadD3(0));
+} else {
+    tryLoadD3(0);
+}
 
 // Also try to check if D3 loads naturally
 document.addEventListener('DOMContentLoaded', function() {
