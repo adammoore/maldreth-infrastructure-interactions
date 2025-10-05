@@ -530,7 +530,8 @@ class MaLDReTHRadialVisualization {
 
         this.data.stages.forEach((stage, stageIndex) => {
             const tools = this.data.stageTools[stage] || [];
-            const stageColor = this.colors.stages(stage);
+            // Use same color scheme as stage circles
+            const stageColor = d3.schemeCategory10[stageIndex % 10];
 
             if (tools.length > 0) {
                 // Calculate the stage's full sector boundaries
