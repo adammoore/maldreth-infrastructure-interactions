@@ -41,13 +41,8 @@ function tryLoadD3(sourceIndex = 0) {
             console.log(`D3.js v${d3.version} loaded successfully from source ${sourceIndex + 1}`);
             // Wait a bit for D3 to fully initialize
             setTimeout(() => {
-                console.log('Attempting to initialize visualization...');
-                console.log('initializeCircularVisualization type:', typeof initializeCircularVisualization);
                 if (typeof initializeCircularVisualization === 'function') {
-                    console.log('Calling initializeCircularVisualization()');
                     initializeCircularVisualization();
-                } else {
-                    console.error('D3 loaded but visualization function not ready!');
                 }
             }, 100);
         } else {
@@ -385,12 +380,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     <hr>
                     
                     <div class="future-features">
-                        <small class="text-muted d-block mb-2">Coming Soon:</small>
+                        <small class="text-muted d-block mb-2">Additional Features:</small>
                         <ul class="list-unstyled small text-muted">
-                            <li><i class="fas fa-check-circle me-2 text-success"></i>Interactive node connections</li>
-                            <li><i class="fas fa-check-circle me-2 text-success"></i>Tool-to-tool relationship mapping</li>
-                            <li><i class="fas fa-check-circle me-2 text-success"></i>Dynamic filtering and search</li>
-                            <li><i class="fas fa-check-circle me-2 text-success"></i>Export to various formats</li>
+                            <li><i class="fas fa-arrow-right me-2 text-primary"></i>Tool interaction connections available in <a href="{{ url_for('radial_visualization') }}">Radial View</a></li>
+                            <li><i class="fas fa-arrow-right me-2 text-primary"></i>Network analysis available in <a href="{{ url_for('enhanced_rdl_visualization') }}">Network View</a></li>
+                            <li><i class="fas fa-check-circle me-2 text-success"></i>Export visualization controls (above)</li>
+                            <li><i class="fas fa-check-circle me-2 text-success"></i>Stage filtering by selection</li>
                         </ul>
                     </div>
                 </div>
@@ -398,18 +393,19 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <!-- Development Notice -->
+    <!-- Visualization Info -->
     <div class="row mt-4">
         <div class="col-12">
-            <div class="alert alert-warning border-0 shadow-sm">
+            <div class="alert alert-info border-0 shadow-sm">
                 <div class="d-flex align-items-center">
-                    <i class="fas fa-construction me-3 fs-4"></i>
+                    <i class="fas fa-info-circle me-3 fs-4"></i>
                     <div>
-                        <h5 class="alert-heading mb-2">Visualization Under Development</h5>
+                        <h5 class="alert-heading mb-2">Interactive D3.js Visualization</h5>
                         <p class="mb-0">
-                            This is a foundational implementation of the RDL visualization. Future versions will include 
-                            interactive D3.js network graphs, real-time filtering, advanced analytics, and export capabilities. 
-                            The current view provides a structural overview that will evolve into a fully interactive experience.
+                            This circular visualization shows the 12 MaLDReTH lifecycle stages with tool counts and stage relationships.
+                            Hover over stage circles for details, and use the controls above to focus on specific stages.
+                            For more advanced network analysis, try the <a href="{{ url_for('radial_visualization') }}" class="alert-link">Radial Visualization</a>
+                            or <a href="{{ url_for('enhanced_rdl_visualization') }}" class="alert-link">Network Visualization</a>.
                         </p>
                     </div>
                 </div>
@@ -443,13 +439,7 @@ const stageData = {{ stages | tojson | safe }};
 const visualizationData = {{ visualization_data | tojson | safe }};
 
 function initializeCircularVisualization() {
-    console.log('initializeCircularVisualization called');
-    console.log('d3 available:', typeof d3 !== 'undefined');
-    console.log('SVG element exists:', document.getElementById('lifecycle-circle') !== null);
-
     const svg = d3.select("#lifecycle-circle");
-    console.log('SVG selection:', svg.node());
-
     const width = 800;
     const height = 500;
     const centerX = width / 2;
