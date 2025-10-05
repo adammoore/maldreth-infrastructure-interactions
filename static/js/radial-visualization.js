@@ -67,15 +67,10 @@ class MaLDReTHRadialVisualization {
 
         this.svg.call(this.zoom);
         
-        // Calculate GORC category coverage
-        this.calculateCategoryCoverage();
-        
         // Create layers
         this.createCenterHub();
         this.createStageRing();
-        this.createDynamicCategoryArcs();
         this.createToolArcs();
-        this.createConnections();
         // this.createLegend(); // Commented out per user request
         this.addInteractivity();
     }
@@ -539,8 +534,11 @@ class MaLDReTHRadialVisualization {
 
             if (tools.length > 0) {
                 // Calculate the stage's full sector boundaries
-                const sectorStartAngle = ((stageIndex - 0.5) * angleStep) - Math.PI / 2;
-                const sectorEndAngle = ((stageIndex + 0.5) * angleStep) - Math.PI / 2;
+                // Stage circles are at: i * angleStep - Math.PI / 2
+                // So sectors should span from that angle ± half a step
+                const stageCenterAngle = (stageIndex * angleStep) - Math.PI / 2;
+                const sectorStartAngle = stageCenterAngle - (angleStep / 2);
+                const sectorEndAngle = stageCenterAngle + (angleStep / 2);
                 const sectorWidth = sectorEndAngle - sectorStartAngle;
 
                 // Create a colored arc for this stage's sector in the outer ring
