@@ -535,8 +535,8 @@ class MaLDReTHRadialVisualization {
 
             // Calculate the stage's full sector boundaries
             // Stage circles are at: i * angleStep - Math.PI / 2
-            // So sectors should span from that angle ± half a step
-            const stageCenterAngle = (stageIndex * angleStep) - Math.PI / 2;
+            // Adding 90 degrees (Math.PI / 2) to align tool sectors with stage circles
+            const stageCenterAngle = (stageIndex * angleStep) - Math.PI / 2 + Math.PI / 2;
             const sectorStartAngle = stageCenterAngle - (angleStep / 2);
             const sectorEndAngle = stageCenterAngle + (angleStep / 2);
             const sectorWidth = sectorEndAngle - sectorStartAngle;
