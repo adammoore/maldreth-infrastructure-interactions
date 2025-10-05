@@ -41,10 +41,13 @@ function tryLoadD3(sourceIndex = 0) {
             console.log(`D3.js v${d3.version} loaded successfully from source ${sourceIndex + 1}`);
             // Wait a bit for D3 to fully initialize
             setTimeout(() => {
+                console.log('Attempting to initialize visualization...');
+                console.log('initializeCircularVisualization type:', typeof initializeCircularVisualization);
                 if (typeof initializeCircularVisualization === 'function') {
+                    console.log('Calling initializeCircularVisualization()');
                     initializeCircularVisualization();
                 } else {
-                    console.log('D3 loaded but visualization function not ready, will initialize later');
+                    console.error('D3 loaded but visualization function not ready!');
                 }
             }, 100);
         } else {
@@ -440,7 +443,13 @@ const stageData = {{ stages | tojson | safe }};
 const visualizationData = {{ visualization_data | tojson | safe }};
 
 function initializeCircularVisualization() {
+    console.log('initializeCircularVisualization called');
+    console.log('d3 available:', typeof d3 !== 'undefined');
+    console.log('SVG element exists:', document.getElementById('lifecycle-circle') !== null);
+
     const svg = d3.select("#lifecycle-circle");
+    console.log('SVG selection:', svg.node());
+
     const width = 800;
     const height = 500;
     const centerX = width / 2;
