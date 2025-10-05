@@ -27,8 +27,7 @@ function tryLoadD3(sourceIndex = 0) {
     d3LoadAttempts++;
     const script = document.createElement('script');
     script.src = D3_SOURCES[sourceIndex];
-    script.async = true;
-    script.defer = true;
+    script.async = false; // Load synchronously to avoid race conditions
     
     const timeout = setTimeout(() => {
         console.log(`D3.js source ${sourceIndex + 1} timed out after 10s`);

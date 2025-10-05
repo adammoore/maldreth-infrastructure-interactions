@@ -22,7 +22,7 @@ function tryLoadD3Enhanced(sourceIndex = 0) {
     
     const script = document.createElement('script');
     script.src = D3_SOURCES[sourceIndex];
-    script.async = true;
+    script.async = false; // Load synchronously to avoid race conditions
     
     const timeout = setTimeout(() => {
         script.remove();
