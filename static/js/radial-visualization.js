@@ -541,9 +541,6 @@ class MaLDReTHRadialVisualization {
             const sectorEndAngle = stageCenterAngle + (angleStep / 2);
             const sectorWidth = sectorEndAngle - sectorStartAngle;
 
-            // Debug logging
-            console.log(`Stage ${stageIndex}: ${stage}, angle=${(stageCenterAngle * 180 / Math.PI).toFixed(1)}°, tools=${tools.length}, color index=${stageIndex % 10}`);
-
             // Create a colored arc for this stage's sector in the outer ring
             const stageArc = d3.arc()
                 .innerRadius(this.toolRadius - 35)
