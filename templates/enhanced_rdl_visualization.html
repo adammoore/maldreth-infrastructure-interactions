@@ -771,25 +771,273 @@ function createForceDirectedLayout() {
 }
 
 function createHierarchicalLayout() {
-    // Placeholder for hierarchical tree layout
-    svg.append('text')
-        .attr('x', width / 2)
-        .attr('y', height / 2)
-        .attr('text-anchor', 'middle')
+    const stageColors = d3.schemeCategory10;
+    const margin = { top: 40, right: 120, bottom: 40, left: 120 };
+    const treeWidth = width - margin.left - margin.right;
+    const treeHeight = height - margin.top - margin.bottom;
+
+    // Create hierarchical data structure
+    const hierarchyData = {
+        name: "Research Data Lifecycle",
+        children: stageData.map((stage, index) => ({
+            name: stage.name,
+            id: stage.id,
+            position: stage.position,
+            color: stageColors[index % 10],
+            tool_count: stage.tool_count || 0,
+            children: (toolData || [])
+                .filter(tool => tool.stage === stage.name)
+                .slice(0, 5) // Limit to 5 tools per stage for clarity
+                .map(tool => ({
+                    name: tool.name,
+                    is_open_source: tool.is_open_source
+                }))
+        }))
+    };
+
+    // Create tree layout
+    const treeLayout = d3.tree()
+        .size([treeHeight, treeWidth]);
+
+    const root = d3.hierarchy(hierarchyData);
+    treeLayout(root);
+
+    // Create group for tree
+    const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Draw links
+    g.selectAll('.link')
+        .data(root.links())
+        .join('path')
+        .attr('class', 'link')
+        .attr('d', d3.linkHorizontal()
+            .x(d => d.y)
+            .y(d => d.x))
+        .attr('fill', 'none')
+        .attr('stroke', 'rgba(255,255,255,0.3)')
+        .attr('stroke-width', d => d.target.depth === 1 ? 2 : 1);
+
+    // Draw nodes
+    const nodes = g.selectAll('.node')
+        .data(root.descendants())
+        .join('g')
+        .attr('class', 'node')
+        .attr('transform', d => `translate(${d.y},${d.x})`)
+        .style('cursor', 'pointer')
+        .on('mouseover', (event, d) => {
+            const info = d.depth === 0 ? 'Root' :
+                        d.depth === 1 ? `${d.data.name}<br/>${d.data.tool_count} tools<br/>Stage ${d.data.position + 1}` :
+                        `${d.data.name}${d.data.is_open_source ? '<br/>(Open Source)' : ''}`;
+            showTooltip(event, info);
+        })
+        .on('mouseout', hideTooltip);
+
+    // Node circles
+    nodes.append('circle')
+        .attr('r', d => {
+            if (d.depth === 0) return 20; // Root
+            if (d.depth === 1) return 15; // Stages
+            return 6; // Tools
+        })
+        .attr('fill', d => {
+            if (d.depth === 0) return 'rgba(255,255,255,0.9)';
+            if (d.depth === 1) return d.data.color;
+            return d.data.is_open_source ? '#28a745' : '#6c757d';
+        })
+        .attr('stroke', 'white')
+        .attr('stroke-width', d => d.depth === 0 ? 3 : 2)
+        .attr('opacity', 0.9);
+
+    // Node labels
+    nodes.append('text')
+        .attr('dy', '0.31em')
+        .attr('x', d => d.depth === 0 ? 0 : (d.children ? -25 : 12))
+        .attr('text-anchor', d => d.depth === 0 ? 'middle' : (d.children ? 'end' : 'start'))
         .attr('fill', 'white')
-        .style('font-size', '18px')
-        .text('Hierarchical Layout - Coming Soon');
+        .attr('font-size', d => {
+            if (d.depth === 0) return '14px';
+            if (d.depth === 1) return '11px';
+            return '9px';
+        })
+        .attr('font-weight', d => d.depth <= 1 ? 'bold' : 'normal')
+        .text(d => {
+            if (d.depth === 0) return d.data.name;
+            if (d.depth === 1) return `${d.data.position + 1}. ${d.data.name}`;
+            return d.data.name.length > 20 ? d.data.name.substring(0, 18) + '...' : d.data.name;
+        })
+        .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.5)');
+
+    // Add stage position numbers for stages
+    nodes.filter(d => d.depth === 1)
+        .append('text')
+        .attr('dy', '-1.2em')
+        .attr('x', -25)
+        .attr('text-anchor', 'end')
+        .attr('fill', 'rgba(255,255,255,0.6)')
+        .attr('font-size', '10px')
+        .text(d => `${d.data.tool_count} tools`);
 }
 
 function createMatrixView() {
-    // Placeholder for matrix view
-    svg.append('text')
-        .attr('x', width / 2)
-        .attr('y', height / 2)
+    const stageColors = d3.schemeCategory10;
+    const margin = { top: 100, right: 50, bottom: 50, left: 100 };
+    const matrixWidth = Math.min(width - margin.left - margin.right, height - margin.top - margin.bottom);
+    const cellSize = matrixWidth / stageData.length;
+
+    // Create interaction matrix - count interactions between stages
+    const matrix = Array(stageData.length).fill(null).map(() => Array(stageData.length).fill(0));
+
+    if (interactionData) {
+        interactionData.forEach(interaction => {
+            const sourceIndex = stageData.findIndex(s => s.name === interaction.source_stage);
+            const targetIndex = stageData.findIndex(s => s.name === interaction.target_stage);
+            if (sourceIndex >= 0 && targetIndex >= 0) {
+                matrix[sourceIndex][targetIndex]++;
+            }
+        });
+    }
+
+    // Find max value for color scaling
+    const maxValue = Math.max(...matrix.flat());
+
+    // Create group for matrix
+    const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Add column labels (top)
+    g.selectAll('.col-label')
+        .data(stageData)
+        .join('text')
+        .attr('class', 'col-label')
+        .attr('x', (d, i) => i * cellSize + cellSize / 2)
+        .attr('y', -10)
         .attr('text-anchor', 'middle')
         .attr('fill', 'white')
-        .style('font-size', '18px')
-        .text('Connection Matrix View - Coming Soon');
+        .attr('font-size', '10px')
+        .attr('font-weight', 'bold')
+        .attr('transform', (d, i) => `rotate(-45, ${i * cellSize + cellSize / 2}, -10)`)
+        .text(d => d.name.length > 10 ? d.name.substring(0, 8) + '...' : d.name)
+        .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.5)');
+
+    // Add row labels (left)
+    g.selectAll('.row-label')
+        .data(stageData)
+        .join('text')
+        .attr('class', 'row-label')
+        .attr('x', -10)
+        .attr('y', (d, i) => i * cellSize + cellSize / 2 + 4)
+        .attr('text-anchor', 'end')
+        .attr('fill', 'white')
+        .attr('font-size', '10px')
+        .attr('font-weight', 'bold')
+        .text(d => d.name.length > 10 ? d.name.substring(0, 8) + '...' : d.name)
+        .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.5)');
+
+    // Draw matrix cells
+    matrix.forEach((row, i) => {
+        row.forEach((value, j) => {
+            const cellGroup = g.append('g')
+                .attr('class', 'matrix-cell')
+                .attr('transform', `translate(${j * cellSize},${i * cellSize})`)
+                .style('cursor', value > 0 ? 'pointer' : 'default')
+                .on('mouseover', function(event) {
+                    if (value > 0) {
+                        const sourceStage = stageData[i].name;
+                        const targetStage = stageData[j].name;
+                        showTooltip(event, `${sourceStage} → ${targetStage}<br/>${value} interaction${value > 1 ? 's' : ''}`);
+                        d3.select(this).select('rect').attr('stroke-width', 3);
+                    }
+                })
+                .on('mouseout', function() {
+                    hideTooltip();
+                    d3.select(this).select('rect').attr('stroke-width', 1);
+                });
+
+            // Cell rectangle
+            cellGroup.append('rect')
+                .attr('width', cellSize - 2)
+                .attr('height', cellSize - 2)
+                .attr('x', 1)
+                .attr('y', 1)
+                .attr('fill', value > 0 ? stageColors[i % 10] : 'rgba(255,255,255,0.05)')
+                .attr('stroke', 'rgba(255,255,255,0.2)')
+                .attr('stroke-width', 1)
+                .attr('opacity', value > 0 ? Math.max(0.3, value / maxValue) : 0.3)
+                .attr('rx', 2);
+
+            // Cell value text
+            if (value > 0) {
+                cellGroup.append('text')
+                    .attr('x', cellSize / 2)
+                    .attr('y', cellSize / 2 + 4)
+                    .attr('text-anchor', 'middle')
+                    .attr('fill', value / maxValue > 0.5 ? 'white' : 'rgba(255,255,255,0.9)')
+                    .attr('font-size', '11px')
+                    .attr('font-weight', 'bold')
+                    .text(value)
+                    .style('pointer-events', 'none')
+                    .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.8)');
+            }
+        });
+    });
+
+    // Add legend
+    const legendY = matrixWidth + 40;
+    const legendWidth = 200;
+    const legendHeight = 15;
+
+    const legendGroup = g.append('g')
+        .attr('transform', `translate(${(matrixWidth - legendWidth) / 2},${legendY})`);
+
+    // Create gradient for legend
+    const gradient = svg.append('defs')
+        .append('linearGradient')
+        .attr('id', 'matrix-legend-gradient')
+        .attr('x1', '0%')
+        .attr('x2', '100%');
+
+    gradient.append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', 'rgba(255,255,255,0.1)')
+        .attr('stop-opacity', 0.3);
+
+    gradient.append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', stageColors[0])
+        .attr('stop-opacity', 1);
+
+    legendGroup.append('rect')
+        .attr('width', legendWidth)
+        .attr('height', legendHeight)
+        .attr('fill', 'url(#matrix-legend-gradient)')
+        .attr('stroke', 'rgba(255,255,255,0.3)');
+
+    legendGroup.append('text')
+        .attr('x', 0)
+        .attr('y', legendHeight + 15)
+        .attr('fill', 'white')
+        .attr('font-size', '10px')
+        .text('0 interactions');
+
+    legendGroup.append('text')
+        .attr('x', legendWidth)
+        .attr('y', legendHeight + 15)
+        .attr('text-anchor', 'end')
+        .attr('fill', 'white')
+        .attr('font-size', '10px')
+        .text(`${maxValue} interactions`);
+
+    // Add title
+    svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', 30)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .attr('font-size', '16px')
+        .attr('font-weight', 'bold')
+        .text('Stage-to-Stage Interaction Matrix')
+        .style('text-shadow', '2px 2px 4px rgba(0,0,0,0.8)');
 }
 
 function addToolsToVisualization() {
