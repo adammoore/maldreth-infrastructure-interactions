@@ -86,20 +86,40 @@ PRISM is an official output of the **MaLDReTH II RDA Working Group**, contributi
 
 ### 2. Data Visualization
 
-PRISM offers three distinct visualization modes powered by D3.js v7:
+PRISM offers three distinct visualization pages with multiple view modes, all powered by D3.js v7:
 
-- **Radial Visualization** (`/radial-visualization`): Interactive radial layout showing tools positioned around lifecycle stages with connection lines highlighting tool-to-tool interactions
-- **Circular Visualization** (`/rdl/visualization`): Traditional circular lifecycle representation with stage-based tool grouping and counts
-- **Network Visualization** (`/enhanced-rdl-visualization`): Force-directed network graph showing complex tool relationships and interaction patterns
+#### Radial Visualization (`/radial-visualization`)
+Interactive radial layout with tools positioned around lifecycle stages
+- Connection lines highlighting tool-to-tool interactions
+- Dynamic tool positioning with collision detection
+- Stage-based color coding and filtering
 
-All visualizations feature:
+#### Circular Visualization (`/rdl/visualization`)
+Three view modes for different perspectives:
+- **Stage Overview**: Traditional circular lifecycle with tool counts
+- **Interaction Flow**: Shows interaction patterns between stages with curved flow lines
+- **Tool Mapping**: Individual tools distributed around their primary stages
+
+#### Enhanced Network Visualization (`/enhanced-rdl-visualization`)
+Four advanced visualization modes:
+- **Circular Layout**: Concentric stage-based layout with tool clusters
+- **Force-Directed Network**: Physics-based interactive network graph
+- **Hierarchical Tree**: Three-level tree showing lifecycle → stages → tools
+- **Connection Matrix**: Heat map showing stage-to-stage interaction frequencies
+
+**All visualizations feature:**
 - Consistent d3.schemeCategory10 color scheme across all 12 MaLDReTH stages
 - Interactive hover tooltips with detailed tool and interaction information
-- Stage filtering and focus controls
+- View mode switching and stage filtering controls
 - Real-time data updates from the database
 - Responsive SVG rendering for all screen sizes
+- Export to SVG functionality
 
-### 3. Search & Discovery
+### 3. User Guidance & Onboarding
+- **Welcome Modal**: First-time user onboarding with quick start guide
+  - Auto-displays on first visit using localStorage
+  - "Don't show again" option for user control
+  - Direct links to key features and documentation
 - **Glossary**: Comprehensive glossary of terms with tooltips throughout the application
 - **Tool Search**: Search across 267+ research tools with metadata
 - **Advanced Filtering**: Multi-criteria search with collapsible filter panels
