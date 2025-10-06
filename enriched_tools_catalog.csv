@@ -1,0 +1,90 @@
+Tool Name,Description,URL,Is Open Source,License,GitHub URL,Category,Stage,Notes
+Zenodo,General-purpose open repository developed by CERN for research outputs including datasets software and publications,https://zenodo.org/,TRUE,GNU GPL v2,https://github.com/zenodo/zenodo,Repository,PRESERVE,Integrates with GitHub for automatic archiving
+Figshare,Repository platform for research outputs including datasets figures presentations and media,https://figshare.com/,FALSE,Proprietary,,Repository,PUBLISH,Commercial service with free tier
+Dataverse,Open source repository software developed by Harvard for research data with rich metadata support,https://dataverse.org/,TRUE,Apache 2.0,https://github.com/IQSS/dataverse,Repository Platform,STORE,Widely deployed at universities worldwide
+DSpace,Open source repository platform for managing and preserving digital content,https://dspace.org/,TRUE,BSD,https://github.com/DSpace/DSpace,Repository Platform,PRESERVE,Used by academic libraries globally
+OSF,Open Science Framework - free open platform for research collaboration and management,https://osf.io/,TRUE,Apache 2.0,https://github.com/CenterForOpenScience/osf.io,Research Platform,PLAN,Integrates with many storage providers
+DMPTool,Data Management Planning tool from California Digital Library for creating DMPs,https://dmptool.org/,TRUE,MIT,https://github.com/CDLUC3/dmptool,Planning Tool,PLAN,Integrates with ORCID and institutional systems
+DMP Online,Data Management Planning tool from Digital Curation Centre,https://dmponline.dcc.ac.uk/,TRUE,MIT,https://github.com/DMPRoadmap/roadmap,Planning Tool,PLAN,Used primarily in UK and Europe
+GitHub,Web-based platform for version control and collaboration using Git,https://github.com/,FALSE,Proprietary,,Version Control,SHARE,Industry standard for code collaboration
+GitLab,DevOps lifecycle tool with integrated Git repository manager and CI/CD,https://gitlab.com/,TRUE,MIT,https://gitlab.com/gitlab-org/gitlab,Version Control,SHARE,Self-hosted or cloud options available
+Bitbucket,Git-based code hosting and collaboration platform by Atlassian,https://bitbucket.org/,FALSE,Proprietary,,Version Control,SHARE,Integrates with Jira and Trello
+R,Free software environment for statistical computing and graphics,https://www.r-project.org/,TRUE,GPL,,Programming Language,ANALYSE,Foundation for extensive ecosystem of packages
+Python,High-level interpreted programming language for general-purpose programming,https://www.python.org/,TRUE,PSF,,Programming Language,ANALYSE,Widely used in data science and research
+Jupyter,Open-source interactive computing platform for creating shareable notebook documents,https://jupyter.org/,TRUE,BSD,https://github.com/jupyter/jupyter,Analysis Platform,ANALYSE,Supports 40+ programming languages
+RStudio,Integrated development environment for R programming language,https://posit.co/products/open-source/rstudio/,TRUE,AGPL v3,https://github.com/rstudio/rstudio,Development Environment,ANALYSE,Also available as commercial Posit Workbench
+MATLAB,Proprietary programming platform for numerical computing and visualization,https://www.mathworks.com/products/matlab.html,FALSE,Proprietary,,Programming Platform,ANALYSE,Industry standard in engineering and sciences
+SPSS,Statistical software package for data analysis and predictive analytics,https://www.ibm.com/products/spss-statistics,FALSE,Proprietary,,Statistical Software,ANALYSE,Long-established in social sciences
+Stata,Statistical software for data analysis and statistical graphics,https://www.stata.com/,FALSE,Proprietary,,Statistical Software,ANALYSE,Popular in economics and epidemiology
+SAS,Analytics software suite for data management and advanced analytics,https://www.sas.com/,FALSE,Proprietary,,Analytics Platform,ANALYSE,Enterprise-focused with strong compliance features
+ORCID,Persistent digital identifier for researchers and contributors,https://orcid.org/,TRUE,MIT,https://github.com/ORCID,Identifier System,CONCEPTUALISE,Widely integrated across publisher and funding systems
+DOI,Digital Object Identifier system for persistent identification of objects,https://www.doi.org/,FALSE,Proprietary,,Identifier System,PUBLISH,Standard for scholarly publications and datasets
+ROR,Research Organization Registry providing persistent identifiers for institutions,https://ror.org/,TRUE,CC0,https://github.com/ror-community,Identifier System,CONCEPTUALISE,Community-led open infrastructure
+DataCite,Research data repository providing DOIs for datasets and research outputs,https://datacite.org/,FALSE,Non-profit,,DOI Provider,PUBLISH,Issues DOIs specifically for research data
+RSpace,Electronic lab notebook for research documentation and collaboration,https://www.researchspace.com/,TRUE,Apache 2.0,https://github.com/rspace-os/rspace-web,ELN,COLLECT,Supports compliance and audit requirements
+LabArchives,Cloud-based electronic lab notebook platform,https://www.labarchives.com/,FALSE,Proprietary,,ELN,COLLECT,Used widely in academic and industry labs
+Benchling,Life sciences R&D cloud platform with ELN and inventory management,https://www.benchling.com/,FALSE,Proprietary,,Research Platform,COLLECT,Focus on biotech and pharmaceutical research
+eLabFTW,Free open-source electronic lab notebook for research labs,https://www.elabftw.net/,TRUE,AGPL v3,https://github.com/elabftw/elabftw,ELN,COLLECT,Self-hosted solution with export capabilities
+Zotero,Free open-source reference management software for bibliographies,https://www.zotero.org/,TRUE,AGPL v3,https://github.com/zotero/zotero,Reference Manager,CONCEPTUALISE,Browser integration and group libraries
+Mendeley,Reference manager and academic social network by Elsevier,https://www.mendeley.com/,FALSE,Proprietary,,Reference Manager,CONCEPTUALISE,Combines reference management with networking
+EndNote,Commercial reference management software by Clarivate,https://endnote.com/,FALSE,Proprietary,,Reference Manager,CONCEPTUALISE,Integration with Web of Science
+RefWorks,Web-based reference management tool,https://refworks.proquest.com/,FALSE,Proprietary,,Reference Manager,CONCEPTUALISE,Cloud-based with institutional subscriptions
+OpenRefine,Open source tool for working with messy data cleaning transformation and enrichment,https://openrefine.org/,TRUE,BSD,https://github.com/OpenRefine/OpenRefine,Data Cleaning,PROCESS,Previously Google Refine
+Trifacta,Data preparation platform for cleaning and transforming datasets,https://www.trifacta.com/,FALSE,Proprietary,,Data Preparation,PROCESS,Now part of Alteryx
+Excel,Spreadsheet application for data analysis and visualization,https://www.microsoft.com/en-us/microsoft-365/excel,FALSE,Proprietary,,Spreadsheet,PROCESS,Ubiquitous tool despite limitations for research
+Google Sheets,Cloud-based spreadsheet application for collaboration,https://www.google.com/sheets/about/,FALSE,Proprietary,,Spreadsheet,PROCESS,Real-time collaboration features
+KNIME,Open source data analytics platform with visual programming,https://www.knime.com/,TRUE,GPL v3,https://github.com/knime/knime-core,Data Analytics,ANALYSE,Node-based workflow design
+RapidMiner,Data science platform for machine learning and analytics,https://rapidminer.com/,FALSE,Proprietary,,Analytics Platform,ANALYSE,Visual workflow with commercial extensions
+Tableau,Business intelligence and analytics platform for data visualization,https://www.tableau.com/,FALSE,Proprietary,,Visualization,ANALYSE,Market leader in interactive dashboards
+PowerBI,Microsoft business analytics service for interactive visualizations,https://powerbi.microsoft.com/,FALSE,Proprietary,,Visualization,ANALYSE,Integration with Microsoft ecosystem
+Apache Spark,Open-source unified analytics engine for large-scale data processing,https://spark.apache.org/,TRUE,Apache 2.0,https://github.com/apache/spark,Big Data,PROCESS,In-memory processing for speed
+Hadoop,Open-source framework for distributed storage and processing of big data,https://hadoop.apache.org/,TRUE,Apache 2.0,https://github.com/apache/hadoop,Big Data,STORE,Foundation of many big data platforms
+Docker,Platform for developing shipping and running applications in containers,https://www.docker.com/,TRUE,Apache 2.0,https://github.com/docker/docker-ce,Containerization,TRANSFORM,Ensures reproducible computational environments
+Singularity,Container platform designed for HPC and research computing,https://sylabs.io/singularity/,TRUE,BSD,https://github.com/sylabs/singularity,Containerization,TRANSFORM,Security-focused for shared HPC resources
+Galaxy,Open web-based platform for data intensive biomedical research,https://galaxyproject.org/,TRUE,AFL,https://github.com/galaxyproject/galaxy,Workflow Platform,ANALYSE,No programming required for analysis pipelines
+Nextflow,Workflow management system for bioinformatics pipelines,https://www.nextflow.io/,TRUE,Apache 2.0,https://github.com/nextflow-io/nextflow,Workflow Manager,ANALYSE,Portable scalable pipelines
+Snakemake,Workflow management system for reproducible data analysis,https://snakemake.github.io/,TRUE,MIT,https://github.com/snakemake/snakemake,Workflow Manager,ANALYSE,Python-based with HPC cluster support
+Common Workflow Language,Specification for describing analysis workflows and tools,https://www.commonwl.org/,TRUE,Apache 2.0,https://github.com/common-workflow-language/common-workflow-language,Workflow Standard,ANALYSE,Enables portable reproducible workflows
+REDCap,Secure web application for building and managing online surveys and databases,https://www.project-redcap.org/,TRUE,Custom Open,https://github.com/redcap-tools,Data Capture,COLLECT,HIPAA-compliant for clinical research
+Qualtrics,Online survey and experience management platform,https://www.qualtrics.com/,FALSE,Proprietary,,Survey Platform,COLLECT,Enterprise survey solution
+SurveyMonkey,Online survey development cloud-based software,https://www.surveymonkey.com/,FALSE,Proprietary,,Survey Platform,COLLECT,Consumer and business survey tool
+LimeSurvey,Open source online survey application,https://www.limesurvey.org/,TRUE,GPL v2,https://github.com/LimeSurvey/LimeSurvey,Survey Platform,COLLECT,Self-hosted or cloud options
+FAIR Data Point,Reference implementation for exposing and consuming FAIR metadata,https://fairdatapoint.org/,TRUE,MIT,https://github.com/FAIRDataTeam/FAIRDataPoint,Metadata Platform,PUBLISH,Implements FAIR Data Point specification
+CKAN,Open-source data portal platform for publishing and sharing data,https://ckan.org/,TRUE,AGPL v3,https://github.com/ckan/ckan,Data Portal,SHARE,Powers many government open data portals
+Omeka,Open-source web publishing platform for digital collections and exhibitions,https://omeka.org/,TRUE,GPL v3,https://github.com/omeka/Omeka,Digital Collection,SHARE,Used by galleries libraries archives museums
+DuraSpace,Suite of open-source repository solutions including DSpace Fedora,https://duraspace.org/,TRUE,Various,https://github.com/DuraSpace,Repository Consortium,PRESERVE,Stewards multiple repository platforms
+Archivematica,Open-source digital preservation system,https://www.archivematica.org/,TRUE,AGPL v3,https://github.com/artefactual/archivematica,Preservation,PRESERVE,Standards-based preservation workflows
+Preservica,Commercial digital preservation platform,https://preservica.com/,FALSE,Proprietary,,Preservation,PRESERVE,Enterprise active digital preservation
+Plotly,Interactive graphing library for Python R and JavaScript,https://plotly.com/,TRUE,MIT,https://github.com/plotly/plotly.py,Visualization Library,ANALYSE,Creates interactive web-based visualizations
+D3.js,JavaScript library for producing dynamic interactive data visualizations,https://d3js.org/,TRUE,BSD,https://github.com/d3/d3,Visualization Library,ANALYSE,Low-level but highly flexible
+ggplot2,R package for declarative creation of graphics,https://ggplot2.tidyverse.org/,TRUE,MIT,https://github.com/tidyverse/ggplot2,Visualization Library,ANALYSE,Based on grammar of graphics principles
+Matplotlib,Comprehensive plotting library for Python,https://matplotlib.org/,TRUE,PSF,https://github.com/matplotlib/matplotlib,Visualization Library,ANALYSE,Foundation for many other Python viz tools
+Pandas,Python data analysis and manipulation library,https://pandas.pydata.org/,TRUE,BSD,https://github.com/pandas-dev/pandas,Data Analysis Library,ANALYSE,Essential tool for Python data science
+NumPy,Fundamental package for scientific computing with Python,https://numpy.org/,TRUE,BSD,https://github.com/numpy/numpy,Scientific Computing,ANALYSE,Provides N-dimensional array objects
+SciPy,Python library for scientific and technical computing,https://scipy.org/,TRUE,BSD,https://github.com/scipy/scipy,Scientific Computing,ANALYSE,Builds on NumPy for optimization statistics
+TensorFlow,Open-source machine learning framework by Google,https://www.tensorflow.org/,TRUE,Apache 2.0,https://github.com/tensorflow/tensorflow,Machine Learning,ANALYSE,Industry standard for deep learning
+PyTorch,Open-source machine learning library based on Torch,https://pytorch.org/,TRUE,BSD,https://github.com/pytorch/pytorch,Machine Learning,ANALYSE,Popular in research community
+scikit-learn,Machine learning library for Python,https://scikit-learn.org/,TRUE,BSD,https://github.com/scikit-learn/scikit-learn,Machine Learning,ANALYSE,Classical ML algorithms and tools
+Git,Distributed version control system for tracking changes in source code,https://git-scm.com/,TRUE,GPL v2,https://github.com/git/git,Version Control,SHARE,Foundation for GitHub GitLab Bitbucket
+Subversion,Centralized version control system,https://subversion.apache.org/,TRUE,Apache 2.0,https://github.com/apache/subversion,Version Control,SHARE,Predecessor to Git still used in some contexts
+Mercurial,Distributed version control system,https://www.mercurial-scm.org/,TRUE,GPL v2,https://www.mercurial-scm.org/repo/hg,Version Control,SHARE,Alternative to Git with simpler model
+LaTeX,Document preparation system for high-quality typesetting,https://www.latex-project.org/,TRUE,LPPL,https://github.com/latex3/latex2e,Document Preparation,PUBLISH,Standard for scientific and mathematical documents
+Overleaf,Online collaborative LaTeX editor,https://www.overleaf.com/,FALSE,Proprietary,,LaTeX Platform,PUBLISH,Real-time collaboration with cloud sync
+Authorea,Collaborative platform for research writing and publishing,https://www.authorea.com/,FALSE,Proprietary,,Writing Platform,PUBLISH,Supports LaTeX Markdown and WYSIWYG
+Markdown,Lightweight markup language for creating formatted text,https://daringfireball.net/projects/markdown/,TRUE,BSD,,Markup Language,PUBLISH,Simple readable syntax for documentation
+Miro,Online collaborative whiteboard platform,https://miro.com/,FALSE,Proprietary,,Collaboration,CONCEPTUALISE,Visual collaboration for distributed teams
+Lucidchart,Web-based diagramming application,https://www.lucidchart.com/,FALSE,Proprietary,,Diagramming,CONCEPTUALISE,Templates for many diagram types
+draw.io,Free online diagramming tool,https://www.diagrams.net/,TRUE,Apache 2.0,https://github.com/jgraph/drawio,Diagramming,CONCEPTUALISE,No account required web-based
+yEd,Desktop application for creating diagrams,https://www.yworks.com/products/yed,FALSE,Freeware,,Diagramming,CONCEPTUALISE,Automatic layout algorithms
+Slack,Business communication platform with channels and integrations,https://slack.com/,FALSE,Proprietary,,Communication,SHARE,Widely adopted for team communication
+Microsoft Teams,Collaboration platform integrated with Microsoft 365,https://www.microsoft.com/en/microsoft-teams/group-chat-software,FALSE,Proprietary,,Communication,SHARE,Enterprise communication and collaboration
+Discord,Voice video and text communication platform,https://discord.com/,FALSE,Proprietary,,Communication,SHARE,Originally for gaming now broader use
+Zoom,Video conferencing and online meeting platform,https://zoom.us/,FALSE,Proprietary,,Video Conferencing,SHARE,Became essential during remote work shift
+AWS,Amazon Web Services cloud computing platform,https://aws.amazon.com/,FALSE,Proprietary,,Cloud Infrastructure,STORE,Market leader in cloud services
+Google Cloud,Google Cloud Platform for cloud computing services,https://cloud.google.com/,FALSE,Proprietary,,Cloud Infrastructure,STORE,Strong in data analytics and AI
+Microsoft Azure,Microsoft cloud computing platform and services,https://azure.microsoft.com/,FALSE,Proprietary,,Cloud Infrastructure,STORE,Integration with Microsoft products
+CyVerse,Cyberinfrastructure for life sciences research,https://cyverse.org/,TRUE,BSD,https://github.com/cyverse,Research Infrastructure,ANALYSE,NSF-funded with data storage and compute
+JupyterHub,Multi-user server for Jupyter notebooks,https://jupyter.org/hub,TRUE,BSD,https://github.com/jupyterhub/jupyterhub,Computing Platform,ANALYSE,Serves Jupyter to multiple users
+Binder,Service for turning Git repositories into interactive notebooks,https://mybinder.org/,TRUE,BSD,https://github.com/jupyterhub/binderhub,Reproducibility,TRANSFORM,Creates executable environments from repos
+Code Ocean,Computational reproducibility platform,https://codeocean.com/,FALSE,Proprietary,,Reproducibility,TRANSFORM,Compute capsules for reproducible research
+Whole Tale,Platform for reproducible research enabling transparent science,https://wholetale.org/,TRUE,Apache 2.0,https://github.com/whole-tale/whole-tale,Reproducibility,TRANSFORM,NSF-funded reproducibility platform
