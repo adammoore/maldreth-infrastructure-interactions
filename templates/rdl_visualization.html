@@ -614,16 +614,281 @@ function updateVisualization() {
         console.log('D3.js not loaded yet, skipping visualization update');
         return;
     }
-    
+
     const mode = document.getElementById('view-mode').value;
     console.log('Switching to view mode:', mode);
-    
+
+    // Update info card
+    const infoCard = document.querySelector('.alert-info .alert-heading');
+    if (infoCard) {
+        if (mode === 'stages') {
+            infoCard.textContent = 'Current View: Stage Overview';
+            infoCard.nextElementSibling.textContent = 'Showing the 12 MaLDReTH lifecycle stages with their relative positions and tool counts.';
+        } else if (mode === 'interactions') {
+            infoCard.textContent = 'Current View: Interaction Flow';
+            infoCard.nextElementSibling.textContent = 'Showing tool interactions flowing between lifecycle stages with connection strength indicators.';
+        } else if (mode === 'tools') {
+            infoCard.textContent = 'Current View: Tool Mapping';
+            infoCard.nextElementSibling.textContent = 'Showing individual tools positioned by their primary lifecycle stage with interaction links.';
+        }
+    }
+
     if (mode === 'stages') {
         initializeCircularVisualization();
-    } else {
-        alert('This view mode is under development. Currently showing stage overview.');
-        document.getElementById('view-mode').value = 'stages';
+    } else if (mode === 'interactions') {
+        initializeInteractionFlowVisualization();
+    } else if (mode === 'tools') {
+        initializeToolMappingVisualization();
     }
+}
+
+function initializeInteractionFlowVisualization() {
+    const stageColors = d3.schemeCategory10;
+    const svg = d3.select("#lifecycle-circle");
+    const width = 800;
+    const height = 500;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = 180;
+
+    // Clear existing elements
+    svg.selectAll("g").remove();
+
+    // Create main group
+    const g = svg.append("g");
+
+    // Draw central circle
+    g.append("circle")
+        .attr("cx", centerX)
+        .attr("cy", centerY)
+        .attr("r", 80)
+        .attr("fill", "rgba(255,255,255,0.15)")
+        .attr("stroke", "rgba(255,255,255,0.4)")
+        .attr("stroke-width", 2);
+
+    // Central text
+    g.append("text")
+        .attr("x", centerX)
+        .attr("y", centerY - 5)
+        .attr("text-anchor", "middle")
+        .attr("fill", "white")
+        .attr("font-size", "14")
+        .attr("font-weight", "bold")
+        .text("Interaction");
+
+    g.append("text")
+        .attr("x", centerX)
+        .attr("y", centerY + 15)
+        .attr("text-anchor", "middle")
+        .attr("fill", "white")
+        .attr("font-size", "14")
+        .attr("font-weight", "bold")
+        .text("Flow");
+
+    // Count interactions per stage
+    const stageInteractionCounts = new Map();
+    visualizationData.interactions.forEach(interaction => {
+        const sourceStage = interaction.source_stage || '';
+        const targetStage = interaction.target_stage || '';
+        stageInteractionCounts.set(sourceStage, (stageInteractionCounts.get(sourceStage) || 0) + 1);
+        stageInteractionCounts.set(targetStage, (stageInteractionCounts.get(targetStage) || 0) + 1);
+    });
+
+    // Draw stages with interaction counts
+    stageData.forEach((stage, i) => {
+        const angle = (i / stageData.length) * 2 * Math.PI - Math.PI / 2;
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+
+        const interactionCount = stageInteractionCounts.get(stage.name) || 0;
+
+        // Stage group
+        const stageGroup = g.append("g")
+            .attr("class", "stage-group")
+            .attr("data-stage-id", stage.id);
+
+        // Stage circle sized by interaction count
+        const stageColor = stageColors[i % 10];
+        const circleRadius = 20 + (interactionCount * 3);
+
+        stageGroup.append("circle")
+            .attr("cx", x)
+            .attr("cy", y)
+            .attr("r", circleRadius)
+            .attr("fill", stageColor)
+            .attr("stroke", "white")
+            .attr("stroke-width", 2)
+            .attr("opacity", interactionCount > 0 ? 0.9 : 0.3);
+
+        // Interaction count badge
+        if (interactionCount > 0) {
+            stageGroup.append("text")
+                .attr("x", x)
+                .attr("y", y + 4)
+                .attr("text-anchor", "middle")
+                .attr("fill", "white")
+                .attr("font-size", "12")
+                .attr("font-weight", "bold")
+                .text(interactionCount);
+        }
+
+        // Stage name
+        const textRadius = radius + 50;
+        const textX = centerX + Math.cos(angle) * textRadius;
+        const textY = centerY + Math.sin(angle) * textRadius;
+
+        stageGroup.append("text")
+            .attr("x", textX)
+            .attr("y", textY)
+            .attr("text-anchor", "middle")
+            .attr("fill", "white")
+            .attr("font-size", "11")
+            .attr("font-weight", "bold")
+            .text(stage.name);
+    });
+
+    // Draw interaction flow lines
+    visualizationData.interactions.forEach((interaction, i) => {
+        const sourceStageData = stageData.find(s => s.name === interaction.source_stage);
+        const targetStageData = stageData.find(s => s.name === interaction.target_stage);
+
+        if (sourceStageData && targetStageData) {
+            const sourceIndex = stageData.indexOf(sourceStageData);
+            const targetIndex = stageData.indexOf(targetStageData);
+
+            const sourceAngle = (sourceIndex / stageData.length) * 2 * Math.PI - Math.PI / 2;
+            const targetAngle = (targetIndex / stageData.length) * 2 * Math.PI - Math.PI / 2;
+
+            const x1 = centerX + Math.cos(sourceAngle) * radius;
+            const y1 = centerY + Math.sin(sourceAngle) * radius;
+            const x2 = centerX + Math.cos(targetAngle) * radius;
+            const y2 = centerY + Math.sin(targetAngle) * radius;
+
+            // Curved path through center
+            g.append("path")
+                .attr("d", `M ${x1} ${y1} Q ${centerX} ${centerY} ${x2} ${y2}`)
+                .attr("stroke", stageColors[sourceIndex % 10])
+                .attr("stroke-width", 1.5)
+                .attr("fill", "none")
+                .attr("opacity", 0.4)
+                .attr("stroke-dasharray", "3,2");
+        }
+    });
+}
+
+function initializeToolMappingVisualization() {
+    const stageColors = d3.schemeCategory10;
+    const svg = d3.select("#lifecycle-circle");
+    const width = 800;
+    const height = 500;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = 200;
+
+    // Clear existing elements
+    svg.selectAll("g").remove();
+
+    // Create main group
+    const g = svg.append("g");
+
+    // Draw central circle
+    g.append("circle")
+        .attr("cx", centerX)
+        .attr("cy", centerY)
+        .attr("r", 60)
+        .attr("fill", "rgba(255,255,255,0.1)")
+        .attr("stroke", "rgba(255,255,255,0.3)")
+        .attr("stroke-width", 2);
+
+    // Central text
+    g.append("text")
+        .attr("x", centerX)
+        .attr("y", centerY)
+        .attr("text-anchor", "middle")
+        .attr("fill", "white")
+        .attr("font-size", "12")
+        .attr("font-weight", "bold")
+        .text("Tool Map");
+
+    // Group tools by stage
+    const toolsByStage = new Map();
+    visualizationData.tools.forEach(tool => {
+        const stageName = tool.stage || 'Unknown';
+        if (!toolsByStage.has(stageName)) {
+            toolsByStage.set(stageName, []);
+        }
+        toolsByStage.get(stageName).push(tool);
+    });
+
+    // Draw stages with tools
+    stageData.forEach((stage, i) => {
+        const angle = (i / stageData.length) * 2 * Math.PI - Math.PI / 2;
+        const baseX = centerX + Math.cos(angle) * radius;
+        const baseY = centerY + Math.sin(angle) * radius;
+
+        const stageTools = toolsByStage.get(stage.name) || [];
+        const stageColor = stageColors[i % 10];
+
+        // Draw stage label
+        g.append("text")
+            .attr("x", baseX)
+            .attr("y", baseY - 30)
+            .attr("text-anchor", "middle")
+            .attr("fill", "white")
+            .attr("font-size", "10")
+            .attr("font-weight", "bold")
+            .text(stage.name);
+
+        // Draw tools for this stage (max 5 shown)
+        const toolsToShow = stageTools.slice(0, 5);
+        toolsToShow.forEach((tool, toolIndex) => {
+            const toolOffsetAngle = angle + (toolIndex - 2) * 0.15; // Spread tools around stage
+            const toolRadius = radius + 30;
+            const toolX = centerX + Math.cos(toolOffsetAngle) * toolRadius;
+            const toolY = centerY + Math.sin(toolOffsetAngle) * toolRadius;
+
+            // Tool node
+            g.append("circle")
+                .attr("cx", toolX)
+                .attr("cy", toolY)
+                .attr("r", 6)
+                .attr("fill", stageColor)
+                .attr("stroke", "white")
+                .attr("stroke-width", 1)
+                .attr("opacity", 0.8)
+                .append("title")
+                .text(tool.name);
+
+            // Connection line from stage to tool
+            g.append("line")
+                .attr("x1", baseX)
+                .attr("y1", baseY)
+                .attr("x2", toolX)
+                .attr("y2", toolY)
+                .attr("stroke", "rgba(255,255,255,0.2)")
+                .attr("stroke-width", 0.5);
+        });
+
+        // Show tool count badge
+        if (stageTools.length > 0) {
+            g.append("circle")
+                .attr("cx", baseX)
+                .attr("cy", baseY)
+                .attr("r", 15)
+                .attr("fill", stageColor)
+                .attr("stroke", "white")
+                .attr("stroke-width", 2);
+
+            g.append("text")
+                .attr("x", baseX)
+                .attr("y", baseY + 4)
+                .attr("text-anchor", "middle")
+                .attr("fill", "white")
+                .attr("font-size", "10")
+                .attr("font-weight", "bold")
+                .text(stageTools.length);
+        }
+    });
 }
 
 function filterByStage() {

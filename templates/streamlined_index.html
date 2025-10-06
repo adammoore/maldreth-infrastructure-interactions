@@ -219,4 +219,92 @@
         </div>
     </div>
 </div>
+
+<!-- First-Time User Welcome Modal -->
+<div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="welcomeModalLabel">
+                    <i class="fas fa-rocket me-2"></i>Welcome to PRISM!
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">What is PRISM?</h6>
+                        <p class="small">
+                            <strong>Platform for Research Infrastructure Synergy Mapping</strong> helps you
+                            map and understand how digital research tools interact across the research data lifecycle.
+                        </p>
+                        <h6 class="text-primary mt-3">Why Contribute?</h6>
+                        <ul class="small">
+                            <li>Build comprehensive tool interaction knowledge</li>
+                            <li>Support FAIR data practices</li>
+                            <li>Help researchers discover tool integrations</li>
+                            <li>Contribute to RDA MaLDReTH II initiative</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Quick Start Guide</h6>
+                        <ol class="small">
+                            <li><strong>Explore</strong>: Browse existing interactions and lifecycle stages</li>
+                            <li><strong>Learn</strong>: Read the <a href="{{ url_for('glossary') }}" target="_blank">glossary</a> to understand terminology</li>
+                            <li><strong>Contribute</strong>: Add interactions you know about</li>
+                            <li><strong>Visualize</strong>: Explore the <a href="{{ url_for('radial_visualization') }}" target="_blank">interactive visualizations</a></li>
+                        </ol>
+
+                        <div class="alert alert-info border-0 mt-3 mb-0">
+                            <small>
+                                <i class="fas fa-lightbulb me-1"></i>
+                                <strong>Tip:</strong> Start by browsing the
+                                <a href="{{ url_for('view_interactions') }}">existing interactions</a>
+                                to see examples!
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="form-check me-auto">
+                    <input class="form-check-input" type="checkbox" id="dontShowAgain">
+                    <label class="form-check-label small" for="dontShowAgain">
+                        Don't show this again
+                    </label>
+                </div>
+                <a href="{{ url_for('glossary') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-book me-1"></i>View Glossary
+                </a>
+                <a href="{{ url_for('add_interaction') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Add Interaction
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if user has dismissed welcome modal before
+    const hasSeenWelcome = localStorage.getItem('prism_welcome_seen');
+
+    if (!hasSeenWelcome) {
+        const welcomeModal = new bootstrap.Modal(document.getElementById('welcomeModal'));
+        welcomeModal.show();
+    }
+
+    // Handle "don't show again" checkbox
+    const dontShowCheckbox = document.getElementById('dontShowAgain');
+    if (dontShowCheckbox) {
+        dontShowCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                localStorage.setItem('prism_welcome_seen', 'true');
+            } else {
+                localStorage.removeItem('prism_welcome_seen');
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
