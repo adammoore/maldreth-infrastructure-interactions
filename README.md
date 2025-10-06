@@ -15,9 +15,11 @@
 
 - 🔄 **Interactive Tool Interaction Mapping**: Comprehensive database of research tool interactions
 - 📊 **Research Data Lifecycle Visualization**: 12-stage MaLDReTH lifecycle model with tool mappings
+- 🎨 **Multiple Visualization Modes**: Radial, circular, and network visualizations with D3.js
+- 🔍 **Advanced Search & Filtering**: Multi-criteria filtering with collapsible advanced options
 - 📤 **CSV Import/Export**: Bulk data management with duplicate protection
 - ✏️ **Curation Interface**: Edit and enhance interaction data for quality control
-- 🔍 **Live Data Visualization**: Real-time statistics and analytics
+- 📈 **Live Data Analytics**: Real-time statistics, tool usage patterns, and connectivity analysis
 - 🛡️ **Data Integrity**: Robust validation and duplicate detection
 - 📱 **Responsive Design**: Works seamlessly across all devices
 - 🔗 **RESTful API**: Programmatic access to all data
@@ -74,23 +76,42 @@ PRISM is an official output of the **MaLDReTH II RDA Working Group**, contributi
 
 ### 1. Interaction Management
 - **Add Interactions**: Web form with tool selection and interaction details
-- **View Interactions**: Comprehensive list with filtering and search
+- **View Interactions**: Comprehensive list with advanced filtering capabilities
+  - Basic filters: Text search, Interaction Type, Lifecycle Stage
+  - Advanced filters: Priority, Complexity, Status, Organization
+  - Filter persistence across page navigation via sessionStorage
+  - Real-time result count updates
 - **Edit Interactions**: Curation interface for data quality management
 - **Bulk Import**: CSV upload with validation and duplicate protection
 
 ### 2. Data Visualization
-- **Live Statistics**: Real-time counts and distributions
-- **Interaction Analytics**: Usage patterns and tool connectivity
-- **Lifecycle Mapping**: Visual representation of the 12-stage RDL model
-- **Tool Networks**: Connectivity and relationship analysis
 
-### 3. CSV Tools
+PRISM offers three distinct visualization modes powered by D3.js v7:
+
+- **Radial Visualization** (`/radial-visualization`): Interactive radial layout showing tools positioned around lifecycle stages with connection lines highlighting tool-to-tool interactions
+- **Circular Visualization** (`/rdl/visualization`): Traditional circular lifecycle representation with stage-based tool grouping and counts
+- **Network Visualization** (`/enhanced-rdl-visualization`): Force-directed network graph showing complex tool relationships and interaction patterns
+
+All visualizations feature:
+- Consistent d3.schemeCategory10 color scheme across all 12 MaLDReTH stages
+- Interactive hover tooltips with detailed tool and interaction information
+- Stage filtering and focus controls
+- Real-time data updates from the database
+- Responsive SVG rendering for all screen sizes
+
+### 3. Search & Discovery
+- **Glossary**: Comprehensive glossary of terms with tooltips throughout the application
+- **Tool Search**: Search across 267+ research tools with metadata
+- **Advanced Filtering**: Multi-criteria search with collapsible filter panels
+- **Interactive Tooltips**: Context-sensitive help throughout the interface
+
+### 4. CSV Tools
 - **Export**: Download complete interaction data with all fields
 - **Import**: Upload CSV files with intelligent duplicate detection
 - **Template**: Download current data structure as a template
 - **Validation**: Tool name verification and type checking
 
-### 4. API Access
+### 5. API Access
 - **REST Endpoints**: Programmatic access to all data
 - **JSON Responses**: Structured data with full metadata
 - **Tool Catalog**: Complete listing of available research tools
@@ -252,10 +273,12 @@ curl http://localhost:5001/api/v1/tools | jq
 - **Backend**: Flask (Python 3.11)
 - **Database**: PostgreSQL (production), SQLite (development)
 - **ORM**: SQLAlchemy with Flask-SQLAlchemy
-- **Frontend**: Bootstrap 5, Font Awesome, vanilla JavaScript
+- **Frontend**: Bootstrap 5, Font Awesome, D3.js v7 for visualizations
+- **JavaScript**: Vanilla JavaScript with sessionStorage for state persistence
 - **Deployment**: Heroku with GitHub Actions CI/CD
 - **Data Processing**: Pandas for CSV handling
 - **API**: RESTful JSON endpoints
+- **Visualization**: D3.js v7 with SVG rendering and interactive tooltips
 
 ## Information Structures
 
