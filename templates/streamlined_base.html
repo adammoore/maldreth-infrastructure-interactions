@@ -72,10 +72,14 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="csvDropdown">
                             <li><a class="dropdown-item" href="{{ url_for('export_interactions_csv') }}">
-                                <i class="fas fa-download me-2"></i>Export CSV
+                                <i class="fas fa-download me-2"></i>Export Interactions CSV
                             </a></li>
                             <li><a class="dropdown-item" href="{{ url_for('upload_interactions_csv') }}">
-                                <i class="fas fa-upload me-2"></i>Upload CSV
+                                <i class="fas fa-upload me-2"></i>Upload Interactions CSV
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('upload_tools_csv') }}">
+                                <i class="fas fa-tools me-2"></i>Upload Tools CSV
                             </a></li>
                         </ul>
                     </li>

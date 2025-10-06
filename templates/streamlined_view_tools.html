@@ -156,8 +156,12 @@
                     
                     <!-- Tool Classification -->
                     <div class="mb-3">
-                        <span class="badge bg-primary badge-sm me-1">{{ tool.category.stage.name }}</span>
-                        <span class="badge bg-secondary badge-sm">{{ tool.category.name }}</span>
+                        {% if tool.category and tool.category.stage %}
+                            <span class="badge bg-primary badge-sm me-1">{{ tool.category.stage.name }}</span>
+                            <span class="badge bg-secondary badge-sm">{{ tool.category.name }}</span>
+                        {% else %}
+                            <span class="badge bg-warning badge-sm">Uncategorized</span>
+                        {% endif %}
                     </div>
                     
                     <!-- Tool Statistics -->

@@ -22,6 +22,7 @@ from flask import Flask, render_template, request, jsonify, flash, redirect, url
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from sqlalchemy import func
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -334,11 +335,20 @@ class ExemplarTool(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     url = db.Column(db.String(500))
-    stage_id = db.Column(db.Integer, db.ForeignKey('maldreth_stages.id'), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey('tool_categories.id'), nullable=False)
+    stage_id = db.Column(db.Integer, db.ForeignKey('maldreth_stages.id'), nullable=True)  # Now nullable for CSV imports
+    category_id = db.Column(db.Integer, db.ForeignKey('tool_categories.id'), nullable=True)  # Now nullable for CSV imports
     is_active = db.Column(db.Boolean, default=True)
     is_open_source = db.Column(db.Boolean, default=False)
     provider = db.Column(db.String(200))  # MaLDReTH compatibility: tool provider/organization
+
+    # New fields for enriched metadata
+    license = db.Column(db.String(100))  # License type (MIT, Apache, GPL, etc.)
+    github_url = db.Column(db.String(500))  # GitHub repository URL
+    notes = db.Column(db.Text)  # Additional notes and context
+    created_via = db.Column(db.String(100), default='UI')  # 'UI', 'CSV Import', 'Discovery System'
+    is_archived = db.Column(db.Boolean, default=False)  # Soft delete flag
+
+    # Existing fields
     auto_created = db.Column(db.Boolean, default=False)  # Track if created from CSV import
     import_source = db.Column(db.String(100))  # Track origin of tool data
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -367,6 +377,10 @@ class ToolInteraction(db.Model):
     status = db.Column(db.String(20))
     submitted_by = db.Column(db.String(100))
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # New fields for curation
+    auto_created = db.Column(db.Boolean, default=False)  # Track if created from CSV/Discovery
+    is_archived = db.Column(db.Boolean, default=False)  # Soft delete flag
 
 
 # --- Helper Functions ---
@@ -852,7 +866,8 @@ def upload_interactions_csv():
                     complexity=row.get('Complexity', ''),
                     status=row.get('Status', ''),
                     submitted_by=row.get('Submitted By', 'CSV Upload'),
-                    submitted_at=datetime.now()
+                    submitted_at=datetime.now(),
+                    auto_created=True  # Mark as auto-created from CSV
                 )
                 
                 db.session.add(interaction)
@@ -897,6 +912,183 @@ def upload_interactions_csv():
         
     except Exception as e:
         logger.error(f"Error uploading CSV: {e}")
+        flash(f'Error processing CSV file: {str(e)}', 'error')
+        return redirect(request.url)
+
+@app.route('/upload/tools/csv', methods=['GET', 'POST'])
+def upload_tools_csv():
+    """
+    Upload and import tools from CSV file.
+
+    Expected CSV columns:
+    - Tool Name (required)
+    - Description
+    - URL
+    - Is Open Source (TRUE/FALSE)
+    - License
+    - GitHub URL
+    - Category
+    - Stage
+    - Notes
+    """
+    if request.method == 'GET':
+        return render_template('streamlined_upload_tools_csv.html')
+
+    try:
+        # Check if file was uploaded
+        if 'file' not in request.files:
+            flash('No file uploaded', 'error')
+            return redirect(request.url)
+
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected', 'error')
+            return redirect(request.url)
+
+        if not file.filename.endswith('.csv'):
+            flash('File must be a CSV', 'error')
+            return redirect(request.url)
+
+        # Read CSV file
+        stream = StringIO(file.stream.read().decode("UTF8"), newline=None)
+        csv_reader = csv.DictReader(stream)
+
+        # Required column
+        required_columns = ['Tool Name']
+
+        # Validate CSV structure
+        if not all(col in csv_reader.fieldnames for col in required_columns):
+            missing = [col for col in required_columns if col not in csv_reader.fieldnames]
+            flash(f'Missing required columns: {", ".join(missing)}', 'error')
+            return redirect(request.url)
+
+        # Track statistics
+        imported_count = 0
+        updated_count = 0
+        skipped_count = 0
+        error_count = 0
+        errors = []
+        updates_list = []
+
+        # Process each row
+        for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 (row 1 is header)
+            try:
+                # Validate required field
+                if not row.get('Tool Name', '').strip():
+                    error_count += 1
+                    errors.append(f"Row {row_num}: Tool Name is required")
+                    continue
+
+                tool_name = row['Tool Name'].strip()
+
+                # Check if tool already exists
+                existing_tool = ExemplarTool.query.filter_by(name=tool_name).first()
+
+                # Parse Is Open Source
+                is_open_source = None
+                if row.get('Is Open Source', '').strip().upper() == 'TRUE':
+                    is_open_source = True
+                elif row.get('Is Open Source', '').strip().upper() == 'FALSE':
+                    is_open_source = False
+
+                # Note: We don't create/update categories from CSV since they require stage_id
+                # Categories must be created through the normal UI which associates them with stages
+
+                if existing_tool:
+                    # Update existing tool with enriched data
+                    updated = False
+
+                    if row.get('Description', '').strip() and not existing_tool.description:
+                        existing_tool.description = row['Description'].strip()
+                        updated = True
+
+                    if row.get('URL', '').strip() and not existing_tool.url:
+                        existing_tool.url = row['URL'].strip()
+                        updated = True
+
+                    if is_open_source is not None:
+                        existing_tool.is_open_source = is_open_source
+                        updated = True
+
+                    # Update new enriched fields
+                    if row.get('License', '').strip() and not existing_tool.license:
+                        existing_tool.license = row['License'].strip()
+                        updated = True
+
+                    if row.get('GitHub URL', '').strip() and not existing_tool.github_url:
+                        existing_tool.github_url = row['GitHub URL'].strip()
+                        updated = True
+
+                    if row.get('Notes', '').strip():
+                        # Append notes if they don't already exist
+                        if not existing_tool.notes or row['Notes'].strip() not in existing_tool.notes:
+                            existing_tool.notes = (existing_tool.notes or '') + '\n' + row['Notes'].strip()
+                            updated = True
+
+                    if updated:
+                        updated_count += 1
+                        updates_list.append(f"Row {row_num}: Updated tool '{tool_name}'")
+                    else:
+                        skipped_count += 1
+                else:
+                    # Create new tool with enriched fields
+                    # Now stage_id and category_id are nullable, so we can create tools from CSV
+                    new_tool = ExemplarTool(
+                        name=tool_name,
+                        description=row.get('Description', '').strip() or None,
+                        url=row.get('URL', '').strip() or None,
+                        is_open_source=is_open_source,
+                        license=row.get('License', '').strip() or None,
+                        github_url=row.get('GitHub URL', '').strip() or None,
+                        notes=row.get('Notes', '').strip() or None,
+                        stage_id=None,  # Will be set via UI later
+                        category_id=None,  # Will be set via UI later
+                        auto_created=True,  # Mark as auto-created
+                        created_via='CSV Import',
+                        import_source='Tool CSV Upload'
+                    )
+
+                    db.session.add(new_tool)
+                    imported_count += 1
+
+            except Exception as e:
+                error_count += 1
+                errors.append(f"Row {row_num}: {str(e)}")
+                continue
+
+        # Commit all successful imports/updates
+        if imported_count > 0 or updated_count > 0:
+            db.session.commit()
+
+        # Prepare summary message
+        messages = []
+        if imported_count > 0:
+            messages.append(f"Successfully imported {imported_count} new tool(s)")
+        if updated_count > 0:
+            messages.append(f"Updated {updated_count} existing tool(s)")
+        if skipped_count > 0:
+            messages.append(f"Skipped {skipped_count} tool(s) (no changes)")
+        if error_count > 0:
+            messages.append(f"Failed to import {error_count} row(s)")
+
+        # Show summary
+        summary = "; ".join(messages)
+        if error_count > 0 or skipped_count > 0:
+            flash(f"{summary}. Check details below.", 'warning')
+        else:
+            flash(summary, 'success')
+
+        # Return results page with details
+        return render_template('streamlined_upload_tools_results.html',
+                             imported_count=imported_count,
+                             updated_count=updated_count,
+                             skipped_count=skipped_count,
+                             error_count=error_count,
+                             errors=errors[:20],  # Limit to first 20 errors
+                             updates=updates_list[:20])  # Limit to first 20 updates
+
+    except Exception as e:
+        logger.error(f"Error uploading tools CSV: {e}")
         flash(f'Error processing CSV file: {str(e)}', 'error')
         return redirect(request.url)
 
@@ -1070,6 +1262,10 @@ def rdl_visualization():
         # Tool data
         tools = ExemplarTool.query.all()
         for tool in tools:
+            # Skip tools without stage/category (e.g., CSV imported tools)
+            if not tool.category or not tool.stage_id:
+                continue
+
             tool_data = {
                 'id': tool.id,
                 'name': tool.name,

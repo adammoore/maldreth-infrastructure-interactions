@@ -1,0 +1,241 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}Upload Tools CSV - PRISM{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="display-5 text-primary mb-3">
+                    <i class="fas fa-upload me-3"></i>Upload Tools CSV
+                </h1>
+                <p class="lead text-muted">
+                    Import or update tool metadata from a CSV file. Existing tools will be enriched with new data.
+                </p>
+            </div>
+
+            <!-- Upload Form -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" action="{{ url_for('upload_tools_csv') }}">
+                        <div class="mb-4">
+                            <label for="file" class="form-label h5">
+                                <i class="fas fa-file-csv me-2 text-success"></i>Select CSV File
+                            </label>
+                            <input type="file" class="form-control form-control-lg" id="file" name="file"
+                                   accept=".csv" required>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Maximum file size: 10MB. Only CSV files are accepted.
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('view_tools') }}" class="btn btn-outline-secondary btn-lg me-md-2">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Tools
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>Upload CSV
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Requirements & Format -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list-check me-2 text-primary"></i>Requirements
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="text-primary">Required Column:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i><code>Tool Name</code></li>
+                            </ul>
+
+                            <h6 class="text-info mt-3">Optional Columns:</h6>
+                            <div class="small">
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-circle-small me-1"></i><code>Description</code></li>
+                                    <li><i class="fas fa-circle-small me-1"></i><code>URL</code></li>
+                                    <li><i class="fas fa-circle-small me-1"></i><code>Is Open Source</code> (TRUE/FALSE)</li>
+                                    <li><i class="fas fa-circle-small me-1"></i><code>License</code></li>
+                                    <li><i class="fas fa-circle-small me-1"></i><code>GitHub URL</code></li>
+                                    <li><i class="fas fa-circle-small me-1"></i><code>Category</code></li>
+                                    <li><i class="fas fa-circle-small me-1"></i><code>Stage</code></li>
+                                    <li><i class="fas fa-circle-small me-1"></i><code>Notes</code></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shield-alt me-2 text-success"></i>Safety Features
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-sync text-success me-2"></i>
+                                    <strong>Smart Update:</strong> Only fills in missing data, doesn't overwrite existing values
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-plus-circle text-info me-2"></i>
+                                    <strong>Auto-Create:</strong> Creates new tools if they don't exist
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-list-alt text-warning me-2"></i>
+                                    <strong>Detailed Report:</strong> Summary of imported, updated, and skipped entries
+                                </li>
+                                <li>
+                                    <i class="fas fa-undo text-secondary me-2"></i>
+                                    <strong>Safe Import:</strong> No data loss if import fails
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sample CSV Format -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2 text-secondary"></i>CSV Format Example
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info border-0 mb-3">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-lightbulb me-2"></i>Enriched Tools Catalog Available
+                        </h6>
+                        <p class="mb-2">
+                            A comprehensive CSV with 88+ research tools and full metadata is ready for import:
+                        </p>
+                        <div class="small text-muted">
+                            <strong>File:</strong> <code>enriched_tools_catalog.csv</code> (in project root)<br>
+                            <strong>Contents:</strong> Tool names, descriptions, URLs, licenses, GitHub links, categories, and more
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tool Name</th>
+                                    <th>Description</th>
+                                    <th>URL</th>
+                                    <th>Is Open Source</th>
+                                    <th>License</th>
+                                    <th>Category</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Zenodo</td>
+                                    <td>General-purpose open repository for research outputs</td>
+                                    <td>https://zenodo.org/</td>
+                                    <td>TRUE</td>
+                                    <td>GNU GPL v2</td>
+                                    <td>Repository</td>
+                                </tr>
+                                <tr>
+                                    <td>Jupyter</td>
+                                    <td>Interactive computing platform for notebooks</td>
+                                    <td>https://jupyter.org/</td>
+                                    <td>TRUE</td>
+                                    <td>BSD</td>
+                                    <td>Analysis Platform</td>
+                                </tr>
+                                <tr class="text-muted">
+                                    <td colspan="6" class="text-center small">
+                                        <i class="fas fa-ellipsis-h"></i> Additional columns: GitHub URL, Stage, Notes
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import Behavior -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2 text-primary"></i>Import Behavior
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success">
+                                <i class="fas fa-plus-circle me-2"></i>New Tools
+                            </h6>
+                            <p class="small text-muted">
+                                If a tool doesn't exist, it will be created with all provided metadata.
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-info">
+                                <i class="fas fa-sync me-2"></i>Existing Tools
+                            </h6>
+                            <p class="small text-muted">
+                                Only empty fields will be filled. Your existing data is safe from overwrites.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning border-0 mt-3 mb-0">
+                        <small>
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            <strong>Note:</strong> Tool names are case-sensitive and must match exactly for updates.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('file');
+    const form = document.querySelector('form');
+
+    // File validation
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                alert('Please select a CSV file.');
+                e.target.value = '';
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) { // 10MB
+                alert('File size must be less than 10MB.');
+                e.target.value = '';
+                return;
+            }
+        }
+    });
+
+    // Form submission loading state
+    form.addEventListener('submit', function() {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+
+{% endblock %}

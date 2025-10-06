@@ -235,6 +235,41 @@
                         <strong>C</strong>ommons. An RDA initiative that PRISM contributes to, focused on
                         improving interoperability and FAIR data practices.
                     </dd>
+
+                    <dt class="col-sm-3">Auto-created Tools</dt>
+                    <dd class="col-sm-9">
+                        Tools imported via CSV upload or automated discovery systems rather than manually
+                        added through the web interface. These are flagged as "Uncategorized" until
+                        manually reviewed and assigned to lifecycle stages and categories.
+                    </dd>
+
+                    <dt class="col-sm-3">Uncategorized Tools</dt>
+                    <dd class="col-sm-9">
+                        Tools that have been imported but not yet assigned to a specific lifecycle stage
+                        or tool category. These typically originate from CSV imports or will come from
+                        the automated discovery system.
+                    </dd>
+
+                    <dt class="col-sm-3">CSV Import</dt>
+                    <dd class="col-sm-9">
+                        Bulk upload functionality that allows administrators to rapidly populate the
+                        catalog with tools and interactions from comma-separated values (CSV) files.
+                        Supports enriched metadata including licenses, GitHub URLs, and notes.
+                    </dd>
+
+                    <dt class="col-sm-3">Discovery Queue</dt>
+                    <dd class="col-sm-9">
+                        (Coming soon) A system for automated tool discovery that monitors RSS feeds,
+                        GitHub repositories, academic literature, and tool registries. Discovered items
+                        are queued for human review before being added to the catalog.
+                    </dd>
+
+                    <dt class="col-sm-3">Enriched Metadata</dt>
+                    <dd class="col-sm-9">
+                        Enhanced tool information beyond basic name and description, including software
+                        licenses, GitHub repository URLs, and curator notes. This metadata supports
+                        better tool discovery and assessment.
+                    </dd>
                 </dl>
             </div>
 
@@ -328,17 +363,42 @@
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm">
+                <div class="card border-0 shadow-sm mb-3">
                     <div class="card-body">
                         <h5>Bulk Upload via CSV</h5>
-                        <p>For adding multiple interactions:</p>
+                        <p>For adding multiple interactions or tools:</p>
                         <ol>
                             <li>Download the <a href="{{ url_for('export_csv') }}">CSV template</a> to see the format</li>
                             <li>Prepare your data following the same structure</li>
-                            <li>Ensure tool names match existing tools in PRISM (or new tools will be created)</li>
-                            <li>Use the <a href="{{ url_for('upload_interactions_csv') }}">CSV upload page</a> to submit your file</li>
+                            <li>Ensure tool names match existing tools in PRISM (or new tools will be created automatically)</li>
+                            <li>Use the CSV upload page (<a href="{{ url_for('upload_interactions_csv') }}">interactions</a>
+                                or <a href="{{ url_for('upload_tools_csv') }}">tools</a>) to submit your file</li>
                             <li>Review the results and fix any errors reported</li>
                         </ol>
+                        <div class="alert alert-info border-0 small mt-3 mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> Tools imported via CSV will be flagged as "Auto-created" and marked as
+                            "Uncategorized" until manually reviewed and assigned to lifecycle stages and categories.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5>Tool CSV Format</h5>
+                        <p>When uploading tools via CSV, include these columns for enriched metadata:</p>
+                        <ul>
+                            <li><strong>Tool Name:</strong> Required - unique tool identifier</li>
+                            <li><strong>Description:</strong> Recommended - brief description of the tool</li>
+                            <li><strong>URL:</strong> Tool homepage or documentation</li>
+                            <li><strong>Is Open Source:</strong> TRUE/FALSE flag</li>
+                            <li><strong>License:</strong> Software license (e.g., MIT, Apache 2.0, GPL)</li>
+                            <li><strong>GitHub URL:</strong> Link to source code repository</li>
+                            <li><strong>Notes:</strong> Additional curator notes or context</li>
+                        </ul>
+                        <p class="small text-muted mb-0">
+                            Tools imported from CSV can be categorized later through the web interface.
+                        </p>
                     </div>
                 </div>
             </div>

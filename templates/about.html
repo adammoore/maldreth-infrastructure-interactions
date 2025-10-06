@@ -34,9 +34,11 @@
                         <ul class="mb-0">
                             <li>Interactive tool interaction mapping</li>
                             <li>Research data lifecycle visualization</li>
-                            <li>Comprehensive CSV data export</li>
+                            <li>Comprehensive CSV data export and import</li>
+                            <li>Enriched metadata (licenses, GitHub URLs, notes)</li>
                             <li>Open source tool identification</li>
                             <li>Community-driven data collection</li>
+                            <li>Automated discovery system (coming soon)</li>
                         </ul>
                     </div>
                 </div>
@@ -99,6 +101,42 @@
                 </div>
             </div>
 
+            <!-- Data Catalog & Import -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h4 text-success mb-3">
+                        <i class="fas fa-database me-2"></i>Growing the Catalog
+                    </h2>
+                    <p>
+                        PRISM supports multiple pathways for expanding the research tools catalog to ensure comprehensive
+                        coverage of the digital research infrastructure landscape.
+                    </p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="fas fa-hand-pointer me-2"></i>Manual Curation</h6>
+                            <p class="small">
+                                Researchers and tool developers can directly add tools and interactions through the web interface,
+                                providing detailed metadata and categorization.
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="fas fa-file-csv me-2"></i>Bulk CSV Import</h6>
+                            <p class="small">
+                                Upload enriched CSV catalogs to rapidly populate the database with tools and interactions.
+                                Imported items are flagged for later manual categorization and curation.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="alert alert-light border-0 mt-3">
+                        <h6 class="small mb-2"><i class="fas fa-robot me-2 text-info"></i>Coming Soon: Automated Discovery</h6>
+                        <p class="small mb-0">
+                            An AI-powered discovery system will continuously monitor RSS feeds, GitHub, academic literature,
+                            and tool registries to identify new research tools and suggest interactions for human review.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Participation -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body">
@@ -106,8 +144,8 @@
                         <i class="fas fa-users me-2"></i>Get Involved
                     </h2>
                     <p>
-                        PRISM is a community-driven platform that relies on contributions from researchers, developers, 
-                        and infrastructure providers worldwide. Your participation helps build a comprehensive understanding 
+                        PRISM is a community-driven platform that relies on contributions from researchers, developers,
+                        and infrastructure providers worldwide. Your participation helps build a comprehensive understanding
                         of the digital research tools landscape.
                     </p>
                     <div class="d-flex gap-3 flex-wrap">
@@ -117,7 +155,7 @@
                         <a href="{{ url_for('view_interactions') }}" class="btn btn-outline-primary">
                             <i class="fas fa-list me-2"></i>View Data
                         </a>
-                        <a href="https://www.rd-alliance.org/groups/mapping-the-landscape-of-digital-research-tools-ii-maldreth-ii" 
+                        <a href="https://www.rd-alliance.org/groups/mapping-the-landscape-of-digital-research-tools-ii-maldreth-ii"
                            class="btn btn-outline-secondary" target="_blank">
                             <i class="fas fa-external-link-alt me-2"></i>MaLDReTH II Working Group
                         </a>
@@ -138,7 +176,8 @@
                             <p><strong>Deployment:</strong> Heroku cloud platform</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Data Format:</strong> CSV export capabilities</p>
+                            <p><strong>Data Format:</strong> CSV export & import</p>
+                            <p><strong>Metadata:</strong> Enriched tool information (licenses, GitHub, notes)</p>
                             <p><strong>API:</strong> RESTful JSON endpoints</p>
                             <p><strong>License:</strong> Open source contribution to RDA</p>
                         </div>

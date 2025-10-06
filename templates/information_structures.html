@@ -194,6 +194,26 @@
                                                                 <td>import_source</td>
                                                                 <td><code>VARCHAR(100)</code></td>
                                                             </tr>
+                                                            <tr class="table-success">
+                                                                <td><i class="fas fa-plus text-success me-2"></i><strong>license</strong></td>
+                                                                <td><code>VARCHAR(100)</code></td>
+                                                            </tr>
+                                                            <tr class="table-success">
+                                                                <td><i class="fas fa-plus text-success me-2"></i><strong>github_url</strong></td>
+                                                                <td><code>VARCHAR(500)</code></td>
+                                                            </tr>
+                                                            <tr class="table-success">
+                                                                <td><i class="fas fa-plus text-success me-2"></i><strong>notes</strong></td>
+                                                                <td><code>TEXT</code></td>
+                                                            </tr>
+                                                            <tr class="table-success">
+                                                                <td><i class="fas fa-plus text-success me-2"></i><strong>created_via</strong></td>
+                                                                <td><code>VARCHAR(100)</code></td>
+                                                            </tr>
+                                                            <tr class="table-success">
+                                                                <td><i class="fas fa-plus text-success me-2"></i><strong>is_archived</strong></td>
+                                                                <td><code>BOOLEAN</code></td>
+                                                            </tr>
                                                             <tr>
                                                                 <td>created_at</td>
                                                                 <td><code>DATETIME</code></td>
@@ -204,11 +224,11 @@
                                                             </tr>
                                                             <tr class="table-info">
                                                                 <td><i class="fas fa-link text-info me-2"></i><strong>stage_id</strong></td>
-                                                                <td><code>INT</code></td>
+                                                                <td><code>INT (NULL)</code></td>
                                                             </tr>
                                                             <tr class="table-info">
                                                                 <td><i class="fas fa-link text-info me-2"></i><strong>category_id</strong></td>
-                                                                <td><code>INT</code></td>
+                                                                <td><code>INT (NULL)</code></td>
                                                             </tr>
                                                         </tbody>
                                                     </table>
@@ -290,6 +310,14 @@
                                                             <tr>
                                                                 <td>submitted_at</td>
                                                                 <td><code>DATETIME</code></td>
+                                                            </tr>
+                                                            <tr class="table-success">
+                                                                <td><i class="fas fa-plus text-success me-2"></i><strong>auto_created</strong></td>
+                                                                <td><code>BOOLEAN</code></td>
+                                                            </tr>
+                                                            <tr class="table-success">
+                                                                <td><i class="fas fa-plus text-success me-2"></i><strong>is_archived</strong></td>
+                                                                <td><code>BOOLEAN</code></td>
                                                             </tr>
                                                             <tr class="table-info">
                                                                 <td><i class="fas fa-link text-info me-2"></i><strong>source_tool_id</strong></td>
