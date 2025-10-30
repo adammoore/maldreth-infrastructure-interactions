@@ -1140,6 +1140,33 @@ def feedback():
     # GET request - show form
     return render_template('feedback.html')
 
+@app.route('/feedback/review')
+def review_feedback():
+    """Admin view to review all submitted feedback."""
+    try:
+        # Get all feedback, ordered by most recent first
+        all_feedback = Feedback.query.order_by(Feedback.submitted_at.desc()).all()
+
+        # Get summary statistics
+        total_count = len(all_feedback)
+        status_counts = {
+            'new': len([f for f in all_feedback if f.status == 'new']),
+            'reviewed': len([f for f in all_feedback if f.status == 'reviewed']),
+            'addressed': len([f for f in all_feedback if f.status == 'addressed'])
+        }
+        category_counts = {}
+        for f in all_feedback:
+            category_counts[f.category] = category_counts.get(f.category, 0) + 1
+
+        return render_template('feedback_review.html',
+                             feedback_items=all_feedback,
+                             total_count=total_count,
+                             status_counts=status_counts,
+                             category_counts=category_counts)
+    except Exception as e:
+        logger.error(f"Error reviewing feedback: {e}")
+        return render_template('error.html', error=str(e)), 500
+
 @app.route('/glossary')
 def glossary():
     """
