@@ -110,6 +110,23 @@
         </div>
     </nav>
 
+    <!-- Alpha Status Banner -->
+    <div class="alert alert-warning alert-dismissible fade show mb-0" role="alert" style="border-radius: 0; border-left: none; border-right: none;">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <div class="flex-grow-1">
+                    <strong>Alpha Version:</strong> PRISM is in active development.
+                    Data structures and features may change.
+                    <a href="{{ url_for('feedback') }}" class="alert-link ms-2">
+                        <i class="fas fa-comment me-1"></i>Share Feedback
+                    </a>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
     <main class="container my-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
