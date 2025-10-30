@@ -382,6 +382,19 @@ class ToolInteraction(db.Model):
     auto_created = db.Column(db.Boolean, default=False)  # Track if created from CSV/Discovery
     is_archived = db.Column(db.Boolean, default=False)  # Soft delete flag
 
+class Feedback(db.Model):
+    """Model for collecting user feedback on PRISM alpha."""
+    __tablename__ = 'feedback'
+    id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(50))  # Usability, Data Quality, Features, Documentation, Other
+    feedback_text = db.Column(db.Text, nullable=False)
+    page_url = db.Column(db.String(500))  # Page where feedback originated
+    contact_name = db.Column(db.String(200))  # Optional
+    contact_email = db.Column(db.String(200))  # Optional
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='new')  # new, reviewed, addressed
+    user_agent = db.Column(db.String(500))  # Browser/device info
+
 
 # --- Helper Functions ---
 
@@ -1096,6 +1109,36 @@ def upload_tools_csv():
 def about():
     """About page with MaLDReTH II and RDA context."""
     return render_template('about.html')
+
+@app.route('/feedback', methods=['GET', 'POST'])
+def feedback():
+    """Collect user feedback on PRISM alpha."""
+    if request.method == 'POST':
+        try:
+            # Collect feedback data
+            new_feedback = Feedback(
+                category=request.form.get('category'),
+                feedback_text=request.form.get('feedback_text'),
+                page_url=request.form.get('page_url', request.referrer),
+                contact_name=request.form.get('contact_name'),
+                contact_email=request.form.get('contact_email'),
+                user_agent=request.headers.get('User-Agent')
+            )
+
+            db.session.add(new_feedback)
+            db.session.commit()
+
+            logger.info(f"Feedback received: Category={new_feedback.category}, ID={new_feedback.id}")
+            flash('Thank you for your feedback! Your input helps us improve PRISM.', 'success')
+
+            return redirect(url_for('feedback'))
+        except Exception as e:
+            logger.error(f"Error submitting feedback: {e}")
+            flash('An error occurred while submitting your feedback. Please try again.', 'danger')
+            db.session.rollback()
+
+    # GET request - show form
+    return render_template('feedback.html')
 
 @app.route('/glossary')
 def glossary():

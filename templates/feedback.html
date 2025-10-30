@@ -1,0 +1,193 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}Feedback - PRISM Alpha{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-5 text-primary mb-3">
+                    <i class="fas fa-comment-dots me-3"></i>Share Your Feedback
+                </h1>
+                <p class="lead text-muted">
+                    Help us improve PRISM by sharing your thoughts, suggestions, and issues
+                </p>
+            </div>
+
+            <!-- Info Card -->
+            <div class="alert alert-info border-0 mb-4">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="fas fa-info-circle fa-2x"></i>
+                    </div>
+                    <div>
+                        <h6 class="alert-heading">We Value Your Input</h6>
+                        <p class="small mb-0">
+                            PRISM is in active alpha development. Your feedback during this phase is crucial to
+                            building a platform that truly serves the research community's needs. All feedback is
+                            reviewed by the development team and MaLDReTH II working group.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feedback Form Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('feedback') }}">
+                        <!-- Category Selection -->
+                        <div class="mb-4">
+                            <label for="category" class="form-label">
+                                <strong>Feedback Category</strong>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">-- Select a category --</option>
+                                <option value="Usability">Usability - Interface, navigation, user experience</option>
+                                <option value="Data Quality">Data Quality - Tool data, interactions, accuracy</option>
+                                <option value="Features">Features - New features, enhancements, functionality</option>
+                                <option value="Documentation">Documentation - User guide, help text, glossary</option>
+                                <option value="Performance">Performance - Speed, reliability, bugs</option>
+                                <option value="Other">Other - General feedback or suggestions</option>
+                            </select>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Choose the category that best describes your feedback
+                            </div>
+                        </div>
+
+                        <!-- Feedback Text -->
+                        <div class="mb-4">
+                            <label for="feedback_text" class="form-label">
+                                <strong>Your Feedback</strong>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="feedback_text" name="feedback_text" rows="6"
+                                      required placeholder="Please be as specific as possible. Include:
+- What you were trying to do
+- What happened (or didn't happen)
+- What you expected
+- Any error messages you saw
+- Suggestions for improvement"></textarea>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Detailed feedback helps us address your concerns more effectively
+                            </div>
+                        </div>
+
+                        <!-- Page URL (hidden, auto-filled from referrer) -->
+                        <input type="hidden" name="page_url" value="{{ request.referrer or '' }}">
+
+                        <!-- Optional Contact Information -->
+                        <div class="card border-secondary mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-address-card me-2"></i>
+                                    Contact Information (Optional)
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="small text-muted mb-3">
+                                    Providing your contact information allows us to follow up if we need clarification
+                                    or want to let you know when your feedback has been addressed.
+                                </p>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="contact_name" class="form-label">Name</label>
+                                        <input type="text" class="form-control" id="contact_name" name="contact_name"
+                                               placeholder="Your name">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="contact_email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="contact_email" name="contact_email"
+                                               placeholder="your.email@example.com">
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-light border-0 mb-0">
+                                    <small class="text-muted">
+                                        <i class="fas fa-lock me-1"></i>
+                                        Your contact information will only be used to respond to this feedback
+                                        and will not be shared with third parties.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a href="{{ request.referrer or url_for('index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Feedback
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Additional Help Section -->
+            <div class="row mt-5">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-primary">
+                        <div class="card-body">
+                            <h6 class="card-title text-primary">
+                                <i class="fas fa-book-open me-2"></i>Need Help?
+                            </h6>
+                            <p class="card-text small">
+                                Check out our comprehensive user guide for step-by-step instructions on using PRISM.
+                            </p>
+                            <a href="{{ url_for('user_guide') }}" class="btn btn-outline-primary btn-sm">
+                                View User Guide
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-info">
+                        <div class="card-body">
+                            <h6 class="card-title text-info">
+                                <i class="fas fa-book me-2"></i>Understanding Terminology
+                            </h6>
+                            <p class="card-text small">
+                                Review the glossary to understand PRISM terminology and interaction types.
+                            </p>
+                            <a href="{{ url_for('glossary') }}" class="btn btn-outline-info btn-sm">
+                                View Glossary
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feedback Timeline -->
+            <div class="alert alert-secondary border-0 mt-4">
+                <h6 class="alert-heading">
+                    <i class="fas fa-clock me-2"></i>What Happens Next?
+                </h6>
+                <ol class="small mb-0">
+                    <li>Your feedback is reviewed by the PRISM development team</li>
+                    <li>We may reach out if we need clarification (if you provided contact info)</li>
+                    <li>Feedback is prioritized and incorporated into our development roadmap</li>
+                    <li>If you provided an email, we'll notify you when your feedback is addressed</li>
+                </ol>
+                <p class="small mb-0 mt-2">
+                    <strong>Typical response time:</strong> 1-2 weeks for initial review
+                </p>
+            </div>
+
+            <!-- Statistics -->
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    <i class="fas fa-comments me-1"></i>
+                    Your voice matters in shaping the future of research infrastructure mapping
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
