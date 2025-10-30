@@ -2067,7 +2067,14 @@ def migrate_database_schema():
             db.create_all()
             logger.info("✅ Database tables created successfully")
             return
-            
+
+        # Check if feedback table exists (added for Phase 1 feedback collection)
+        if 'feedback' not in tables:
+            logger.info("Feedback table missing, creating it...")
+            # Create only the Feedback table
+            Feedback.__table__.create(db.engine, checkfirst=True)
+            logger.info("✅ Feedback table created successfully")
+
         columns = [col['name'] for col in inspector.get_columns('exemplar_tools')]
         
         migrations_needed = []
