@@ -26,14 +26,10 @@ def heroku_release():
             logger.info("Step 2: Initializing database with MaLDReTH data...")
             init_database_with_maldreth_data()
 
-            # Step 3: Clean up any duplicates or invalid data
-            logger.info("Step 3: Running clean update process...")
-            try:
-                from clean_update import clean_update
-                clean_update()
-            except Exception as e:
-                logger.warning(f"Clean update skipped or failed: {e}")
-                # Don't fail the release if clean_update has issues
+            # Step 3: Clean up any duplicates or invalid data (SKIP for now)
+            # NOTE: clean_update is disabled because it deactivates all auto-created tools
+            # which breaks the initial dataset. This should only run for actual updates.
+            logger.info("Step 3: Skipping clean update process (not needed for fresh deploys)")
 
             logger.info("✅ Heroku release process completed successfully")
             return True
