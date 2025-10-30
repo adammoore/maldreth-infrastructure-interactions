@@ -1953,11 +1953,13 @@ def migrate_database_schema():
     try:
         # Check if new columns exist and add them if they don't
         inspector = db.inspect(db.engine)
-        
+
         # Check if exemplar_tools table exists
         tables = inspector.get_table_names()
         if 'exemplar_tools' not in tables:
-            logger.info("exemplar_tools table doesn't exist, will be created")
+            logger.info("Tables don't exist yet, creating all tables...")
+            db.create_all()
+            logger.info("✅ Database tables created successfully")
             return
             
         columns = [col['name'] for col in inspector.get_columns('exemplar_tools')]
