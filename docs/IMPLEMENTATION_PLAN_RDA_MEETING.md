@@ -455,8 +455,8 @@ interactions across the research data lifecycle.
 
 ### Immediate (Next 7 days)
 1. ✅ User Guide completed (DONE)
-2. 🔲 Alpha status banner
-3. 🔲 Feedback collection page
+2. ✅ Alpha status banner (DONE)
+3. ✅ Feedback collection page (DONE)
 4. 🔲 Google spreadsheet template
 
 ### Short-term (Weeks 2-3)
