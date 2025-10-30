@@ -1,0 +1,195 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}Quick Add Interaction - PRISM{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="h3 text-primary mb-2">
+                    <i class="fas fa-bolt me-2"></i>Quick Add Interaction
+                </h1>
+                <p class="text-muted small">
+                    Rapidly add tool interactions with just the essentials. You can add details later.
+                </p>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="alert alert-info border-0 mb-4">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <i class="fas fa-tools"></i>
+                        <div class="small"><strong>{{ tools|length }}</strong> Tools</div>
+                    </div>
+                    <div class="col-4">
+                        <i class="fas fa-clock"></i>
+                        <div class="small"><strong>~30 sec</strong> per entry</div>
+                    </div>
+                    <div class="col-4">
+                        <i class="fas fa-keyboard"></i>
+                        <div class="small"><strong>5 fields</strong> only</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Add Form -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('quick_add_interaction') }}" id="quickAddForm">
+                        <!-- Source Tool -->
+                        <div class="mb-3">
+                            <label for="source_tool_id" class="form-label">
+                                <strong>1. Source Tool</strong>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select select2" id="source_tool_id" name="source_tool_id" required>
+                                <option value="">-- Select source tool --</option>
+                                {% for tool in tools %}
+                                <option value="{{ tool.id }}">{{ tool.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text small">
+                                <i class="fas fa-arrow-right me-1"></i>The tool that initiates or provides the interaction
+                            </div>
+                        </div>
+
+                        <!-- Target Tool -->
+                        <div class="mb-3">
+                            <label for="target_tool_id" class="form-label">
+                                <strong>2. Target Tool</strong>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select select2" id="target_tool_id" name="target_tool_id" required>
+                                <option value="">-- Select target tool --</option>
+                                {% for tool in tools %}
+                                <option value="{{ tool.id }}">{{ tool.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text small">
+                                <i class="fas fa-arrow-right me-1"></i>The tool that receives or consumes the interaction
+                            </div>
+                        </div>
+
+                        <!-- Interaction Type -->
+                        <div class="mb-3">
+                            <label for="interaction_type" class="form-label">
+                                <strong>3. Interaction Type</strong>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="interaction_type" name="interaction_type" required>
+                                <option value="">-- Select interaction type --</option>
+                                {% for type in interaction_types %}
+                                <option value="{{ type }}">{{ type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Lifecycle Stage -->
+                        <div class="mb-3">
+                            <label for="lifecycle_stage" class="form-label">
+                                <strong>4. Lifecycle Stage</strong>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="lifecycle_stage" name="lifecycle_stage" required>
+                                <option value="">-- Select lifecycle stage --</option>
+                                {% for stage in lifecycle_stages %}
+                                <option value="{{ stage }}">{{ stage }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                <strong>5. Brief Description</strong>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                      required placeholder="e.g., 'DMPTool exports data management plans as JSON that RSpace imports via API'"></textarea>
+                            <div class="form-text small">
+                                <i class="fas fa-lightbulb me-1"></i>One sentence is enough - focus on what, not how
+                            </div>
+                        </div>
+
+                        <!-- Optional: Submitted By -->
+                        <div class="mb-4">
+                            <label for="submitted_by" class="form-label">
+                                Your Name (Optional)
+                            </label>
+                            <input type="text" class="form-control" id="submitted_by" name="submitted_by"
+                                   placeholder="Anonymous">
+                        </div>
+
+                        <!-- Add Another Checkbox -->
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="add_another_checkbox" checked>
+                            <input type="hidden" name="add_another" id="add_another" value="true">
+                            <label class="form-check-label" for="add_another_checkbox">
+                                <strong>Add another after saving</strong>
+                                <span class="text-muted small">(Keep this checked for rapid entry)</span>
+                            </label>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('add_interaction') }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-expand me-2"></i>Full Form
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-bolt me-2"></i>Quick Save
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Keyboard Shortcuts Hint -->
+            <div class="alert alert-light border mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-keyboard me-1"></i>
+                    <strong>Tip:</strong> Use Tab to navigate fields quickly. After saving, the form clears for rapid entry.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Select2 for tool dropdowns
+    $('.select2').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Search tools...',
+        allowClear: true
+    });
+
+    // Handle add another checkbox
+    const addAnotherCheckbox = document.getElementById('add_another_checkbox');
+    const addAnotherInput = document.getElementById('add_another');
+
+    addAnotherCheckbox.addEventListener('change', function() {
+        addAnotherInput.value = this.checked ? 'true' : 'false';
+    });
+
+    // Focus on source tool field on load
+    setTimeout(() => {
+        $('#source_tool_id').select2('open');
+    }, 300);
+
+    // Keyboard shortcut: Ctrl/Cmd + S to submit
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            document.getElementById('quickAddForm').submit();
+        }
+    });
+});
+</script>
+{% endblock %}

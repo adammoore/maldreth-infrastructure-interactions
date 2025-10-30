@@ -1167,6 +1167,47 @@ def review_feedback():
         logger.error(f"Error reviewing feedback: {e}")
         return render_template('error.html', error=str(e)), 500
 
+@app.route('/quick-add', methods=['GET', 'POST'])
+def quick_add_interaction():
+    """Quick entry form for adding tool interactions with minimal required fields."""
+    if request.method == 'POST':
+        try:
+            # Create new interaction with only required fields
+            new_interaction = ToolInteraction(
+                source_tool_id=request.form['source_tool_id'],
+                target_tool_id=request.form['target_tool_id'],
+                interaction_type=request.form['interaction_type'],
+                lifecycle_stage=request.form['lifecycle_stage'],
+                description=request.form['description'],
+                submitted_by=request.form.get('submitted_by', 'Anonymous')
+            )
+
+            db.session.add(new_interaction)
+            db.session.commit()
+
+            logger.info(f"Quick interaction added: {new_interaction.interaction_type} between {new_interaction.source_tool.name} and {new_interaction.target_tool.name}")
+
+            # Check if user wants to add another
+            if request.form.get('add_another') == 'true':
+                flash('Interaction added successfully! Add another below.', 'success')
+                return redirect(url_for('quick_add_interaction'))
+            else:
+                flash('Interaction added successfully!', 'success')
+                return redirect(url_for('view_interactions'))
+
+        except Exception as e:
+            logger.error(f"Error adding quick interaction: {e}")
+            flash('An error occurred while adding the interaction. Please try again.', 'danger')
+            db.session.rollback()
+
+    # GET request - show form
+    all_tools = ExemplarTool.query.filter_by(is_active=True).order_by(ExemplarTool.name).all()
+
+    return render_template('quick_add.html',
+                         tools=all_tools,
+                         interaction_types=INTERACTION_TYPES,
+                         lifecycle_stages=LIFECYCLE_STAGES)
+
 @app.route('/glossary')
 def glossary():
     """
