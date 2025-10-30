@@ -1133,6 +1133,34 @@ def glossary():
         logger.error(f"Error in glossary route: {e}")
         return render_template('error.html', error=str(e)), 500
 
+@app.route('/user-guide')
+def user_guide():
+    """
+    Interactive user guide for adding and curating interactions.
+
+    Comprehensive documentation covering:
+    - Understanding tool interactions
+    - Web form submission
+    - CSV bulk import
+    - Curation best practices
+    - Troubleshooting and support
+    """
+    try:
+        # Get statistics for contextual examples
+        total_interactions = ToolInteraction.query.count()
+        total_tools = ExemplarTool.query.count()
+        stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
+
+        return render_template('user_guide.html',
+                             interaction_types=INTERACTION_TYPES,
+                             lifecycle_stages=LIFECYCLE_STAGES,
+                             stages=stages,
+                             total_interactions=total_interactions,
+                             total_tools=total_tools)
+    except Exception as e:
+        logger.error(f"Error in user guide route: {e}")
+        return render_template('error.html', error=str(e)), 500
+
 @app.route('/information-structures')
 def information_structures():
     """Information Structures page with database schema and live data visualization."""

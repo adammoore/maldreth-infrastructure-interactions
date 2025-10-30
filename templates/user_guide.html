@@ -1,0 +1,1454 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}User Guide - Adding and Curating Interactions | PRISM{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Floating Table of Contents */
+    .toc-sidebar {
+        position: sticky;
+        top: 80px;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        padding-right: 15px;
+    }
+
+    .toc-sidebar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .toc-sidebar::-webkit-scrollbar-thumb {
+        background: #007bff;
+        border-radius: 4px;
+    }
+
+    .toc-link {
+        display: block;
+        padding: 8px 12px;
+        color: #6c757d;
+        text-decoration: none;
+        border-left: 2px solid transparent;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+
+    .toc-link:hover {
+        color: #007bff;
+        border-left-color: #007bff;
+        background-color: #f8f9fa;
+    }
+
+    .toc-link.active {
+        color: #007bff;
+        border-left-color: #007bff;
+        font-weight: 600;
+        background-color: #e7f1ff;
+    }
+
+    /* Collapsible Sections */
+    .guide-section {
+        margin-bottom: 2rem;
+        scroll-margin-top: 80px;
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px 8px 0 0;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-header:hover {
+        transform: translateX(5px);
+    }
+
+    .section-content {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        padding: 25px;
+    }
+
+    /* Callout Boxes */
+    .callout {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        border-left: 4px solid;
+    }
+
+    .callout-info {
+        background-color: #e7f3ff;
+        border-color: #2196F3;
+    }
+
+    .callout-success {
+        background-color: #e8f5e9;
+        border-color: #4CAF50;
+    }
+
+    .callout-warning {
+        background-color: #fff3e0;
+        border-color: #FF9800;
+    }
+
+    .callout-danger {
+        background-color: #ffebee;
+        border-color: #f44336;
+    }
+
+    .callout-tip {
+        background-color: #f3e5f5;
+        border-color: #9C27B0;
+    }
+
+    /* Code Blocks */
+    pre {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 15px;
+        overflow-x: auto;
+    }
+
+    code {
+        background-color: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.9em;
+        color: #d63384;
+    }
+
+    pre code {
+        background-color: transparent;
+        padding: 0;
+        color: #212529;
+    }
+
+    /* Step Cards */
+    .step-card {
+        border-left: 4px solid #007bff;
+        padding: 20px;
+        margin: 15px 0;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+
+    .step-number {
+        display: inline-block;
+        width: 32px;
+        height: 32px;
+        background: #007bff;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 32px;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    /* Example Box */
+    .example-box {
+        background: #fff;
+        border: 2px dashed #28a745;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 15px 0;
+    }
+
+    .example-box.bad {
+        border-color: #dc3545;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        position: sticky;
+        bottom: 20px;
+        background: white;
+        border: 2px solid #007bff;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    /* Progress Indicator */
+    .progress-indicator {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: #e9ecef;
+        z-index: 9999;
+    }
+
+    .progress-bar-custom {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        width: 0%;
+        transition: width 0.1s;
+    }
+
+    /* Tables */
+    .guide-table {
+        width: 100%;
+        margin: 15px 0;
+    }
+
+    .guide-table th {
+        background-color: #007bff;
+        color: white;
+        padding: 12px;
+    }
+
+    .guide-table td {
+        padding: 10px;
+        border: 1px solid #dee2e6;
+    }
+
+    .guide-table tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    /* Icon Boxes */
+    .icon-box {
+        text-align: center;
+        padding: 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        transition: all 0.3s;
+        height: 100%;
+    }
+
+    .icon-box:hover {
+        border-color: #007bff;
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,123,255,0.2);
+    }
+
+    .icon-box i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+
+    /* Search Box */
+    #guideSearch {
+        position: sticky;
+        top: 10px;
+        z-index: 100;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Progress Indicator -->
+<div class="progress-indicator">
+    <div class="progress-bar-custom" id="readingProgress"></div>
+</div>
+
+<!-- Hero Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-body py-5 text-center">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="fas fa-book-open me-3"></i>PRISM User Guide
+                </h1>
+                <h2 class="h4 mb-4">Adding and Curating Interactions</h2>
+                <p class="lead mb-4">
+                    Comprehensive documentation for contributing to the research infrastructure mapping initiative
+                </p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="#quick-start" class="btn btn-light btn-lg smooth-scroll">
+                        <i class="fas fa-rocket me-2"></i>Quick Start
+                    </a>
+                    <a href="{{ url_for('add_interaction') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-plus me-2"></i>Add Interaction Now
+                    </a>
+                    <a href="{{ url_for('glossary') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-book me-2"></i>View Glossary
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Table of Contents Sidebar -->
+    <div class="col-lg-3">
+        <div class="toc-sidebar">
+            <input type="search" id="guideSearch" class="form-control mb-3" placeholder="Search guide...">
+            <h5 class="text-primary mb-3">
+                <i class="fas fa-list me-2"></i>Contents
+            </h5>
+            <nav id="toc">
+                <a href="#understanding" class="toc-link">
+                    <i class="fas fa-lightbulb me-2"></i>Understanding Interactions
+                </a>
+                <a href="#before-start" class="toc-link">
+                    <i class="fas fa-clipboard-check me-2"></i>Before You Start
+                </a>
+                <a href="#web-form" class="toc-link">
+                    <i class="fas fa-edit me-2"></i>Web Form Submission
+                </a>
+                <a href="#csv-import" class="toc-link">
+                    <i class="fas fa-file-csv me-2"></i>CSV Bulk Import
+                </a>
+                <a href="#curation" class="toc-link">
+                    <i class="fas fa-tasks me-2"></i>Curation
+                </a>
+                <a href="#best-practices" class="toc-link">
+                    <i class="fas fa-star me-2"></i>Best Practices
+                </a>
+                <a href="#scenarios" class="toc-link">
+                    <i class="fas fa-question-circle me-2"></i>Common Scenarios
+                </a>
+                <a href="#quality" class="toc-link">
+                    <i class="fas fa-check-circle me-2"></i>Quality Guidelines
+                </a>
+                <a href="#troubleshooting" class="toc-link">
+                    <i class="fas fa-wrench me-2"></i>Troubleshooting
+                </a>
+                <a href="#reference" class="toc-link">
+                    <i class="fas fa-bookmark me-2"></i>Quick Reference
+                </a>
+            </nav>
+
+            <!-- Quick Stats -->
+            <div class="card mt-4 border-primary">
+                <div class="card-body">
+                    <h6 class="card-title text-primary">
+                        <i class="fas fa-chart-bar me-2"></i>Current Stats
+                    </h6>
+                    <p class="mb-1 small"><strong>{{ total_interactions }}</strong> interactions</p>
+                    <p class="mb-0 small"><strong>{{ total_tools }}</strong> tools</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-9">
+        <!-- Section 1: Understanding Tool Interactions -->
+        <div class="guide-section" id="understanding">
+            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#understanding-content">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>1. Understanding Tool Interactions
+                </h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="understanding-content" class="collapse show section-content">
+                <h4 class="text-primary mb-3">What is a Tool Interaction?</h4>
+                <p class="lead">
+                    A <strong>tool interaction</strong> in PRISM represents a connection or integration between two research tools
+                    in the digital research ecosystem. Interactions enable data flow, functionality enhancement, or workflow
+                    integration across the research data lifecycle.
+                </p>
+
+                <div class="row my-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="icon-box">
+                            <i class="fas fa-arrow-right text-primary"></i>
+                            <h5>Source Tool</h5>
+                            <p class="small mb-0">Initiates or provides data/functionality</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="icon-box">
+                            <i class="fas fa-exchange-alt text-success"></i>
+                            <h5>Interaction Type</h5>
+                            <p class="small mb-0">How the tools connect</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="icon-box">
+                            <i class="fas fa-bullseye text-info"></i>
+                            <h5>Target Tool</h5>
+                            <p class="small mb-0">Receives data/functionality</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="callout callout-info">
+                    <h5><i class="fas fa-info-circle me-2"></i>Example Interaction</h5>
+                    <p class="mb-2">
+                        <strong>GitHub</strong> <i class="fas fa-arrow-right mx-2"></i> <strong>Zenodo</strong>
+                    </p>
+                    <ul class="mb-0">
+                        <li><strong>Type:</strong> Data Exchange</li>
+                        <li><strong>Stage:</strong> PRESERVE</li>
+                        <li><strong>Description:</strong> GitHub repositories are automatically archived to Zenodo with DOI assignment,
+                            creating permanent records of research software.</li>
+                    </ul>
+                </div>
+
+                <h5 class="mt-4 mb-3">Components of an Interaction</h5>
+                <p>Every interaction consists of five essential elements:</p>
+                <ol>
+                    <li><strong>Source Tool</strong> - The tool that initiates the connection</li>
+                    <li><strong>Target Tool</strong> - The tool that receives or responds</li>
+                    <li><strong>Interaction Type</strong> - The mechanism of connection (API, data exchange, etc.)</li>
+                    <li><strong>Lifecycle Stage</strong> - Where in the research process this occurs</li>
+                    <li><strong>Description</strong> - What happens and why it matters</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Section 2: Before You Start -->
+        <div class="guide-section" id="before-start">
+            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#before-content">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-clipboard-check me-2"></i>2. Before You Start
+                </h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="before-content" class="collapse show section-content">
+                <h4 class="text-primary mb-3">Prerequisites</h4>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="callout callout-success">
+                            <h6><i class="fas fa-check me-2"></i>Account Access</h6>
+                            <p class="small mb-0">Access to the PRISM web interface</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="callout callout-success">
+                            <h6><i class="fas fa-check me-2"></i>Knowledge</h6>
+                            <p class="small mb-0">Familiarity with the tools you're documenting</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="callout callout-success">
+                            <h6><i class="fas fa-check me-2"></i>Reference Materials</h6>
+                            <p class="small mb-0">Tool documentation, examples, technical specs</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="callout callout-success">
+                            <h6><i class="fas fa-check me-2"></i>Understanding</h6>
+                            <p class="small mb-0">Review the <a href="{{ url_for('glossary') }}">glossary</a> first</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mt-4 mb-3">Familiarize Yourself</h5>
+                <p>Before adding interactions, explore:</p>
+
+                <div class="step-card">
+                    <span class="step-number">1</span>
+                    <strong>Tool Catalog</strong> - View all {{ total_tools }}+ research tools in PRISM
+                    <br><a href="{{ url_for('view_tools') }}" class="btn btn-sm btn-outline-primary mt-2">View Tools</a>
+                </div>
+
+                <div class="step-card">
+                    <span class="step-number">2</span>
+                    <strong>Glossary</strong> - Understand terminology and interaction types
+                    <br><a href="{{ url_for('glossary') }}" class="btn btn-sm btn-outline-primary mt-2">View Glossary</a>
+                </div>
+
+                <div class="step-card">
+                    <span class="step-number">3</span>
+                    <strong>Existing Interactions</strong> - See examples of well-documented interactions
+                    <br><a href="{{ url_for('view_interactions') }}" class="btn btn-sm btn-outline-primary mt-2">View Interactions</a>
+                </div>
+
+                <div class="step-card">
+                    <span class="step-number">4</span>
+                    <strong>Visualizations</strong> - Understand how interactions are displayed
+                    <br><a href="{{ url_for('radial_visualization') }}" class="btn btn-sm btn-outline-primary mt-2">View Visualization</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Web Form -->
+        <div class="guide-section" id="web-form">
+            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#webform-content">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-edit me-2"></i>3. Adding Interactions via Web Form
+                </h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="webform-content" class="collapse section-content">
+                <p class="lead">
+                    The web form is ideal for adding single, well-researched interactions with detailed information.
+                </p>
+
+                <h5 class="text-primary mt-4 mb-3">Step-by-Step Guide</h5>
+
+                <div class="accordion" id="webformSteps">
+                    <!-- Step 1 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#step1">
+                                <i class="fas fa-map-marker-alt me-2"></i>Step 1: Navigate to Add Interaction Page
+                            </button>
+                        </h2>
+                        <div id="step1" class="accordion-collapse collapse show" data-bs-parent="#webformSteps">
+                            <div class="accordion-body">
+                                <ol>
+                                    <li>Go to PRISM homepage</li>
+                                    <li>Click <strong>"Add Interaction"</strong> in the navigation menu</li>
+                                    <li>Or navigate directly to <code>/interaction/add</code></li>
+                                </ol>
+                                <a href="{{ url_for('add_interaction') }}" class="btn btn-primary mt-2">
+                                    <i class="fas fa-plus me-2"></i>Go to Add Interaction
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step2">
+                                <i class="fas fa-tools me-2"></i>Step 2: Select Tools
+                            </button>
+                        </h2>
+                        <div id="step2" class="accordion-collapse collapse" data-bs-parent="#webformSteps">
+                            <div class="accordion-body">
+                                <h6 class="text-primary">Source Tool:</h6>
+                                <ul>
+                                    <li>Select the tool that <strong>initiates</strong> the interaction</li>
+                                    <li>Use the searchable dropdown (type to filter)</li>
+                                    <li>Each tool shows its lifecycle stage in parentheses</li>
+                                </ul>
+
+                                <h6 class="text-primary mt-3">Target Tool:</h6>
+                                <ul>
+                                    <li>Select the tool that <strong>receives</strong> data/functionality</li>
+                                    <li>Cannot be the same as source tool</li>
+                                    <li>Consider the direction of data/functionality flow</li>
+                                </ul>
+
+                                <div class="callout callout-tip">
+                                    <strong><i class="fas fa-lightbulb me-2"></i>Tip:</strong> The order matters! Think about causality:
+                                    <br><br>
+                                    <span class="text-success"><i class="fas fa-check me-1"></i>GitHub → Zenodo (GitHub pushes to Zenodo)</span>
+                                    <br>
+                                    <span class="text-danger"><i class="fas fa-times me-1"></i>Zenodo → GitHub (backwards)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step3">
+                                <i class="fas fa-info-circle me-2"></i>Step 3: Define Interaction Details
+                            </button>
+                        </h2>
+                        <div id="step3" class="accordion-collapse collapse" data-bs-parent="#webformSteps">
+                            <div class="accordion-body">
+                                <h6 class="text-primary">Interaction Type (Required)</h6>
+                                <p>Choose from {{ interaction_types|length }} predefined types:</p>
+                                <ul class="row">
+                                    {% for itype in interaction_types %}
+                                    <li class="col-md-6">{{ itype }}</li>
+                                    {% endfor %}
+                                </ul>
+
+                                <h6 class="text-primary mt-3">Lifecycle Stage (Required)</h6>
+                                <p>Select the primary stage where this interaction is used:</p>
+                                <div class="row">
+                                    {% for stage in stages[:6] %}
+                                    <div class="col-md-4 mb-2">
+                                        <span class="badge bg-primary">{{ stage.name }}</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <p class="small text-muted mt-2">...and {{ stages|length - 6 }} more stages</p>
+
+                                <h6 class="text-primary mt-3">Description (Required)</h6>
+                                <p>Write 1-3 sentences explaining:</p>
+                                <ul>
+                                    <li>What happens during the interaction</li>
+                                    <li>Why it's useful for researchers</li>
+                                    <li>The benefit or outcome</li>
+                                </ul>
+
+                                <div class="example-box">
+                                    <strong><i class="fas fa-check-circle text-success me-2"></i>Good Example:</strong>
+                                    <p class="mb-0 mt-2">
+                                        "Zenodo automatically links publications and datasets to ORCID profiles, enabling
+                                        comprehensive research output tracking and attribution across the scholarly ecosystem."
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step4">
+                                <i class="fas fa-cogs me-2"></i>Step 4: Add Technical Details (Optional)
+                            </button>
+                        </h2>
+                        <div id="step4" class="accordion-collapse collapse" data-bs-parent="#webformSteps">
+                            <div class="accordion-body">
+                                <p>While optional, these fields greatly enhance interaction quality:</p>
+
+                                <table class="guide-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Field</th>
+                                            <th>What to Include</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Technical Details</strong></td>
+                                            <td>Implementation specifics (REST API, OAuth 2.0, etc.)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Benefits</strong></td>
+                                            <td>Advantages for researchers or workflows</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Challenges</strong></td>
+                                            <td>Known limitations or difficulties</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Examples</strong></td>
+                                            <td>Real-world use cases or scenarios</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step5">
+                                <i class="fas fa-check-double me-2"></i>Step 5: Review and Submit
+                            </button>
+                        </h2>
+                        <div id="step5" class="accordion-collapse collapse" data-bs-parent="#webformSteps">
+                            <div class="accordion-body">
+                                <div class="callout callout-warning">
+                                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Before Submitting</h6>
+                                    <ol class="mb-0">
+                                        <li>Review all fields for accuracy</li>
+                                        <li>Check that source/target tools are in correct order</li>
+                                        <li>Verify interaction type matches the connection</li>
+                                        <li>Ensure lifecycle stage is appropriate</li>
+                                        <li>Proofread your description</li>
+                                    </ol>
+                                </div>
+                                <p class="mt-3">Once ready, click <strong>"Add Interaction"</strong> to submit.</p>
+                                <p>You'll be redirected to the interaction list with a success message!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: CSV Import -->
+        <div class="guide-section" id="csv-import">
+            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#csv-content">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-file-csv me-2"></i>4. Bulk Import via CSV
+                </h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="csv-content" class="collapse section-content">
+                <p class="lead">
+                    CSV import is ideal for adding multiple interactions at once, especially when working from
+                    spreadsheets or external sources.
+                </p>
+
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h5 class="text-primary">Step 1: Download Template</h5>
+                        <p>Get the correct CSV structure:</p>
+                        <a href="{{ url_for('upload_interactions_csv') }}" class="btn btn-success">
+                            <i class="fas fa-download me-2"></i>Download CSV Template
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="text-primary">Step 2: Prepare Data</h5>
+                        <p>Fill in your interaction data:</p>
+                        <a href="#csv-structure" class="btn btn-outline-primary">
+                            <i class="fas fa-info-circle me-2"></i>View CSV Structure
+                        </a>
+                    </div>
+                </div>
+
+                <h5 class="text-primary mt-5 mb-3" id="csv-structure">CSV Structure</h5>
+
+                <h6>Required Columns:</h6>
+                <pre><code>Source Tool, Target Tool, Interaction Type, Lifecycle Stage</code></pre>
+
+                <h6 class="mt-3">Optional Columns:</h6>
+                <pre><code>Description, Technical Details, Benefits, Challenges, Examples,
+Contact Person, Organization, Email, Priority, Complexity, Status, Submitted By</code></pre>
+
+                <h6 class="mt-4 mb-3">Example CSV Content:</h6>
+                <pre><code>Source Tool,Target Tool,Interaction Type,Lifecycle Stage,Description,Priority,Status
+GitHub,Zenodo,Data Exchange,PRESERVE,"GitHub repositories automatically archived to Zenodo with DOI.",medium,implemented
+DMPTool,RSpace,API Integration,PLAN,"DMPTool integrates with RSpace for data management planning.",high,pilot
+REDCap,R,Data Exchange,ANALYSE,"REDCap exports directly to R for statistical analysis.",high,implemented</code></pre>
+
+                <div class="callout callout-warning mt-4">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Important Validation Requirements</h6>
+                    <ul class="mb-0">
+                        <li><strong>Tool Names:</strong> Must exactly match existing tools in PRISM (case-sensitive)</li>
+                        <li><strong>Interaction Types:</strong> Must be from the predefined list</li>
+                        <li><strong>Lifecycle Stages:</strong> Must match MaLDReTH stages</li>
+                        <li><strong>CSV Format:</strong> UTF-8 encoding, comma-separated, quoted fields if containing commas</li>
+                    </ul>
+                </div>
+
+                <h5 class="text-primary mt-5 mb-3">Step 3: Upload and Review</h5>
+                <ol>
+                    <li>Navigate to the CSV upload page</li>
+                    <li>Choose your file or drag-and-drop</li>
+                    <li>Click "Upload and Process"</li>
+                    <li>Review the results page for success/errors</li>
+                </ol>
+
+                <a href="{{ url_for('upload_interactions_csv') }}" class="btn btn-primary mt-3">
+                    <i class="fas fa-upload me-2"></i>Upload CSV Now
+                </a>
+
+                <h6 class="mt-4 mb-3">Understanding Results:</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="callout callout-success">
+                            <strong><i class="fas fa-check me-2"></i>Success</strong>
+                            <p class="small mb-0">New interactions added to database</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="callout callout-warning">
+                            <strong><i class="fas fa-exclamation me-2"></i>Duplicates</strong>
+                            <p class="small mb-0">Interactions already exist (skipped)</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="callout callout-danger">
+                            <strong><i class="fas fa-times me-2"></i>Errors</strong>
+                            <p class="small mb-0">Issues with data that need correction</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Curation -->
+        <div class="guide-section" id="curation">
+            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#curation-content">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-tasks me-2"></i>5. Curating Existing Interactions
+                </h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="curation-content" class="collapse section-content">
+                <p class="lead">
+                    Curation involves reviewing, correcting, and enriching existing interaction data to maintain
+                    quality and completeness.
+                </p>
+
+                <h5 class="text-primary mt-4 mb-3">When to Curate</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-warning">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="fas fa-exclamation-triangle text-warning me-2"></i>Incomplete Data</h6>
+                                <p class="card-text small">Missing technical details or examples</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-info">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="fas fa-clock text-info me-2"></i>Outdated Information</h6>
+                                <p class="card-text small">Status changes, deprecated integrations</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-success">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="fas fa-lightbulb text-success me-2"></i>Improved Understanding</h6>
+                                <p class="card-text small">Better descriptions based on new knowledge</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-danger">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="fas fa-bug text-danger me-2"></i>Error Correction</h6>
+                                <p class="card-text small">Fix typos, wrong tools, incorrect stages</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="text-primary mt-4 mb-3">How to Curate</h5>
+
+                <div class="step-card">
+                    <span class="step-number">1</span>
+                    <strong>Find the Interaction</strong>
+                    <br>Browse, search, or use direct URL if you know the ID
+                    <br><a href="{{ url_for('view_interactions') }}" class="btn btn-sm btn-outline-primary mt-2">Browse Interactions</a>
+                </div>
+
+                <div class="step-card">
+                    <span class="step-number">2</span>
+                    <strong>Review Current Data</strong>
+                    <br>Read the full record and identify what needs updating
+                </div>
+
+                <div class="step-card">
+                    <span class="step-number">3</span>
+                    <strong>Edit the Interaction</strong>
+                    <br>Click the "Edit" button (✏️ icon) on the interaction detail page
+                </div>
+
+                <div class="step-card">
+                    <span class="step-number">4</span>
+                    <strong>Make Updates</strong>
+                    <br>Modify fields, add missing information, correct errors
+                </div>
+
+                <div class="step-card">
+                    <span class="step-number">5</span>
+                    <strong>Save Changes</strong>
+                    <br>Review your modifications and click "Save Changes"
+                </div>
+
+                <div class="callout callout-tip mt-4">
+                    <strong><i class="fas fa-lightbulb me-2"></i>Best Practice:</strong>
+                    Add a note in the description about what you changed and why, if the change is significant.
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 6: Best Practices -->
+        <div class="guide-section" id="best-practices">
+            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#practices-content">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-star me-2"></i>6. Best Practices
+                </h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="practices-content" class="collapse section-content">
+                <h5 class="text-primary mb-3">Writing Quality Descriptions</h5>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success"><i class="fas fa-check me-2"></i>DO:</h6>
+                        <ul>
+                            <li>Focus on what the interaction enables for researchers</li>
+                            <li>Use clear, concise language (1-3 sentences)</li>
+                            <li>Explain the "why" not just the "what"</li>
+                            <li>Include context about research workflows</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger"><i class="fas fa-times me-2"></i>DON'T:</h6>
+                        <ul>
+                            <li>Use overly technical jargon without explanation</li>
+                            <li>Write vague descriptions ("these tools work together")</li>
+                            <li>Include marketing language or superlatives</li>
+                            <li>Copy-paste from tool websites without context</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="example-box">
+                            <h6 class="text-success"><i class="fas fa-thumbs-up me-2"></i>Good Example:</h6>
+                            <p class="mb-0">
+                                "Jupyter notebooks can be containerized using Docker to ensure reproducible computational
+                                environments across different systems and platforms, enabling researchers to share analysis
+                                workflows that run identically regardless of local setup."
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <div class="example-box bad">
+                            <h6 class="text-danger"><i class="fas fa-thumbs-down me-2"></i>Poor Example:</h6>
+                            <p class="mb-0">
+                                "Jupyter and Docker work together. This is useful."
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="text-primary mt-5 mb-3">Selecting the Right Lifecycle Stage</h5>
+                <p>Consider where the interaction has <strong>primary impact</strong>:</p>
+
+                <table class="guide-table">
+                    <thead>
+                        <tr>
+                            <th>Stage</th>
+                            <th>Use When</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>COLLECT</strong></td>
+                            <td>Data entry, sensor integration, lab instruments</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ANALYSE</strong></td>
+                            <td>Statistical analysis, visualization, computation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PRESERVE</strong></td>
+                            <td>Long-term storage, archiving, repositories</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PUBLISH</strong></td>
+                            <td>Publishing platforms, DOI minting, article submission</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="callout callout-tip mt-3">
+                    <strong><i class="fas fa-lightbulb me-2"></i>Tip:</strong>
+                    If an interaction spans multiple stages, choose the one where it provides the most value
+                    or is most commonly used.
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 7: Common Scenarios -->
+        <div class="guide-section" id="scenarios">
+            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#scenarios-content">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-question-circle me-2"></i>7. Common Scenarios
+                </h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="scenarios-content" class="collapse section-content">
+                <div class="accordion" id="scenariosAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#scenario1">
+                                <i class="fas fa-exchange-alt me-2"></i>Two-Way Integrations
+                            </button>
+                        </h2>
+                        <div id="scenario1" class="accordion-collapse collapse show" data-bs-parent="#scenariosAccordion">
+                            <div class="accordion-body">
+                                <p><strong>Question:</strong> GitHub and Zenodo have bidirectional integration. Should I create two interactions?</p>
+                                <div class="callout callout-success">
+                                    <p><strong>Answer:</strong> Yes, create separate interactions if the directionality matters:</p>
+                                    <ul class="mb-0">
+                                        <li>GitHub → Zenodo (archiving repositories)</li>
+                                        <li>Zenodo → GitHub (linking back to source code)</li>
+                                    </ul>
+                                    <p class="mt-2 mb-0">Each has different use cases and technical implementations.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#scenario2">
+                                <i class="fas fa-network-wired me-2"></i>One Tool, Multiple Targets
+                            </button>
+                        </h2>
+                        <div id="scenario2" class="accordion-collapse collapse" data-bs-parent="#scenariosAccordion">
+                            <div class="accordion-body">
+                                <p><strong>Question:</strong> ORCID connects to Zenodo, figshare, DataCite, and many others. How should I document this?</p>
+                                <div class="callout callout-success">
+                                    <p><strong>Answer:</strong> Create separate interactions for each connection:</p>
+                                    <ul class="mb-0">
+                                        <li>ORCID → Zenodo (authentication and profile linking)</li>
+                                        <li>ORCID → figshare (researcher identification)</li>
+                                        <li>ORCID → DataCite (persistent identifiers)</li>
+                                    </ul>
+                                    <p class="mt-2 mb-0">Each interaction may have different technical details and use cases.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#scenario3">
+                                <i class="fas fa-tools me-2"></i>Tool Not in Database
+                            </button>
+                        </h2>
+                        <div id="scenario3" class="accordion-collapse collapse" data-bs-parent="#scenariosAccordion">
+                            <div class="accordion-body">
+                                <p><strong>Question:</strong> I want to document an interaction, but one of the tools isn't in PRISM yet.</p>
+                                <div class="callout callout-info">
+                                    <p><strong>Answer:</strong></p>
+                                    <ol class="mb-0">
+                                        <li>Check <a href="{{ url_for('view_tools') }}">tools list</a> to confirm the tool is truly missing</li>
+                                        <li>Check for alternate tool names or spellings</li>
+                                        <li>Use <a href="{{ url_for('add_tool') }}">Add Tool</a> to add it yourself</li>
+                                        <li>For CSV imports, the validation will identify missing tools</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#scenario4">
+                                <i class="fas fa-flask me-2"></i>Experimental or Proposed Interactions
+                            </button>
+                        </h2>
+                        <div id="scenario4" class="accordion-collapse collapse" data-bs-parent="#scenariosAccordion">
+                            <div class="accordion-body">
+                                <p><strong>Question:</strong> Can I document interactions that are planned but not yet implemented?</p>
+                                <div class="callout callout-success">
+                                    <p><strong>Answer:</strong> Yes! Set the Status field appropriately:</p>
+                                    <ul class="mb-0">
+                                        <li><strong>Proposed:</strong> Conceptual or planning phase</li>
+                                        <li><strong>Pilot:</strong> In testing or limited rollout</li>
+                                        <li><strong>Implemented:</strong> Fully operational</li>
+                                    </ul>
+                                    <p class="mt-2 mb-0">This helps track the evolution of the research infrastructure landscape.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#scenario5">
+                                <i class="fas fa-ban me-2"></i>Deprecated Integrations
+                            </button>
+                        </h2>
+                        <div id="scenario5" class="accordion-collapse collapse" data-bs-parent="#scenariosAccordion">
+                            <div class="accordion-body">
+                                <p><strong>Question:</strong> Should I document interactions that no longer work?</p>
+                                <div class="callout callout-success">
+                                    <p><strong>Answer:</strong> Yes, for historical context:</p>
+                                    <ol class="mb-0">
+                                        <li>Keep the interaction record</li>
+                                        <li>Set Status to <strong>Deprecated</strong></li>
+                                        <li>Update description to note "No longer supported as of [date]"</li>
+                                        <li>Explain in challenges: "Service discontinued" or "Replaced by [new tool]"</li>
+                                    </ol>
+                                    <p class="mt-2 mb-0">This helps researchers understand ecosystem evolution.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 8: Quality Guidelines -->
+        <div class="guide-section" id="quality">
+            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#quality-content">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-check-circle me-2"></i>8. Quality Guidelines
+                </h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="quality-content" class="collapse section-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-success h-100">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-check me-2"></i>Minimum Standards</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Every interaction should have:</p>
+                                <ul class="mb-0">
+                                    <li>Correct source and target tools in proper order</li>
+                                    <li>Appropriate interaction type selection</li>
+                                    <li>Accurate lifecycle stage assignment</li>
+                                    <li>Clear description (minimum 1 sentence)</li>
+                                    <li>Appropriate status indicator</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-primary h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-star me-2"></i>Enhanced Quality</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>For high-quality, curated interactions:</p>
+                                <ul class="mb-0">
+                                    <li>Technical details with implementation specifics</li>
+                                    <li>Benefits clearly articulated</li>
+                                    <li>Known challenges or limitations documented</li>
+                                    <li>At least one concrete example provided</li>
+                                    <li>Priority and complexity assessed</li>
+                                    <li>Contact information for verification</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="text-danger mt-4 mb-3"><i class="fas fa-exclamation-triangle me-2"></i>Red Flags to Avoid</h5>
+                <div class="callout callout-danger">
+                    <ul class="mb-0">
+                        <li><strong>Generic descriptions:</strong> "Tool A and Tool B integrate"</li>
+                        <li><strong>Wrong directionality:</strong> Source/target reversed</li>
+                        <li><strong>Incorrect stages:</strong> Choosing ANALYSE for a preservation tool</li>
+                        <li><strong>Missing context:</strong> Technical jargon without explanation</li>
+                        <li><strong>Duplicate entries:</strong> Same interaction documented multiple times</li>
+                        <li><strong>Outdated status:</strong> Marking deprecated integrations as "Implemented"</li>
+                    </ul>
+                </div>
+
+                <h5 class="text-primary mt-4 mb-3"><i class="fas fa-clipboard-check me-2"></i>Verification Tips</h5>
+                <p>Before finalizing an interaction:</p>
+                <ol>
+                    <li><strong>Tool Documentation:</strong> Check official docs to verify the interaction exists</li>
+                    <li><strong>User Experience:</strong> Have you or someone you know used this integration?</li>
+                    <li><strong>Technical Accuracy:</strong> Are the technical details correct?</li>
+                    <li><strong>Current Status:</strong> Is the integration still active and supported?</li>
+                    <li><strong>Peer Review:</strong> Have a colleague review complex or critical interactions</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Section 9: Troubleshooting -->
+        <div class="guide-section" id="troubleshooting">
+            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#troubleshooting-content">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-wrench me-2"></i>9. Troubleshooting
+                </h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="troubleshooting-content" class="collapse section-content">
+                <h5 class="text-primary mb-3">CSV Upload Issues</h5>
+
+                <table class="guide-table">
+                    <thead>
+                        <tr>
+                            <th>Problem</th>
+                            <th>Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>"Tool 'X' not found in database"</td>
+                            <td>
+                                Check exact spelling at <a href="{{ url_for('view_tools') }}">tools list</a> or
+                                add the tool first
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>"Invalid interaction type"</td>
+                            <td>Must use exact names from predefined list (check <a href="{{ url_for('glossary') }}">glossary</a>)</td>
+                        </tr>
+                        <tr>
+                            <td>"Duplicate interaction detected"</td>
+                            <td>Interaction already exists; use curation interface to update</td>
+                        </tr>
+                        <tr>
+                            <td>"CSV encoding error"</td>
+                            <td>Save CSV as UTF-8 encoding or remove special characters</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h5 class="text-primary mt-4 mb-3">Web Form Issues</h5>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-warning">
+                            <div class="card-body">
+                                <h6 class="text-warning"><i class="fas fa-exclamation-triangle me-2"></i>Tool dropdown not loading</h6>
+                                <ul class="small mb-0">
+                                    <li>Enable JavaScript in your browser</li>
+                                    <li>Try a different browser (Chrome, Firefox recommended)</li>
+                                    <li>Clear browser cache and reload</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-danger">
+                            <div class="card-body">
+                                <h6 class="text-danger"><i class="fas fa-times-circle me-2"></i>Form submission fails</h6>
+                                <ul class="small mb-0">
+                                    <li>Check all required fields are completed (marked with *)</li>
+                                    <li>Ensure source and target tools are different</li>
+                                    <li>Check browser console for JavaScript errors</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="text-primary mt-4 mb-3">Getting Help</h5>
+                <p>If you encounter issues not covered here:</p>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('glossary') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-book me-2"></i>Check Glossary
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('view_interactions') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-list me-2"></i>View Examples
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('information_structures') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-database me-2"></i>API Docs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 10: Quick Reference -->
+        <div class="guide-section" id="reference">
+            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#reference-content">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-bookmark me-2"></i>10. Quick Reference Card
+                </h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="reference-content" class="collapse show section-content">
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Adding an Interaction</h5>
+                            </div>
+                            <div class="card-body">
+                                <ol class="mb-0">
+                                    <li>Go to <code>/interaction/add</code></li>
+                                    <li>Select <strong>Source Tool</strong> (initiator)</li>
+                                    <li>Select <strong>Target Tool</strong> (receiver)</li>
+                                    <li>Choose <strong>Interaction Type</strong></li>
+                                    <li>Choose <strong>Lifecycle Stage</strong></li>
+                                    <li>Write <strong>Description</strong></li>
+                                    <li>Add optional details</li>
+                                    <li>Submit</li>
+                                </ol>
+                                <a href="{{ url_for('add_interaction') }}" class="btn btn-primary w-100 mt-3">
+                                    <i class="fas fa-plus me-2"></i>Add Interaction
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-file-csv me-2"></i>CSV Import</h5>
+                            </div>
+                            <div class="card-body">
+                                <ol class="mb-0">
+                                    <li>Download template</li>
+                                    <li>Fill in your data</li>
+                                    <li>Validate tool names and types</li>
+                                    <li>Upload and review results</li>
+                                </ol>
+                                <a href="{{ url_for('upload_interactions_csv') }}" class="btn btn-success w-100 mt-3">
+                                    <i class="fas fa-upload me-2"></i>Upload CSV
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Curating</h5>
+                            </div>
+                            <div class="card-body">
+                                <ol class="mb-0">
+                                    <li>Find interaction</li>
+                                    <li>Click <strong>Edit</strong> (✏️)</li>
+                                    <li>Update fields as needed</li>
+                                    <li>Save changes</li>
+                                </ol>
+                                <a href="{{ url_for('view_interactions') }}" class="btn btn-info w-100 mt-3">
+                                    <i class="fas fa-list me-2"></i>View Interactions
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-secondary">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0"><i class="fas fa-link me-2"></i>Key URLs</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2">
+                                        <a href="{{ url_for('add_interaction') }}">
+                                            <i class="fas fa-plus me-2"></i>Add Interaction
+                                        </a>
+                                    </li>
+                                    <li class="mb-2">
+                                        <a href="{{ url_for('view_interactions') }}">
+                                            <i class="fas fa-list me-2"></i>View All
+                                        </a>
+                                    </li>
+                                    <li class="mb-2">
+                                        <a href="{{ url_for('upload_interactions_csv') }}">
+                                            <i class="fas fa-file-csv me-2"></i>CSV Import
+                                        </a>
+                                    </li>
+                                    <li class="mb-2">
+                                        <a href="{{ url_for('view_tools') }}">
+                                            <i class="fas fa-tools me-2"></i>Tools Catalog
+                                        </a>
+                                    </li>
+                                    <li class="mb-2">
+                                        <a href="{{ url_for('glossary') }}">
+                                            <i class="fas fa-book me-2"></i>Glossary
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer CTA -->
+        <div class="card bg-gradient text-white mt-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-body py-4 text-center">
+                <h3 class="mb-3">Ready to Contribute?</h3>
+                <p class="lead mb-4">
+                    Join the MaLDReTH II community in mapping the research infrastructure landscape
+                </p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="{{ url_for('add_interaction') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-plus me-2"></i>Add Your First Interaction
+                    </a>
+                    <a href="{{ url_for('upload_interactions_csv') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-file-csv me-2"></i>Upload CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Reading Progress Indicator
+    const progressBar = document.getElementById('readingProgress');
+
+    window.addEventListener('scroll', function() {
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollPercent = (scrollTop / (documentHeight - windowHeight)) * 100;
+
+        progressBar.style.width = scrollPercent + '%';
+    });
+
+    // Active TOC Link on Scroll
+    const sections = document.querySelectorAll('.guide-section');
+    const tocLinks = document.querySelectorAll('.toc-link');
+
+    window.addEventListener('scroll', function() {
+        let current = '';
+
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (window.pageYOffset >= (sectionTop - 100)) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        tocLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + current) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+    // Smooth Scrolling for TOC Links
+    document.querySelectorAll('.toc-link, .smooth-scroll').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+
+            if (targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Search Functionality
+    const searchInput = document.getElementById('guideSearch');
+    const allSections = document.querySelectorAll('.guide-section');
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+
+        allSections.forEach(section => {
+            const sectionText = section.textContent.toLowerCase();
+            const sectionHeader = section.querySelector('.section-header');
+            const sectionContent = section.querySelector('.section-content');
+
+            if (sectionText.includes(searchTerm) || searchTerm === '') {
+                section.style.display = 'block';
+
+                // Expand section if search term found
+                if (searchTerm !== '' && sectionContent.classList.contains('collapse')) {
+                    sectionContent.classList.add('show');
+                }
+            } else {
+                section.style.display = 'none';
+            }
+        });
+
+        // Show message if no results
+        const visibleSections = Array.from(allSections).filter(s => s.style.display !== 'none');
+        if (visibleSections.length === 0) {
+            // Could add a "no results" message here
+        }
+    });
+
+    // Toggle chevron icon on collapse
+    document.querySelectorAll('.section-header').forEach(header => {
+        header.addEventListener('click', function() {
+            const icon = this.querySelector('.fa-chevron-down, .fa-chevron-up');
+            if (icon) {
+                if (icon.classList.contains('fa-chevron-down')) {
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                } else {
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

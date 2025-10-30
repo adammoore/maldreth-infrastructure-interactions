@@ -88,15 +88,22 @@
                             <i class="fas fa-database me-1"></i>Info Structures
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('glossary') }}">
-                            <i class="fas fa-book me-1"></i>Glossary
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="helpDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-question-circle me-1"></i>Help
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('about') }}">
-                            <i class="fas fa-info-circle me-1"></i>About
-                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="helpDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('user_guide') }}">
+                                <i class="fas fa-book-open me-2"></i>User Guide
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('glossary') }}">
+                                <i class="fas fa-book me-2"></i>Glossary
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('about') }}">
+                                <i class="fas fa-info-circle me-2"></i>About PRISM
+                            </a></li>
+                        </ul>
                     </li>
                 </ul>
             </div>
