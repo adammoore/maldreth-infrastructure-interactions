@@ -251,18 +251,19 @@
                     <div class="col-md-6">
                         <h6 class="text-primary">Quick Start Guide</h6>
                         <ol class="small">
+                            <li><strong>Read the Guide</strong>: Check out the <a href="{{ url_for('user_guide') }}" target="_blank">User Guide</a> for detailed instructions</li>
                             <li><strong>Explore</strong>: Browse existing interactions and lifecycle stages</li>
                             <li><strong>Learn</strong>: Read the <a href="{{ url_for('glossary') }}" target="_blank">glossary</a> to understand terminology</li>
                             <li><strong>Contribute</strong>: Add interactions you know about</li>
                             <li><strong>Visualize</strong>: Explore the <a href="{{ url_for('radial_visualization') }}" target="_blank">interactive visualizations</a></li>
                         </ol>
 
-                        <div class="alert alert-info border-0 mt-3 mb-0">
+                        <div class="alert alert-success border-0 mt-3 mb-0">
                             <small>
-                                <i class="fas fa-lightbulb me-1"></i>
-                                <strong>Tip:</strong> Start by browsing the
-                                <a href="{{ url_for('view_interactions') }}">existing interactions</a>
-                                to see examples!
+                                <i class="fas fa-book-open me-1"></i>
+                                <strong>New!</strong> Our comprehensive
+                                <a href="{{ url_for('user_guide') }}" class="fw-bold">User Guide</a>
+                                walks you through adding and curating interactions step-by-step.
                             </small>
                         </div>
                     </div>
@@ -275,8 +276,11 @@
                         Don't show this again
                     </label>
                 </div>
+                <a href="{{ url_for('user_guide') }}" class="btn btn-success">
+                    <i class="fas fa-book-open me-1"></i>User Guide
+                </a>
                 <a href="{{ url_for('glossary') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-book me-1"></i>View Glossary
+                    <i class="fas fa-book me-1"></i>Glossary
                 </a>
                 <a href="{{ url_for('add_interaction') }}" class="btn btn-primary">
                     <i class="fas fa-plus me-1"></i>Add Interaction
