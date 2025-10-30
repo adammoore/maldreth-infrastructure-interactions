@@ -665,6 +665,7 @@
                     {% if recent_interactions %}
                     <div class="list-group list-group-flush">
                         {% for interaction in recent_interactions %}
+                        {% if interaction.source_tool and interaction.target_tool %}
                         <div class="list-group-item border-0 px-0">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
@@ -675,6 +676,7 @@
                                 <span class="badge bg-primary">{{ interaction.lifecycle_stage }}</span>
                             </div>
                         </div>
+                        {% endif %}
                         {% endfor %}
                     </div>
                     {% else %}

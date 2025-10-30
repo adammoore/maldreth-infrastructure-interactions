@@ -1157,24 +1157,32 @@ def information_structures():
             db.func.count(ToolInteraction.id).label('count')
         ).group_by(ToolInteraction.lifecycle_stage).all()
         
-        # Get tool usage in interactions
-        tool_usage = db.session.query(
-            ExemplarTool.name,
-            db.func.count(ToolInteraction.id).label('count')
-        ).join(
-            ToolInteraction, 
-            db.or_(
-                ToolInteraction.source_tool_id == ExemplarTool.id,
-                ToolInteraction.target_tool_id == ExemplarTool.id
-            )
-        ).group_by(ExemplarTool.name).order_by(
-            db.func.count(ToolInteraction.id).desc()
-        ).limit(10).all()
-        
-        # Get recent interactions
-        recent_interactions = ToolInteraction.query.order_by(
-            ToolInteraction.submitted_at.desc()
-        ).limit(5).all()
+        # Get tool usage in interactions (with error handling for empty database)
+        try:
+            tool_usage = db.session.query(
+                ExemplarTool.name,
+                db.func.count(ToolInteraction.id).label('count')
+            ).join(
+                ToolInteraction,
+                db.or_(
+                    ToolInteraction.source_tool_id == ExemplarTool.id,
+                    ToolInteraction.target_tool_id == ExemplarTool.id
+                )
+            ).group_by(ExemplarTool.name).order_by(
+                db.func.count(ToolInteraction.id).desc()
+            ).limit(10).all()
+        except Exception as e:
+            logger.warning(f"Could not get tool usage: {e}")
+            tool_usage = []
+
+        # Get recent interactions (with error handling)
+        try:
+            recent_interactions = ToolInteraction.query.order_by(
+                ToolInteraction.submitted_at.desc()
+            ).limit(5).all()
+        except Exception as e:
+            logger.warning(f"Could not get recent interactions: {e}")
+            recent_interactions = []
         
         # Get all stages with their tool counts
         stages_with_tools = []
