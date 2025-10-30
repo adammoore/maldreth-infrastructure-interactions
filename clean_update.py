@@ -16,12 +16,23 @@ def clean_update():
     """Perform a clean update of tool data."""
     with app.app_context():
         logger.info("Starting clean update process...")
-        
+
+        # Check if tables exist first
+        try:
+            inspector = db.inspect(db.engine)
+            tables = inspector.get_table_names()
+            if 'exemplar_tools' not in tables:
+                logger.info("Tables not initialized yet, skipping clean update")
+                return True
+        except Exception as e:
+            logger.warning(f"Could not check table existence: {e}")
+            return True
+
         # 1. Mark all auto-created tools as inactive
         auto_tools = ExemplarTool.query.filter_by(auto_created=True, is_active=True).all()
         for tool in auto_tools:
             tool.is_active = False
-        
+
         logger.info(f"Deactivated {len(auto_tools)} auto-created tools")
         
         # 2. Remove duplicate categories (same name in same stage)
