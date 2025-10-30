@@ -47,10 +47,10 @@
                                     {% endif %}
                                 </h4>
                                 <p class="text-muted mb-1">
-                                    <strong>Stage:</strong> {{ interaction.source_tool.category.stage.name }}
+                                    <strong>Stage:</strong> {{ interaction.source_tool.category.stage.name if interaction.source_tool.category and interaction.source_tool.category.stage else 'Unknown' }}
                                 </p>
                                 <p class="text-muted mb-0">
-                                    <strong>Category:</strong> {{ interaction.source_tool.category.name }}
+                                    <strong>Category:</strong> {{ interaction.source_tool.category.name if interaction.source_tool.category else 'Uncategorized' }}
                                 </p>
                             </div>
                         </div>
@@ -73,10 +73,10 @@
                                     {% endif %}
                                 </h4>
                                 <p class="text-muted mb-1">
-                                    <strong>Stage:</strong> {{ interaction.target_tool.category.stage.name }}
+                                    <strong>Stage:</strong> {{ interaction.target_tool.category.stage.name if interaction.target_tool.category and interaction.target_tool.category.stage else 'Unknown' }}
                                 </p>
                                 <p class="text-muted mb-0">
-                                    <strong>Category:</strong> {{ interaction.target_tool.category.name }}
+                                    <strong>Category:</strong> {{ interaction.target_tool.category.name if interaction.target_tool.category else 'Uncategorized' }}
                                 </p>
                             </div>
                         </div>
