@@ -31,7 +31,7 @@
                             <select class="form-select" id="source_tool_id" name="source_tool_id" required>
                                 <option value="">Select a source tool...</option>
                                 {% for tool in tools %}
-                                <option value="{{ tool.id }}" data-stage="{{ tool.category.stage.name }}">{{ tool.name }} ({{ tool.category.stage.name }})</option>
+                                <option value="{{ tool.id }}" data-stage="{{ tool.category.stage.name if tool.category and tool.category.stage else 'Unknown' }}">{{ tool.name }}{% if tool.category and tool.category.stage %} ({{ tool.category.stage.name }}){% endif %}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -48,7 +48,7 @@
                             <select class="form-select" id="target_tool_id" name="target_tool_id" required>
                                 <option value="">Select a target tool...</option>
                                 {% for tool in tools %}
-                                <option value="{{ tool.id }}" data-stage="{{ tool.category.stage.name }}">{{ tool.name }} ({{ tool.category.stage.name }})</option>
+                                <option value="{{ tool.id }}" data-stage="{{ tool.category.stage.name if tool.category and tool.category.stage else 'Unknown' }}">{{ tool.name }}{% if tool.category and tool.category.stage %} ({{ tool.category.stage.name }}){% endif %}</option>
                                 {% endfor %}
                             </select>
                         </div>
