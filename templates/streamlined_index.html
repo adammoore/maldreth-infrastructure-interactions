@@ -147,6 +147,7 @@
             </h2>
             <div class="row">
                 {% for interaction in recent_interactions %}
+                {% if interaction.source_tool and interaction.target_tool %}
                 <div class="col-lg-6 mb-4">
                     <div class="card card-hover h-100">
                         <div class="card-body">
@@ -157,12 +158,12 @@
                                 <span class="badge bg-primary">{{ interaction.lifecycle_stage }}</span>
                             </div>
                             <p class="text-muted small mb-2">
-                                <a href="{{ url_for('tool_detail', tool_id=interaction.source_tool.id) }}" 
+                                <a href="{{ url_for('tool_detail', tool_id=interaction.source_tool.id) }}"
                                    class="text-decoration-none">
                                     <strong>{{ interaction.source_tool.name }}</strong>
                                 </a>
-                                <i class="fas fa-arrow-right mx-2"></i> 
-                                <a href="{{ url_for('tool_detail', tool_id=interaction.target_tool.id) }}" 
+                                <i class="fas fa-arrow-right mx-2"></i>
+                                <a href="{{ url_for('tool_detail', tool_id=interaction.target_tool.id) }}"
                                    class="text-decoration-none">
                                     <strong>{{ interaction.target_tool.name }}</strong>
                                 </a>
@@ -179,6 +180,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
                 {% endfor %}
             </div>
         </div>
