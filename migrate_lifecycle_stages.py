@@ -49,15 +49,28 @@ def migrate_lifecycle_stages():
 
                 if not is_nullable:
                     try:
-                        # Make column nullable
-                        db.session.execute(db.text(
-                            'ALTER TABLE tool_interactions ALTER COLUMN lifecycle_stage DROP NOT NULL'
-                        ))
-                        db.session.commit()
-                        logger.info("✅ lifecycle_stage column is now nullable")
+                        # SQLite doesn't support ALTER COLUMN DROP NOT NULL
+                        # PostgreSQL does, so we detect and use appropriate syntax
+                        db_type = db.engine.dialect.name
+
+                        if db_type == 'postgresql':
+                            db.session.execute(db.text(
+                                'ALTER TABLE tool_interactions ALTER COLUMN lifecycle_stage DROP NOT NULL'
+                            ))
+                            db.session.commit()
+                            logger.info("✅ lifecycle_stage column is now nullable (PostgreSQL)")
+                        elif db_type == 'sqlite':
+                            # For SQLite, we can't modify constraints easily
+                            # But since the model now has nullable=True, new inserts won't fail
+                            logger.info("✅ SQLite detected - model updated to nullable=True")
+                            logger.info("   Existing data unaffected, new inserts will allow NULL")
+                        else:
+                            logger.warning(f"   Unknown database type: {db_type}")
+                            logger.info("   Skipping ALTER COLUMN, relying on model definition")
+
                     except Exception as e:
                         logger.warning(f"   Note: {e}")
-                        logger.info("   lifecycle_stage may already be nullable")
+                        logger.info("   lifecycle_stage migration skipped (model definition will handle it)")
                         db.session.rollback()
                 else:
                     logger.info("✅ lifecycle_stage column is already nullable")

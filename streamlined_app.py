@@ -353,6 +353,9 @@ class ExemplarTool(db.Model):
     import_source = db.Column(db.String(100))  # Track origin of tool data
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    stage = db.relationship('MaldrethStage', foreign_keys=[stage_id], backref='tools')
     source_interactions = db.relationship('ToolInteraction', foreign_keys='ToolInteraction.source_tool_id', backref='source_tool', lazy='dynamic')
     target_interactions = db.relationship('ToolInteraction', foreign_keys='ToolInteraction.target_tool_id', backref='target_tool', lazy='dynamic')
 
