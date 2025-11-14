@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MaLDReTH II & PRISM - RDA/IDW User Testing Session</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .slide {
+            width: 960px;
+            height: 540px;
+            page-break-after: always;
+            padding: 40px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            margin: 20px auto;
+            background: white;
+        }
+        h1 { font-size: 48px; color: #1a73e8; margin-bottom: 20px; }
+        h2 { font-size: 36px; color: #1a73e8; margin-bottom: 15px; }
+        h3 { font-size: 28px; color: #333; margin-bottom: 10px; }
+        p, li { font-size: 18px; line-height: 1.6; }
+        .subtitle { font-size: 24px; color: #666; font-style: italic; }
+        .center { text-align: center; }
+        .highlight { background-color: #fff3cd; padding: 15px; border-radius: 5px; }
+        .box { border: 2px solid #1a73e8; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .code { font-family: monospace; background: #f5f5f5; padding: 10px; border-radius: 3px; }
+        ul, ol { margin-left: 20px; }
+        .emoji { font-size: 24px; }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Title -->
+<div class="slide center">
+    <h1>MaLDReTH II</h1>
+    <h2>Mapping the Research Infrastructure Landscape</h2>
+    <p class="subtitle">Interactive User Testing Session</p>
+    <br><br>
+    <p><strong>RDA/IDW Session</strong></p>
+    <p>[Your Name] | [Your Affiliation]</p>
+    <p>[Date]</p>
+    <br>
+    <p>🔗 <strong>PRISM Live Demo:</strong> [Insert URL]</p>
+</div>
+
+<!-- Slide 2: Agenda -->
+<div class="slide">
+    <h2>Agenda</h2>
+    <div class="box">
+        <h3>1. Introduction to MaLDReTH II (5 min)</h3>
+        <ul>
+            <li>Problem space & motivation</li>
+            <li>Working group objectives</li>
+        </ul>
+    </div>
+    <div class="box">
+        <h3>2. PRISM Platform Demo (10 min)</h3>
+        <ul>
+            <li>Live walkthrough of key features</li>
+            <li>Recent enhancements</li>
+        </ul>
+    </div>
+    <div class="box">
+        <h3>3. Hands-On User Testing (25 min)</h3>
+        <ul>
+            <li>Guided tasks with the platform</li>
+            <li>Real-time feedback collection</li>
+        </ul>
+    </div>
+    <div class="box">
+        <h3>4. Discussion & Next Steps (10 min)</h3>
+    </div>
+</div>
+
+<!-- Slide 3: The Challenge -->
+<div class="slide">
+    <h2>The Challenge</h2>
+    <h3>Why MaLDReTH II?</h3>
+
+    <div class="highlight">
+        <p><strong>The Problem</strong></p>
+        <ul>
+            <li><strong>Fragmented Landscape:</strong> 1000+ research data tools exist</li>
+            <li><strong>Poor Discoverability:</strong> Researchers struggle to find tools</li>
+            <li><strong>Limited Interoperability:</strong> Tools don't communicate well</li>
+            <li><strong>No Unified View:</strong> Missing comprehensive mapping</li>
+        </ul>
+    </div>
+
+    <br>
+    <p class="center" style="font-size: 22px; font-style: italic;">
+        "Researchers spend 30-40% of their time finding and configuring tools<br>
+        instead of doing research"
+    </p>
+
+    <br>
+    <p><strong>Our Response:</strong> Systematic mapping of digital research infrastructure</p>
+</div>
+
+<!-- Slide 4: MaLDReTH II Overview -->
+<div class="slide">
+    <h2>MaLDReTH II Overview</h2>
+    <h3>Mapping the Landscape of Digital Research Tools Harmonised</h3>
+
+    <div class="box">
+        <p><strong>RDA Working Group Initiative</strong></p>
+        <ul>
+            <li><strong>Launch:</strong> 2023 (Building on MaLDReTH I)</li>
+            <li><strong>Members:</strong> 45+ institutions globally</li>
+            <li><strong>Focus:</strong> Tool discovery, categorization, interoperability</li>
+        </ul>
+    </div>
+
+    <h3>Key Deliverables</h3>
+    <ol>
+        <li>✅ <strong>12-Stage Lifecycle Model</strong> - Complete</li>
+        <li>✅ <strong>Tool Categorization Framework</strong> - Complete</li>
+        <li>✅ <strong>PRISM Platform</strong> - Beta (Today's focus!)</li>
+        <li>🔄 <strong>Open Access Database</strong> - In Progress</li>
+        <li>🔄 <strong>Community Guidelines</strong> - In Progress</li>
+    </ol>
+</div>
+
+<!-- Slide 5: 12-Stage Lifecycle -->
+<div class="slide">
+    <h2>The 12-Stage Research Data Lifecycle</h2>
+    <h3>MaLDReTH Model</h3>
+
+    <pre class="code" style="font-size: 14px;">
+┌──────────────┬──────────────┬──────────────┬──────────────┐
+│ CONCEPTUALISE│     PLAN     │     FUND     │   COLLECT    │
+└──────────────┴──────────────┴──────────────┴──────────────┘
+┌──────────────┬──────────────┬──────────────┬──────────────┐
+│   PROCESS    │   ANALYSE    │    STORE     │   PUBLISH    │
+└──────────────┴──────────────┴──────────────┴──────────────┘
+┌──────────────┬──────────────┬──────────────┬──────────────┐
+│   PRESERVE   │    SHARE     │   ACCESS     │  TRANSFORM   │
+└──────────────┴──────────────┴──────────────┴──────────────┘
+    </pre>
+
+    <br>
+    <div class="box">
+        <p><strong>Why 12 stages?</strong></p>
+        <ul>
+            <li>Previous models: 6-8 stages (too coarse)</li>
+            <li>MaLDReTH: Granular enough for tool mapping</li>
+            <li>Captures full data journey: conception → reuse</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 6: Introducing PRISM -->
+<div class="slide">
+    <h2>Introducing PRISM</h2>
+    <h3>Platform for Research Infrastructure Synergy Mapping</h3>
+
+    <p><strong>What is PRISM?</strong><br>
+    A web-based platform to <strong>map, visualize, and analyze</strong> interactions between research data tools</p>
+
+    <h3>Core Capabilities</h3>
+    <ul>
+        <li>📊 <strong>Interactive Visualizations</strong> - Multiple lifecycle views</li>
+        <li>🔗 <strong>Tool Interaction Mapping</strong> - Document how tools connect</li>
+        <li>📤 <strong>Data Export/Import</strong> - CSV bulk operations</li>
+        <li>🤝 <strong>Community-Driven</strong> - Crowdsourced knowledge</li>
+        <li>🔍 <strong>Discovery System</strong> - Automated discovery (coming soon)</li>
+    </ul>
+
+    <h3>Current Scale</h3>
+    <div class="grid">
+        <div>• <strong>167 tools</strong> documented</div>
+        <div>• <strong>56 interactions</strong> mapped</div>
+        <div>• <strong>12 lifecycle stages</strong></div>
+        <div>• <strong>Multiple visualizations</strong></div>
+    </div>
+</div>
+
+<!-- Slide 7: PRISM Architecture -->
+<div class="slide">
+    <h2>PRISM Architecture</h2>
+    <h3>Information Flow</h3>
+
+    <pre class="code" style="font-size: 13px;">
+┌─────────────────────────────────────────────────────────┐
+│              Data Input Pathways                        │
+├──────────────┬──────────────────┬───────────────────────┤
+│ Manual Entry │  CSV Bulk Upload │  Auto-Discovery*      │
+│  (Web UI)    │   (Enriched)     │  (AI-Powered)         │
+└──────────────┴──────────────────┴───────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────┐
+│               PRISM Core Database                       │
+│   Tools • Interactions • Lifecycle Stages               │
+└─────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────┐
+│           Visualization & Analytics                     │
+├───────────┬──────────┬──────────┬───────────────────────┤
+│  Network  │  Radial  │ Circular │  Export (CSV)         │
+│   View    │   View   │   View   │                       │
+└───────────┴──────────┴──────────┴───────────────────────┘
+    </pre>
+
+    <p style="font-size: 14px; font-style: italic;">*Auto-Discovery coming in Phase 6-7 (Weeks 6-10)</p>
+</div>
+
+<!-- Slide 8: Recent Enhancements -->
+<div class="slide">
+    <h2>Recent Enhancements (Phase 1)</h2>
+    <h3>What's New in PRISM</h3>
+
+    <div class="box">
+        <p><strong>🆕 Enriched Metadata</strong></p>
+        <ul>
+            <li>Software licenses (MIT, Apache, GPL, etc.)</li>
+            <li>GitHub repository URLs</li>
+            <li>Curator notes and context</li>
+        </ul>
+    </div>
+
+    <div class="box">
+        <p><strong>🆕 Bulk CSV Import</strong></p>
+        <ul>
+            <li>Upload 100+ tools at once</li>
+            <li>Automatic enrichment of existing tools</li>
+            <li>Auto-creation during interaction imports</li>
+        </ul>
+    </div>
+
+    <div class="box">
+        <p><strong>Smart Curation</strong></p>
+        <ul>
+            <li>Auto-created flag - Track CSV vs manual entries</li>
+            <li>Uncategorized tools - Queue for manual review</li>
+            <li>Soft deletes - Archive without data loss</li>
+        </ul>
+    </div>
+
+    <p><strong>Scale Achievement:</strong> +82 tools, +50 interactions imported! 🚀</p>
+</div>
+
+<!-- Slide 9: Live Demo -->
+<div class="slide center">
+    <h1>Live Demo</h1>
+    <h2>PRISM Walkthrough</h2>
+
+    <br><br>
+    <div class="box" style="text-align: left;">
+        <h3>We'll Demonstrate:</h3>
+        <ol style="font-size: 20px;">
+            <li>Home Dashboard - Overview statistics</li>
+            <li>Lifecycle Visualizations - Network, Radial, Circular</li>
+            <li>Tool Catalog - Browse 167+ tools</li>
+            <li>Interaction Details - See real connections</li>
+            <li>CSV Import - Bulk upload capability</li>
+            <li>Glossary - Comprehensive guidance</li>
+        </ol>
+    </div>
+
+    <br>
+    <p style="font-size: 28px;"><strong>🔗 Live URL:</strong> [Your PRISM instance]</p>
+    <br>
+    <p style="font-size: 20px; font-style: italic;">Switch to live demo for 10 minutes</p>
+</div>
+
+<!-- Slide 10: User Testing Objectives -->
+<div class="slide">
+    <h2>User Testing Objectives</h2>
+    <h3>What We're Testing Today</h3>
+
+    <div class="box">
+        <p><strong>Primary Goals</strong></p>
+        <ol>
+            <li><strong>Usability</strong> - Can users navigate and understand PRISM?</li>
+            <li><strong>Value</strong> - Is the tool mapping approach useful?</li>
+            <li><strong>Completeness</strong> - What data/features are missing?</li>
+            <li><strong>Workflows</strong> - Does it fit researcher needs?</li>
+        </ol>
+    </div>
+
+    <div class="box">
+        <p><strong>What We'll Measure</strong></p>
+        <ul>
+            <li>Task completion rates & time</li>
+            <li>User confusion points</li>
+            <li>Feature requests</li>
+            <li>Overall satisfaction (1-5 scale)</li>
+        </ul>
+    </div>
+
+    <p><strong>Your Role:</strong> Complete tasks, think aloud, be honest, suggest improvements!</p>
+</div>
+
+<!-- Slide 11: Task 1 -->
+<div class="slide">
+    <h2>User Testing - Task 1</h2>
+    <h3>Explore a Lifecycle Stage (5 min)</h3>
+
+    <div class="highlight">
+        <p><strong>📝 Your Mission</strong></p>
+        <p>You're a researcher starting a new data collection project. Understand what tools are available for the <strong>COLLECT</strong> stage.</p>
+    </div>
+
+    <div class="box">
+        <p><strong>Steps</strong></p>
+        <ol>
+            <li>Navigate to the lifecycle visualization</li>
+            <li>Find the COLLECT stage</li>
+            <li>Identify 3-5 tools in this stage</li>
+            <li>Click on one tool to see details</li>
+        </ol>
+    </div>
+
+    <p><strong>Questions to Consider:</strong></p>
+    <ul>
+        <li>Was it easy to find the COLLECT stage?</li>
+        <li>Are the tool names recognizable?</li>
+        <li>Is the information provided useful?</li>
+        <li>What's missing?</li>
+    </ul>
+
+    <p><strong>📝 Record your observations</strong></p>
+</div>
+
+<!-- Slide 12: Task 2 -->
+<div class="slide">
+    <h2>User Testing - Task 2</h2>
+    <h3>Discover Tool Interactions (5 min)</h3>
+
+    <div class="highlight">
+        <p><strong>📝 Your Mission</strong></p>
+        <p>You use <strong>Zenodo</strong> for data preservation. Find out what other tools it integrates with.</p>
+    </div>
+
+    <div class="box">
+        <p><strong>Steps</strong></p>
+        <ol>
+            <li>Search for "Zenodo" in the tool catalog</li>
+            <li>View the tool details</li>
+            <li>Identify interactions (both as source and target)</li>
+            <li>Examine one interaction in detail</li>
+        </ol>
+    </div>
+
+    <p><strong>Questions to Consider:</strong></p>
+    <ul>
+        <li>How easy was it to find Zenodo?</li>
+        <li>Are the interactions clear?</li>
+        <li>Is the technical detail sufficient?</li>
+        <li>Would this help you in real work?</li>
+    </ul>
+
+    <p><strong>📝 Record your observations</strong></p>
+</div>
+
+<!-- Slide 13: Task 3 -->
+<div class="slide">
+    <h2>User Testing - Task 3</h2>
+    <h3>Add Your Own Knowledge (7 min)</h3>
+
+    <div class="highlight">
+        <p><strong>📝 Your Mission</strong></p>
+        <p>You know about a tool interaction that's not in PRISM. Add it!</p>
+        <p><em>Example: GitHub automatically archives code to Zenodo</em></p>
+    </div>
+
+    <div class="box">
+        <p><strong>Steps</strong></p>
+        <ol>
+            <li>Click "Add Interaction"</li>
+            <li>Select source and target tools</li>
+            <li>Choose interaction type</li>
+            <li>Fill in description and details</li>
+            <li>Submit</li>
+        </ol>
+    </div>
+
+    <p><strong>Questions to Consider:</strong></p>
+    <ul>
+        <li>Was the form intuitive?</li>
+        <li>Were the categories clear?</li>
+        <li>Did you have enough fields?</li>
+        <li>What would make this easier?</li>
+    </ul>
+
+    <p><strong>📝 Record your observations</strong></p>
+</div>
+
+<!-- Slide 14: Task 4 -->
+<div class="slide">
+    <h2>User Testing - Task 4</h2>
+    <h3>Review CSV Import (5 min)</h3>
+
+    <div class="highlight">
+        <p><strong>📝 Your Mission</strong></p>
+        <p>PRISM recently imported 80+ tools via CSV. Explore the "uncategorized" tools.</p>
+    </div>
+
+    <div class="box">
+        <p><strong>Steps</strong></p>
+        <ol>
+            <li>Go to "View All Tools"</li>
+            <li>Look for tools with "Uncategorized" badge</li>
+            <li>Pick one uncategorized tool</li>
+            <li>View its details (license, GitHub, notes)</li>
+            <li>Consider: How would you categorize it?</li>
+        </ol>
+    </div>
+
+    <p><strong>Questions to Consider:</strong></p>
+    <ul>
+        <li>Is it clear which tools need curation?</li>
+        <li>Is the metadata helpful?</li>
+        <li>Would you be comfortable categorizing these?</li>
+        <li>What guidance would you need?</li>
+    </ul>
+
+    <p><strong>📝 Record your observations</strong></p>
+</div>
+
+<!-- Slide 15: Task 5 -->
+<div class="slide">
+    <h2>User Testing - Task 5</h2>
+    <h3>Export Data for Analysis (3 min)</h3>
+
+    <div class="highlight">
+        <p><strong>📝 Your Mission</strong></p>
+        <p>You want to analyze tool interactions in Excel/R/Python.</p>
+    </div>
+
+    <div class="box">
+        <p><strong>Steps</strong></p>
+        <ol>
+            <li>Find the CSV export function</li>
+            <li>Download the interactions data</li>
+            <li>Open it (if time permits)</li>
+        </ol>
+    </div>
+
+    <p><strong>Questions to Consider:</strong></p>
+    <ul>
+        <li>Was export easy to find?</li>
+        <li>Is the CSV format usable?</li>
+        <li>What additional fields would help?</li>
+        <li>What formats would you prefer?</li>
+    </ul>
+
+    <p><strong>📝 Record your observations</strong></p>
+</div>
+
+<!-- Slide 16: Feedback Collection -->
+<div class="slide">
+    <h2>Feedback Collection</h2>
+    <h3>Share Your Thoughts</h3>
+
+    <div class="box">
+        <p><strong>Quick Survey (5 min)</strong></p>
+
+        <p><strong>Usability (1-5)</strong></p>
+        <ul>
+            <li>How easy was PRISM to navigate?</li>
+            <li>How clear were the concepts?</li>
+            <li>How intuitive were the workflows?</li>
+        </ul>
+
+        <p><strong>Value (1-5)</strong></p>
+        <ul>
+            <li>How useful is tool mapping for your work?</li>
+            <li>Would you use PRISM in real projects?</li>
+            <li>Would you contribute data?</li>
+        </ul>
+
+        <p><strong>Features (Open)</strong></p>
+        <ul>
+            <li>What's the most valuable feature?</li>
+            <li>What's missing or confusing?</li>
+            <li>What would you change?</li>
+        </ul>
+    </div>
+
+    <p class="center" style="font-size: 24px;"><strong>🔗 Survey Link:</strong> [Insert Google Form URL]</p>
+</div>
+
+<!-- Slide 17: Initial Findings -->
+<div class="slide">
+    <h2>Initial Findings</h2>
+    <h3>What We're Hearing (Live Notes)</h3>
+
+    <div class="box">
+        <p><strong>✅ Positive Feedback:</strong></p>
+        <ul>
+            <li>[Fill in during session]</li>
+            <li>&nbsp;</li>
+            <li>&nbsp;</li>
+        </ul>
+    </div>
+
+    <div class="box">
+        <p><strong>⚠️ Challenges Identified:</strong></p>
+        <ul>
+            <li>[Fill in during session]</li>
+            <li>&nbsp;</li>
+            <li>&nbsp;</li>
+        </ul>
+    </div>
+
+    <div class="box">
+        <p><strong>💡 Feature Requests:</strong></p>
+        <ul>
+            <li>[Fill in during session]</li>
+            <li>&nbsp;</li>
+            <li>&nbsp;</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 18: Roadmap Preview -->
+<div class="slide">
+    <h2>Roadmap Preview</h2>
+    <h3>What's Coming Next</h3>
+
+    <div class="box">
+        <p><strong>Phase 2: Authentication & Curation (Week 2)</strong></p>
+        <ul>
+            <li>User accounts with ORCID</li>
+            <li>Role-based access (Viewer, Editor, Admin)</li>
+            <li>Admin dashboard for curation</li>
+        </ul>
+    </div>
+
+    <div class="box">
+        <p><strong>Phase 3: Admin Tools (Week 3)</strong></p>
+        <ul>
+            <li>Bulk categorization</li>
+            <li>Archive/delete capabilities</li>
+            <li>Quality assurance workflows</li>
+        </ul>
+    </div>
+
+    <div class="box">
+        <p><strong>Phase 6-7: Automated Discovery (Weeks 6-10)</strong></p>
+        <ul>
+            <li>RSS feed monitoring</li>
+            <li>GitHub repository scanning</li>
+            <li>AI-powered enrichment (Claude + MCP)</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 19: Discovery System -->
+<div class="slide">
+    <h2>Discovery System Sneak Peek</h2>
+    <h3>Coming Soon: Automated Tool Discovery</h3>
+
+    <pre class="code" style="font-size: 12px;">
+[RSS Feeds] ──┐
+[GitHub API] ──┤
+[Literature] ──┼──→ [AI Agent] ──→ [Discovery] ──→ [Human] ──→ [PRISM]
+[Registries] ──┘      (Claude)        (Queue)       (Review)
+    </pre>
+
+    <div class="box">
+        <p><strong>Sources We'll Monitor</strong></p>
+        <ul>
+            <li>Research Data Alliance news</li>
+            <li>Software Carpentry updates</li>
+            <li>GitHub topics (research-software, data-management)</li>
+            <li>bio.tools registry</li>
+            <li>Academic literature (arXiv, PubMed)</li>
+        </ul>
+    </div>
+
+    <div class="box">
+        <p><strong>AI Enhancement</strong></p>
+        <p>Confidence scoring • Metadata extraction • Interaction suggestions</p>
+    </div>
+
+    <p><strong>Result:</strong> Continuously growing, high-quality catalog with human oversight</p>
+</div>
+
+<!-- Slide 20: Contributing -->
+<div class="slide">
+    <h2>Contributing to PRISM</h2>
+    <h3>Join the Community</h3>
+
+    <div class="grid">
+        <div class="box">
+            <p><strong>🔍 Casual User</strong></p>
+            <ul>
+                <li>Browse the catalog</li>
+                <li>Share feedback</li>
+                <li>Suggest tools</li>
+            </ul>
+        </div>
+
+        <div class="box">
+            <p><strong>✍️ Active Contributor</strong></p>
+            <ul>
+                <li>Add interactions</li>
+                <li>Upload CSV catalogs</li>
+                <li>Review imported tools</li>
+            </ul>
+        </div>
+
+        <div class="box">
+            <p><strong>🛠️ Power User</strong></p>
+            <ul>
+                <li>Curate tools</li>
+                <li>Quality assurance</li>
+                <li>Bulk data management</li>
+            </ul>
+        </div>
+
+        <div class="box">
+            <p><strong>👥 WG Member</strong></p>
+            <ul>
+                <li>Join meetings</li>
+                <li>Shape direction</li>
+                <li>Co-author papers</li>
+            </ul>
+        </div>
+    </div>
+
+    <br>
+    <p class="center"><strong>🔗 Join Us:</strong> https://www.rd-alliance.org/groups/maldreth-ii</p>
+</div>
+
+<!-- Slide 21: Get Involved Today -->
+<div class="slide center">
+    <h1>Get Involved Today</h1>
+    <h2>Take Action</h2>
+
+    <br>
+    <div class="box" style="text-align: left;">
+        <h3>Immediate Steps</h3>
+        <ol style="font-size: 20px;">
+            <li><strong>Try PRISM:</strong> [Live URL]</li>
+            <li><strong>Add an Interaction:</strong> Share your knowledge</li>
+            <li><strong>Join Mailing List:</strong> Stay updated</li>
+            <li><strong>Follow on Social:</strong> @maldreth_rda</li>
+        </ol>
+    </div>
+
+    <br>
+    <div class="box" style="text-align: left;">
+        <h3>For Your Institution</h3>
+        <ul style="font-size: 20px;">
+            <li>Contribute your tool catalog via CSV</li>
+            <li>Host a workshop for user testing</li>
+            <li>Provide feedback on priorities</li>
+            <li>Offer long-term hosting partnership</li>
+        </ul>
+    </div>
+
+    <br>
+    <p style="font-size: 22px;"><strong>🔗 All Links:</strong> https://linktr.ee/maldreth</p>
+</div>
+
+<!-- Slide 22: Q&A -->
+<div class="slide center">
+    <h1>Questions & Discussion</h1>
+    <br><br>
+
+    <div class="box" style="text-align: left;">
+        <h3>Topics We Can Discuss</h3>
+        <ul style="font-size: 20px;">
+            <li>Technical implementation details</li>
+            <li>Data quality and curation workflows</li>
+            <li>Integration with your existing tools</li>
+            <li>Collaboration opportunities</li>
+            <li>Discovery system architecture</li>
+            <li>Roadmap priorities</li>
+        </ul>
+    </div>
+
+    <br><br>
+    <div class="box" style="text-align: left;">
+        <p><strong>Contact Information</strong></p>
+        <p>📧 maldreth-wg@rd-alliance.org</p>
+        <p>💬 #maldreth-ii (RDA Slack)</p>
+        <p>🌐 https://www.rd-alliance.org/groups/maldreth-ii</p>
+        <p>🐦 @maldreth_rda</p>
+    </div>
+
+    <br>
+    <p style="font-size: 28px;"><strong>Thank you for participating! 🙏</strong></p>
+</div>
+
+</body>
+</html>

@@ -363,7 +363,11 @@ class ToolInteraction(db.Model):
     source_tool_id = db.Column(db.Integer, db.ForeignKey('exemplar_tools.id'), nullable=False)
     target_tool_id = db.Column(db.Integer, db.ForeignKey('exemplar_tools.id'), nullable=False)
     interaction_type = db.Column(db.String(100), nullable=False)
-    lifecycle_stage = db.Column(db.String(50), nullable=False)
+
+    # DEPRECATED: lifecycle_stage is now auto-computed from source/target tools
+    # Kept for backward compatibility during migration, but no longer user-facing
+    lifecycle_stage = db.Column(db.String(50), nullable=True)  # Made nullable for migration
+
     description = db.Column(db.Text, nullable=False)
     technical_details = db.Column(db.Text)
     benefits = db.Column(db.Text)
@@ -381,6 +385,39 @@ class ToolInteraction(db.Model):
     # New fields for curation
     auto_created = db.Column(db.Boolean, default=False)  # Track if created from CSV/Discovery
     is_archived = db.Column(db.Boolean, default=False)  # Soft delete flag
+
+    @property
+    def lifecycle_stages(self):
+        """
+        Return list of lifecycle stages involved in this interaction.
+        Computed from source and target tools' assigned stages.
+
+        Returns:
+            list: [source_stage_name, target_stage_name]
+        """
+        stages = []
+        if self.source_tool and self.source_tool.stage:
+            stages.append(self.source_tool.stage.name)
+        if self.target_tool and self.target_tool.stage:
+            stages.append(self.target_tool.stage.name)
+        return stages
+
+    @property
+    def lifecycle_stages_display(self):
+        """
+        Return formatted lifecycle stages for display.
+
+        Returns:
+            str: "STAGE1" if same stage, "STAGE1 → STAGE2" if different
+        """
+        stages = self.lifecycle_stages
+        if not stages:
+            return "Unknown"
+        if len(stages) == 1:
+            return stages[0]
+        if len(set(stages)) == 1:  # Both same stage
+            return stages[0]
+        return f"{stages[0]} → {stages[1]}"
 
 class Feedback(db.Model):
     """Model for collecting user feedback on PRISM alpha."""
@@ -495,20 +532,29 @@ def index():
 
 @app.route('/add-interaction', methods=['GET', 'POST'])
 def add_interaction():
-    """Add a new tool interaction."""
-    stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
-    tools = ExemplarTool.query.order_by(ExemplarTool.name).all()
+    """
+    Add a new tool interaction using the unified progressive disclosure form.
+
+    Note: lifecycle_stage is no longer user-input; it's auto-computed from
+    source and target tools (Co-chairs meeting Nov 13, 2025).
+    """
+    tools = ExemplarTool.query.filter_by(is_active=True).order_by(ExemplarTool.name).all()
     interaction_types = INTERACTION_TYPES
-    lifecycle_stages = LIFECYCLE_STAGES
-    
+
     if request.method == 'POST':
         try:
+            # Validate required fields
+            if not request.form.get('description'):
+                flash('Description is required.', 'danger')
+                return redirect(url_for('add_interaction'))
+
             interaction = ToolInteraction(
                 source_tool_id=int(request.form.get('source_tool_id')),
                 target_tool_id=int(request.form.get('target_tool_id')),
                 interaction_type=request.form.get('interaction_type'),
-                lifecycle_stage=request.form.get('lifecycle_stage'),
+                # lifecycle_stage removed - now auto-computed from tools
                 description=request.form.get('description'),
+                # Optional fields from collapsed sections:
                 technical_details=request.form.get('technical_details'),
                 benefits=request.form.get('benefits'),
                 challenges=request.form.get('challenges'),
@@ -516,25 +562,36 @@ def add_interaction():
                 contact_person=request.form.get('contact_person'),
                 organization=request.form.get('organization'),
                 email=request.form.get('email'),
-                priority=request.form.get('priority'),
-                complexity=request.form.get('complexity'),
-                status=request.form.get('status'),
-                submitted_by=request.form.get('submitted_by')
+                priority=request.form.get('priority', 'Medium'),
+                complexity=request.form.get('complexity', 'Medium'),
+                status=request.form.get('status', 'Active'),
+                submitted_by=request.form.get('submitted_by', 'Anonymous')
             )
+
             db.session.add(interaction)
             db.session.commit()
+
+            logger.info(f"New interaction added: {interaction.interaction_type} between {interaction.source_tool.name} and {interaction.target_tool.name} (ID: {interaction.id})")
+
             flash('Interaction added successfully!', 'success')
-            return redirect(url_for('index'))
+            return redirect(url_for('interaction_detail', interaction_id=interaction.id))
+
+        except ValueError as e:
+            logger.error(f"Validation error adding interaction: {e}")
+            db.session.rollback()
+            flash('Invalid input. Please check your selections and try again.', 'danger')
+            return redirect(url_for('add_interaction'))
+
         except Exception as e:
             logger.error(f"Error adding interaction: {e}")
             db.session.rollback()
-            flash('Error adding interaction. Please try again.', 'error')
+            flash('Error adding interaction. Please try again.', 'danger')
+            return redirect(url_for('add_interaction'))
 
-    return render_template('streamlined_add_interaction.html', 
-                         tools=tools, 
-                         stages=stages, 
-                         interaction_types=interaction_types, 
-                         lifecycle_stages=lifecycle_stages)
+    # GET request - show unified form
+    return render_template('add_interaction_unified.html',
+                         tools=tools,
+                         interaction_types=interaction_types)
 
 @app.route('/interactions')
 def view_interactions():
@@ -2141,6 +2198,15 @@ def migrate_database_schema():
                 migrations_needed.append("ALTER TABLE tool_interactions ADD COLUMN complexity VARCHAR(20) DEFAULT 'Medium'")
             if 'status' not in interaction_columns:
                 migrations_needed.append("ALTER TABLE tool_interactions ADD COLUMN status VARCHAR(20) DEFAULT 'Active'")
+
+            # Nov 13, 2025 Co-chairs meeting: Make lifecycle_stage nullable (now computed from tools)
+            if 'lifecycle_stage' in interaction_columns:
+                # Check if column info has nullable property
+                col_info = [col for col in inspector.get_columns('tool_interactions') if col['name'] == 'lifecycle_stage']
+                if col_info and not col_info[0].get('nullable', False):
+                    logger.info("Migrating lifecycle_stage to nullable (now auto-computed)...")
+                    migrations_needed.append("ALTER TABLE tool_interactions ALTER COLUMN lifecycle_stage DROP NOT NULL")
+
         except Exception as e:
             logger.warning(f"Could not check tool_interactions table: {e}")
         

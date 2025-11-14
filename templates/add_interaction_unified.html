@@ -1,0 +1,559 @@
+{% extends "streamlined_base.html" %}
+
+{% block title %}Add Tool Interaction - PRISM{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="h2 text-primary mb-2">
+                    <i class="fas fa-link me-2"></i>Add Tool Interaction
+                </h1>
+                <p class="text-muted">
+                    Document how research tools work together across the data lifecycle.
+                    <a href="{{ url_for('user_guide') }}" target="_blank" class="ms-2">
+                        <i class="fas fa-book-open me-1"></i>Need help? View User Guide
+                    </a>
+                </p>
+            </div>
+
+            <!-- Information Alert -->
+            <div class="alert alert-info border-0 mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <strong><i class="fas fa-info-circle me-2"></i>Quick Entry Made Easy</strong>
+                        <p class="small mb-0 mt-1">
+                            Fill in the required fields below to quickly add an interaction.
+                            Optional sections can be expanded to add richer detail (or added later via edit).
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="expandAllSections()">
+                            <i class="fas fa-expand-alt me-1"></i>Expand All
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="collapseAllSections()">
+                            <i class="fas fa-compress-alt me-1"></i>Collapse All
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <noscript>
+                <div class="alert alert-warning">
+                    <strong>JavaScript Disabled:</strong> For the best experience, please enable JavaScript.
+                    Tool dropdowns will be basic without enhanced search.
+                </div>
+            </noscript>
+
+            <form method="POST" action="{{ url_for('add_interaction') }}" id="interactionForm">
+
+                <!-- REQUIRED FIELDS SECTION -->
+                <div class="card border-primary shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-asterisk me-2"></i>
+                            Required Information
+                        </h5>
+                        <small>These fields are essential for documenting the interaction</small>
+                    </div>
+                    <div class="card-body">
+
+                        <!-- Tool Selection Row -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="source_tool_id" class="form-label">
+                                    <strong>1. Source Tool</strong>
+                                    <span class="text-danger">*</span>
+                                    <span class="text-muted ms-1"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="The tool that initiates or provides data/functionality in this interaction">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <select class="form-select select2" id="source_tool_id" name="source_tool_id" required>
+                                    <option value="">-- Select source tool --</option>
+                                    {% for tool in tools %}
+                                    <option value="{{ tool.id }}"
+                                            data-stage="{{ tool.stage.name if tool.stage else 'Unknown' }}">
+                                        {{ tool.name }}{% if tool.stage %} ({{ tool.stage.name }}){% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text small">
+                                    <i class="fas fa-arrow-right me-1"></i>Provides data or initiates the interaction
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="target_tool_id" class="form-label">
+                                    <strong>2. Target Tool</strong>
+                                    <span class="text-danger">*</span>
+                                    <span class="text-muted ms-1"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="The tool that receives data/functionality in this interaction">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <select class="form-select select2" id="target_tool_id" name="target_tool_id" required>
+                                    <option value="">-- Select target tool --</option>
+                                    {% for tool in tools %}
+                                    <option value="{{ tool.id }}"
+                                            data-stage="{{ tool.stage.name if tool.stage else 'Unknown' }}">
+                                        {{ tool.name }}{% if tool.stage %} ({{ tool.stage.name }}){% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text small">
+                                    <i class="fas fa-arrow-right me-1"></i>Receives data or responds to the interaction
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lifecycle Stages Display (Auto-computed) -->
+                        <div class="alert alert-light border-primary mb-3" id="lifecycleStagesDisplay" style="display: none;">
+                            <small>
+                                <strong><i class="fas fa-sync-alt me-1"></i>Lifecycle Stages:</strong>
+                                <span id="stagesText" class="text-primary"></span>
+                                <span class="text-muted ms-2">(auto-computed from selected tools)</span>
+                            </small>
+                        </div>
+
+                        <!-- Interaction Type -->
+                        <div class="mb-3">
+                            <label for="interaction_type" class="form-label">
+                                <strong>3. Interaction Type</strong>
+                                <span class="text-danger">*</span>
+                                <a href="{{ url_for('glossary') }}#interaction-types" target="_blank"
+                                   class="btn btn-sm btn-outline-secondary ms-2"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
+                                   title="Not sure which type? Click to view definitions and examples in the glossary">
+                                    <i class="fas fa-book me-1"></i>View Glossary
+                                </a>
+                            </label>
+                            <select class="form-select" id="interaction_type" name="interaction_type" required>
+                                <option value="">-- Select interaction type --</option>
+                                {% for itype in interaction_types %}
+                                <option value="{{ itype }}">{{ itype }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text small">
+                                <i class="fas fa-lightbulb me-1"></i>
+                                How do these tools interact? (e.g., API, Data Exchange, etc.)
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                <strong>4. Description</strong>
+                                <span class="text-danger">*</span>
+                                <span class="text-muted ms-1"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title="Describe what happens in this interaction and why it's useful (1-3 sentences)">
+                                    <i class="fas fa-question-circle"></i>
+                                </span>
+                            </label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                      required
+                                      placeholder="e.g., 'DMPTool exports data management plans as JSON files that RSpace imports via its REST API, allowing researchers to link DMP requirements directly to their laboratory notebooks.'"></textarea>
+                            <div class="form-text small">
+                                <i class="fas fa-pen me-1"></i>
+                                One to three sentences explaining what happens and why it matters
+                            </div>
+                        </div>
+
+                        <!-- Submitted By (Optional but Encouraged) -->
+                        <div class="mb-0">
+                            <label for="submitted_by" class="form-label">
+                                <strong>Your Name</strong>
+                                <span class="text-muted">(Optional)</span>
+                            </label>
+                            <input type="text" class="form-control" id="submitted_by" name="submitted_by"
+                                   placeholder="e.g., Jane Researcher or Organization Name">
+                            <div class="form-text small">
+                                <i class="fas fa-user me-1"></i>
+                                Help us acknowledge your contribution (optional)
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- OPTIONAL SECTION 1: TECHNICAL DETAILS -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light" style="cursor: pointer;"
+                         data-bs-toggle="collapse"
+                         data-bs-target="#technicalDetailsSection"
+                         aria-expanded="false"
+                         aria-controls="technicalDetailsSection">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fas fa-chevron-right me-2 collapse-icon"></i>
+                                <i class="fas fa-cogs me-2"></i>
+                                Technical Details
+                                <span class="badge bg-secondary ms-2">Optional</span>
+                            </h6>
+                            <small class="text-muted">Add technical implementation details</small>
+                        </div>
+                    </div>
+                    <div id="technicalDetailsSection" class="collapse">
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">
+                                <i class="fas fa-info-circle me-1"></i>
+                                This section captures the "how" of the interaction - technologies, protocols, and specific implementation details.
+                            </p>
+
+                            <div class="mb-3">
+                                <label for="technical_details" class="form-label">
+                                    Technical Implementation
+                                    <span class="text-muted ms-1"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="Mention protocols, APIs, standards, or technologies used">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <textarea class="form-control" id="technical_details" name="technical_details" rows="2"
+                                          placeholder="e.g., 'Uses REST API with OAuth 2.0 authentication. Data exchanged in JSON format following the DataCite metadata schema v4.3'"></textarea>
+                                <div class="form-text small">
+                                    Technologies, protocols, standards (e.g., REST API, OAuth 2.0, JSON-LD)
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="benefits" class="form-label">
+                                    Benefits
+                                    <span class="text-muted ms-1"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="What advantages does this interaction provide?">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <textarea class="form-control" id="benefits" name="benefits" rows="2"
+                                          placeholder="e.g., 'Reduces manual re-entry of metadata, ensures consistency between DMP and research documentation, enables automated compliance checking'"></textarea>
+                                <div class="form-text small">
+                                    Why is this interaction valuable? What problems does it solve?
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="challenges" class="form-label">
+                                    Challenges
+                                    <span class="text-muted ms-1"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="What limitations, difficulties, or trade-offs exist?">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <textarea class="form-control" id="challenges" name="challenges" rows="2"
+                                          placeholder="e.g., 'Requires institutional OAuth configuration, limited to institutions with both DMPTool and RSpace licenses, manual mapping needed for custom DMP fields'"></textarea>
+                                <div class="form-text small">
+                                    Limitations, setup requirements, known issues
+                                </div>
+                            </div>
+
+                            <div class="mb-0">
+                                <label for="examples" class="form-label">
+                                    Examples
+                                    <span class="text-muted ms-1"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="Provide real-world examples of this interaction in use">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <textarea class="form-control" id="examples" name="examples" rows="2"
+                                          placeholder="e.g., 'University of California uses this integration across 10 campuses. Marine Biology lab at MIT uses it to track compliance with NSF data sharing requirements'"></textarea>
+                                <div class="form-text small">
+                                    Real-world use cases, institutions using this interaction
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OPTIONAL SECTION 2: CONTACT INFORMATION -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light" style="cursor: pointer;"
+                         data-bs-toggle="collapse"
+                         data-bs-target="#contactInfoSection"
+                         aria-expanded="false"
+                         aria-controls="contactInfoSection">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fas fa-chevron-right me-2 collapse-icon"></i>
+                                <i class="fas fa-address-card me-2"></i>
+                                Contact Information
+                                <span class="badge bg-secondary ms-2">Optional</span>
+                            </h6>
+                            <small class="text-muted">Who can provide more information?</small>
+                        </div>
+                    </div>
+                    <div id="contactInfoSection" class="collapse">
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Help others learn more by providing contact details for someone knowledgeable about this interaction.
+                            </p>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="contact_person" class="form-label">Contact Person</label>
+                                    <input type="text" class="form-control" id="contact_person" name="contact_person"
+                                           placeholder="e.g., Dr. Jane Smith">
+                                    <div class="form-text small">Person familiar with this interaction</div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="organization" class="form-label">Organization</label>
+                                    <input type="text" class="form-control" id="organization" name="organization"
+                                           placeholder="e.g., University of Example">
+                                    <div class="form-text small">Institution or organization</div>
+                                </div>
+                                <div class="col-md-4 mb-0">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email"
+                                           placeholder="e.g., contact@example.edu">
+                                    <div class="form-text small">Contact email address</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OPTIONAL SECTION 3: CLASSIFICATION -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light" style="cursor: pointer;"
+                         data-bs-toggle="collapse"
+                         data-bs-target="#classificationSection"
+                         aria-expanded="false"
+                         aria-controls="classificationSection">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fas fa-chevron-right me-2 collapse-icon"></i>
+                                <i class="fas fa-tags me-2"></i>
+                                Classification
+                                <span class="badge bg-secondary ms-2">Optional</span>
+                            </h6>
+                            <small class="text-muted">Categorize this interaction</small>
+                        </div>
+                    </div>
+                    <div id="classificationSection" class="collapse">
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">
+                                <i class="fas fa-info-circle me-1"></i>
+                                These categories help others understand the maturity, complexity, and importance of this interaction.
+                            </p>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    <label for="priority" class="form-label">Priority</label>
+                                    <select class="form-select" id="priority" name="priority">
+                                        <option value="">-- Select --</option>
+                                        <option value="High">High - Critical for workflow</option>
+                                        <option value="Medium" selected>Medium - Important but not critical</option>
+                                        <option value="Low">Low - Nice to have</option>
+                                    </select>
+                                    <div class="form-text small">How important is this interaction?</div>
+                                </div>
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    <label for="complexity" class="form-label">Complexity</label>
+                                    <select class="form-select" id="complexity" name="complexity">
+                                        <option value="">-- Select --</option>
+                                        <option value="Low">Low - Simple setup</option>
+                                        <option value="Medium" selected>Medium - Moderate configuration</option>
+                                        <option value="High">High - Complex implementation</option>
+                                    </select>
+                                    <div class="form-text small">How difficult to implement?</div>
+                                </div>
+                                <div class="col-md-4 mb-0">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-select" id="status" name="status">
+                                        <option value="">-- Select --</option>
+                                        <option value="Active" selected>Active - Currently supported</option>
+                                        <option value="Planned">Planned - In development</option>
+                                        <option value="Deprecated">Deprecated - Legacy/outdated</option>
+                                    </select>
+                                    <div class="form-text small">Current implementation status</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <a href="{{ url_for('user_guide') }}" target="_blank" class="btn btn-outline-info ms-2">
+                            <i class="fas fa-question-circle me-1"></i>Help
+                        </a>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-check me-2"></i>Save Interaction
+                    </button>
+                </div>
+
+            </form>
+
+            <!-- Help Text -->
+            <div class="alert alert-light border mt-4">
+                <small class="text-muted">
+                    <i class="fas fa-lightbulb me-1"></i>
+                    <strong>Tip:</strong> You can always come back and edit this interaction later to add more details.
+                    Don't worry about making it perfect on the first try!
+                </small>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Select2 for tool dropdowns
+    if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+        $('.select2').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Search tools...',
+            allowClear: true,
+            width: '100%'
+        });
+    }
+
+    // Initialize Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Lifecycle stages auto-compute and display
+    const sourceToolSelect = document.getElementById('source_tool_id');
+    const targetToolSelect = document.getElementById('target_tool_id');
+    const lifecycleStagesDisplay = document.getElementById('lifecycleStagesDisplay');
+    const stagesText = document.getElementById('stagesText');
+
+    function updateLifecycleStagesDisplay() {
+        const sourceOption = sourceToolSelect.options[sourceToolSelect.selectedIndex];
+        const targetOption = targetToolSelect.options[targetToolSelect.selectedIndex];
+
+        if (sourceOption && sourceOption.dataset.stage && sourceOption.value &&
+            targetOption && targetOption.dataset.stage && targetOption.value) {
+
+            const sourceStage = sourceOption.dataset.stage;
+            const targetStage = targetOption.dataset.stage;
+
+            lifecycleStagesDisplay.style.display = 'block';
+
+            if (sourceStage === targetStage) {
+                stagesText.textContent = sourceStage;
+            } else {
+                stagesText.innerHTML = `<span class="badge bg-primary me-1">${sourceStage}</span> → <span class="badge bg-primary">${targetStage}</span>`;
+            }
+        } else {
+            lifecycleStagesDisplay.style.display = 'none';
+        }
+    }
+
+    sourceToolSelect.addEventListener('change', updateLifecycleStagesDisplay);
+    targetToolSelect.addEventListener('change', updateLifecycleStagesDisplay);
+
+    // Collapse icon rotation
+    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function(element) {
+        element.addEventListener('click', function() {
+            const icon = this.querySelector('.collapse-icon');
+            if (icon) {
+                const target = document.querySelector(this.getAttribute('data-bs-target'));
+                const bsCollapse = bootstrap.Collapse.getInstance(target) || new bootstrap.Collapse(target, {toggle: false});
+
+                // Toggle icon rotation
+                setTimeout(function() {
+                    if (target.classList.contains('show')) {
+                        icon.classList.remove('fa-chevron-right');
+                        icon.classList.add('fa-chevron-down');
+                    } else {
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-right');
+                    }
+                }, 100);
+            }
+        });
+    });
+
+    // Form validation feedback
+    const form = document.getElementById('interactionForm');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            // Scroll to first invalid field
+            const firstInvalid = form.querySelector(':invalid');
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.focus();
+            }
+        }
+        form.classList.add('was-validated');
+    });
+
+    // Keyboard shortcut: Ctrl/Cmd + S to submit
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            form.submit();
+        }
+    });
+});
+
+// Helper functions for expand/collapse all
+function expandAllSections() {
+    document.querySelectorAll('.collapse').forEach(function(collapseEl) {
+        const bsCollapse = bootstrap.Collapse.getInstance(collapseEl) || new bootstrap.Collapse(collapseEl, {toggle: false});
+        bsCollapse.show();
+    });
+}
+
+function collapseAllSections() {
+    document.querySelectorAll('.collapse').forEach(function(collapseEl) {
+        const bsCollapse = bootstrap.Collapse.getInstance(collapseEl) || new bootstrap.Collapse(collapseEl, {toggle: false});
+        bsCollapse.hide();
+    });
+}
+</script>
+
+<!-- Custom Styles -->
+<style>
+.collapse-icon {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card-header[data-bs-toggle="collapse"]:hover {
+    background-color: #e9ecef !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid {
+    border-color: #dc3545;
+}
+
+.was-validated .form-control:valid,
+.was-validated .form-select:valid {
+    border-color: #198754;
+}
+</style>
+{% endblock %}
