@@ -58,7 +58,14 @@
                             <div class="py-3">
                                 <i class="fas fa-arrow-right fa-2x text-primary"></i>
                                 <div class="mt-2">
-                                    <span class="badge bg-primary">{{ interaction.lifecycle_stage }}</span>
+                                    <small class="text-muted d-block mb-1">Lifecycle Stage</small>
+                                    {% if interaction.lifecycle_stages|length == 2 and interaction.lifecycle_stages[0] != interaction.lifecycle_stages[1] %}
+                                        <span class="badge bg-primary">{{ interaction.lifecycle_stages[0] }}</span>
+                                        <i class="fas fa-arrow-right mx-1"></i>
+                                        <span class="badge bg-success">{{ interaction.lifecycle_stages[1] }}</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">{{ interaction.lifecycle_stages_display }}</span>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

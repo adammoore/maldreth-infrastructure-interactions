@@ -1,229 +1,600 @@
 {% extends "streamlined_base.html" %}
 
-{% block title %}Edit Interaction{% endblock %}
+{% block title %}Edit Interaction - {{ interaction.source_tool.name }} → {{ interaction.target_tool.name }}{% endblock %}
 
 {% block content %}
-<h1 class="text-center mb-4">
-    <i class="fas fa-edit me-2"></i>Curate Tool Interaction
-</h1>
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body">
-                <div class="alert alert-info border-0 mb-4">
-                    <h6 class="alert-heading">
-                        <i class="fas fa-info-circle me-2"></i>Curation Mode
-                    </h6>
-                    <p class="mb-0 small">
-                        You are editing interaction #{{ interaction.id }}. Changes will update the existing record.
-                    </p>
-                </div>
-                
-                <form method="POST" action="{{ url_for('edit_interaction', interaction_id=interaction.id) }}">
-                    
-                    <!-- Core Information -->
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="source_tool_id" class="form-label">Source Tool</label>
-                            <select class="form-select" id="source_tool_id" name="source_tool_id" required>
-                                <option value="">Select a source tool...</option>
-                                {% for tool in tools %}
-                                <option value="{{ tool.id }}" data-stage="{{ tool.category.stage.name if tool.category and tool.category.stage else 'Unknown' }}"
-                                        {% if tool.id == interaction.source_tool_id %}selected{% endif %}>
-                                    {{ tool.name }}{% if tool.category and tool.category.stage %} ({{ tool.category.stage.name }}){% endif %}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="target_tool_id" class="form-label">Target Tool</label>
-                            <select class="form-select" id="target_tool_id" name="target_tool_id" required>
-                                <option value="">Select a target tool...</option>
-                                {% for tool in tools %}
-                                <option value="{{ tool.id }}" data-stage="{{ tool.category.stage.name if tool.category and tool.category.stage else 'Unknown' }}"
-                                        {% if tool.id == interaction.target_tool_id %}selected{% endif %}>
-                                    {{ tool.name }}{% if tool.category and tool.category.stage %} ({{ tool.category.stage.name }}){% endif %}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('view_interactions') }}">Interactions</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('interaction_detail', interaction_id=interaction.id) }}">Interaction #{{ interaction.id }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="text-center mb-3">
+                <i class="fas fa-edit me-2"></i>Curate Tool Interaction
+            </h1>
+            <div class="alert alert-info border-0 text-center mx-auto" style="max-width: 600px;">
+                <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>Curation Mode
+                </h6>
+                <p class="mb-0 small">
+                    You are editing interaction #{{ interaction.id }}. Changes will update the existing record.
+                    <a href="{{ url_for('user_guide') }}" target="_blank" class="text-decoration-none ms-2">
+                        <i class="fas fa-book-open"></i> User Guide
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <form method="POST" action="{{ url_for('edit_interaction', interaction_id=interaction.id) }}" id="editInteractionForm">
+
+                <!-- Required Information Section -->
+                <div class="card border-primary shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-asterisk me-2"></i>
+                            Required Information
+                        </h5>
                     </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="interaction_type" class="form-label">Interaction Type</label>
+                    <div class="card-body">
+                        <!-- Tool Selection Row -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="source_tool_id" class="form-label">
+                                    Source Tool <span class="text-danger">*</span>
+                                    <span class="text-muted ms-1"
+                                          data-bs-toggle="tooltip"
+                                          title="The tool that initiates or provides the interaction">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <select class="form-select select2-dropdown" id="source_tool_id" name="source_tool_id" required>
+                                    <option value="">Select a source tool...</option>
+                                    {% for tool in tools %}
+                                    <option value="{{ tool.id }}"
+                                            data-stage="{{ tool.stage.name if tool.stage else 'Unknown' }}"
+                                            {% if tool.id == interaction.source_tool_id %}selected{% endif %}>
+                                        {{ tool.name }}{% if tool.stage %} ({{ tool.stage.name }}){% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="target_tool_id" class="form-label">
+                                    Target Tool <span class="text-danger">*</span>
+                                    <span class="text-muted ms-1"
+                                          data-bs-toggle="tooltip"
+                                          title="The tool that receives or consumes the interaction">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <select class="form-select select2-dropdown" id="target_tool_id" name="target_tool_id" required>
+                                    <option value="">Select a target tool...</option>
+                                    {% for tool in tools %}
+                                    <option value="{{ tool.id }}"
+                                            data-stage="{{ tool.stage.name if tool.stage else 'Unknown' }}"
+                                            {% if tool.id == interaction.target_tool_id %}selected{% endif %}>
+                                        {{ tool.name }}{% if tool.stage %} ({{ tool.stage.name }}){% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Auto-computed Lifecycle Stages Display -->
+                        <div class="alert alert-light border-primary mb-3" id="lifecycleStagesDisplay" style="display: block;">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="fas fa-layer-group text-primary fa-2x"></i>
+                                </div>
+                                <div class="col">
+                                    <small class="d-block text-muted mb-1">
+                                        <strong>Lifecycle Stages</strong>
+                                        <span class="ms-1"
+                                              data-bs-toggle="tooltip"
+                                              title="Lifecycle stages are automatically computed from the selected source and target tools">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </small>
+                                    <span id="stagesText" class="text-primary fs-6">
+                                        {% if interaction.lifecycle_stages|length == 2 and interaction.lifecycle_stages[0] != interaction.lifecycle_stages[1] %}
+                                            <span class="badge bg-primary">{{ interaction.lifecycle_stages[0] }}</span>
+                                            <i class="fas fa-arrow-right mx-2"></i>
+                                            <span class="badge bg-success">{{ interaction.lifecycle_stages[1] }}</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">{{ interaction.lifecycle_stages_display }}</span>
+                                        {% endif %}
+                                    </span>
+                                    <small class="text-muted ms-2">(auto-computed)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interaction Type -->
+                        <div class="mb-3">
+                            <label for="interaction_type" class="form-label">
+                                Interaction Type <span class="text-danger">*</span>
+                                <span class="text-muted ms-1"
+                                      data-bs-toggle="tooltip"
+                                      title="Select the type of interaction between the two tools">
+                                    <i class="fas fa-question-circle"></i>
+                                </span>
+                                <a href="{{ url_for('glossary') }}#interaction-types" target="_blank" class="ms-2 text-decoration-none small">
+                                    <i class="fas fa-book"></i> View Glossary
+                                </a>
+                            </label>
                             <select class="form-select" id="interaction_type" name="interaction_type" required>
                                 <option value="">Select interaction type...</option>
                                 {% for interaction_type in interaction_types %}
-                                <option value="{{ interaction_type }}" 
+                                <option value="{{ interaction_type }}"
                                         {% if interaction_type == interaction.interaction_type %}selected{% endif %}>
                                     {{ interaction_type }}
                                 </option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label for="lifecycle_stage" class="form-label">Lifecycle Stage</label>
-                            <select class="form-select" id="lifecycle_stage" name="lifecycle_stage" required>
-                                <option value="">Select a lifecycle stage...</option>
-                                {% for stage in stages %}
-                                <option value="{{ stage.name }}" 
-                                        {% if stage.name == interaction.lifecycle_stage %}selected{% endif %}>
-                                    {{ stage.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="3" 
-                                  placeholder="Describe the interaction in detail." required>{{ interaction.description or '' }}</textarea>
-                    </div>
 
-                    <!-- Technical Details -->
-                    <h5 class="mt-4">Technical Details</h5>
-                    <div class="mb-3">
-                        <label for="technical_details" class="form-label">Technical Implementation</label>
-                        <textarea class="form-control" id="technical_details" name="technical_details" rows="2" 
-                                  placeholder="e.g., REST API, OAuth 2.0">{{ interaction.technical_details or '' }}</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="benefits" class="form-label">Benefits</label>
-                        <textarea class="form-control" id="benefits" name="benefits" rows="2" 
-                                  placeholder="Advantages of this interaction">{{ interaction.benefits or '' }}</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="challenges" class="form-label">Challenges</label>
-                        <textarea class="form-control" id="challenges" name="challenges" rows="2" 
-                                  placeholder="Limitations or difficulties">{{ interaction.challenges or '' }}</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="examples" class="form-label">Examples</label>
-                        <textarea class="form-control" id="examples" name="examples" rows="2" 
-                                  placeholder="Real-world examples">{{ interaction.examples or '' }}</textarea>
-                    </div>
-
-                    <!-- Contact Information -->
-                    <h5 class="mt-4">Contact Information</h5>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="contact_person" class="form-label">Contact Person</label>
-                            <input type="text" class="form-control" id="contact_person" name="contact_person" 
-                                   value="{{ interaction.contact_person or '' }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="organization" class="form-label">Organization</label>
-                            <input type="text" class="form-control" id="organization" name="organization" 
-                                   value="{{ interaction.organization or '' }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" 
-                                   value="{{ interaction.email or '' }}">
-                        </div>
-                    </div>
-
-                    <!-- Classification -->
-                    <h5 class="mt-4">Classification</h5>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="priority" class="form-label">Priority</label>
-                            <select class="form-select" id="priority" name="priority">
-                                <option value="">Select...</option>
-                                <option value="high" {% if interaction.priority == 'high' %}selected{% endif %}>High</option>
-                                <option value="medium" {% if interaction.priority == 'medium' %}selected{% endif %}>Medium</option>
-                                <option value="low" {% if interaction.priority == 'low' %}selected{% endif %}>Low</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="complexity" class="form-label">Complexity</label>
-                            <select class="form-select" id="complexity" name="complexity">
-                                <option value="">Select...</option>
-                                <option value="simple" {% if interaction.complexity == 'simple' %}selected{% endif %}>Simple</option>
-                                <option value="moderate" {% if interaction.complexity == 'moderate' %}selected{% endif %}>Moderate</option>
-                                <option value="complex" {% if interaction.complexity == 'complex' %}selected{% endif %}>Complex</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="status" class="form-label">Status</label>
-                            <select class="form-select" id="status" name="status">
-                                <option value="">Select...</option>
-                                <option value="proposed" {% if interaction.status == 'proposed' %}selected{% endif %}>Proposed</option>
-                                <option value="pilot" {% if interaction.status == 'pilot' %}selected{% endif %}>Pilot</option>
-                                <option value="implemented" {% if interaction.status == 'implemented' %}selected{% endif %}>Implemented</option>
-                                <option value="deprecated" {% if interaction.status == 'deprecated' %}selected{% endif %}>Deprecated</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Submitter -->
-                    <div class="mb-3">
-                        <label for="submitted_by" class="form-label">Submitted By</label>
-                        <input type="text" class="form-control" id="submitted_by" name="submitted_by" 
-                               placeholder="Enter name or affiliation" value="{{ interaction.submitted_by or '' }}">
-                    </div>
-                    
-                    <!-- Submit Buttons -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-success btn-lg">
-                                    <i class="fas fa-save me-2"></i>Update Interaction
-                                </button>
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                Description <span class="text-danger">*</span>
+                                <span class="text-muted ms-1"
+                                      data-bs-toggle="tooltip"
+                                      title="Provide a clear, concise description of this interaction">
+                                    <i class="fas fa-question-circle"></i>
+                                </span>
+                            </label>
+                            <textarea class="form-control" id="description" name="description" rows="4"
+                                      placeholder="Describe the interaction between the tools..." required>{{ interaction.description or '' }}</textarea>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Describe what data or functionality is exchanged between the tools.
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('interaction_detail', interaction_id=interaction.id) }}" 
-                                   class="btn btn-outline-secondary btn-lg">
-                                    <i class="fas fa-times me-2"></i>Cancel
-                                </a>
+
+                        <!-- Submitted By -->
+                        <div class="mb-3">
+                            <label for="submitted_by" class="form-label">
+                                Submitted By
+                                <span class="text-muted ms-1"
+                                      data-bs-toggle="tooltip"
+                                      title="Optional: Your name or affiliation">
+                                    <i class="fas fa-question-circle"></i>
+                                </span>
+                            </label>
+                            <input type="text" class="form-control" id="submitted_by" name="submitted_by"
+                                   placeholder="e.g., John Doe, University of Example"
+                                   value="{{ interaction.submitted_by or '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expand/Collapse Controls -->
+                <div class="text-center mb-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="expandAllBtn">
+                        <i class="fas fa-expand-alt me-1"></i>Expand All
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="collapseAllBtn">
+                        <i class="fas fa-compress-alt me-1"></i>Collapse All
+                    </button>
+                </div>
+
+                <!-- Optional Section 1: Technical Details -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#technicalDetailsSection">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chevron-right collapse-icon me-2"></i>
+                            <i class="fas fa-cogs me-2"></i>
+                            Technical Details
+                            <span class="badge bg-secondary ms-2">Optional</span>
+                            <small class="text-muted float-end">Click to expand</small>
+                        </h6>
+                    </div>
+                    <div id="technicalDetailsSection" class="collapse">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="technical_details" class="form-label">
+                                    Technical Implementation
+                                    <span class="text-muted ms-1"
+                                          data-bs-toggle="tooltip"
+                                          title="Technical details about how this interaction is implemented">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <textarea class="form-control" id="technical_details" name="technical_details" rows="3"
+                                          placeholder="e.g., REST API, OAuth 2.0, SWORD protocol">{{ interaction.technical_details or '' }}</textarea>
+                                <div class="form-text">
+                                    <i class="fas fa-lightbulb me-1"></i>
+                                    Examples: REST API, GraphQL, webhook integration, file format conversion
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="benefits" class="form-label">
+                                    Benefits
+                                    <span class="text-muted ms-1"
+                                          data-bs-toggle="tooltip"
+                                          title="What advantages does this interaction provide?">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <textarea class="form-control" id="benefits" name="benefits" rows="3"
+                                          placeholder="What advantages does this interaction provide?">{{ interaction.benefits or '' }}</textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="challenges" class="form-label">
+                                    Challenges
+                                    <span class="text-muted ms-1"
+                                          data-bs-toggle="tooltip"
+                                          title="What limitations or difficulties exist?">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <textarea class="form-control" id="challenges" name="challenges" rows="3"
+                                          placeholder="What limitations or difficulties exist?">{{ interaction.challenges or '' }}</textarea>
+                            </div>
+
+                            <div class="mb-0">
+                                <label for="examples" class="form-label">
+                                    Examples
+                                    <span class="text-muted ms-1"
+                                          data-bs-toggle="tooltip"
+                                          title="Real-world examples or use cases">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <textarea class="form-control" id="examples" name="examples" rows="3"
+                                          placeholder="Provide real-world examples or use cases">{{ interaction.examples or '' }}</textarea>
                             </div>
                         </div>
                     </div>
-                    
-                </form>
-            </div>
+                </div>
+
+                <!-- Optional Section 2: Contact Information -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#contactInfoSection">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chevron-right collapse-icon me-2"></i>
+                            <i class="fas fa-address-book me-2"></i>
+                            Contact Information
+                            <span class="badge bg-secondary ms-2">Optional</span>
+                            <small class="text-muted float-end">Click to expand</small>
+                        </h6>
+                    </div>
+                    <div id="contactInfoSection" class="collapse">
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="contact_person" class="form-label">
+                                        Contact Person
+                                        <span class="text-muted ms-1"
+                                              data-bs-toggle="tooltip"
+                                              title="Primary contact for this interaction">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="text" class="form-control" id="contact_person" name="contact_person"
+                                           placeholder="e.g., Jane Smith"
+                                           value="{{ interaction.contact_person or '' }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="organization" class="form-label">
+                                        Organization
+                                        <span class="text-muted ms-1"
+                                              data-bs-toggle="tooltip"
+                                              title="Organization implementing this interaction">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="text" class="form-control" id="organization" name="organization"
+                                           placeholder="e.g., University of Example"
+                                           value="{{ interaction.organization or '' }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="email" class="form-label">
+                                        Email
+                                        <span class="text-muted ms-1"
+                                              data-bs-toggle="tooltip"
+                                              title="Contact email address">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="email" class="form-control" id="email" name="email"
+                                           placeholder="contact@example.org"
+                                           value="{{ interaction.email or '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Optional Section 3: Classification -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#classificationSection">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chevron-right collapse-icon me-2"></i>
+                            <i class="fas fa-tags me-2"></i>
+                            Classification
+                            <span class="badge bg-secondary ms-2">Optional</span>
+                            <small class="text-muted float-end">Click to expand</small>
+                        </h6>
+                    </div>
+                    <div id="classificationSection" class="collapse">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="priority" class="form-label">
+                                        Priority
+                                        <span class="text-muted ms-1"
+                                              data-bs-toggle="tooltip"
+                                              title="How important is this interaction?">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <select class="form-select" id="priority" name="priority">
+                                        <option value="">Select...</option>
+                                        <option value="High" {% if interaction.priority == 'High' %}selected{% endif %}>High</option>
+                                        <option value="Medium" {% if interaction.priority == 'Medium' %}selected{% endif %}>Medium</option>
+                                        <option value="Low" {% if interaction.priority == 'Low' %}selected{% endif %}>Low</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="complexity" class="form-label">
+                                        Complexity
+                                        <span class="text-muted ms-1"
+                                              data-bs-toggle="tooltip"
+                                              title="How complex is this interaction to implement?">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <select class="form-select" id="complexity" name="complexity">
+                                        <option value="">Select...</option>
+                                        <option value="High" {% if interaction.complexity == 'High' %}selected{% endif %}>High</option>
+                                        <option value="Medium" {% if interaction.complexity == 'Medium' %}selected{% endif %}>Medium</option>
+                                        <option value="Low" {% if interaction.complexity == 'Low' %}selected{% endif %}>Low</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="status" class="form-label">
+                                        Status
+                                        <span class="text-muted ms-1"
+                                              data-bs-toggle="tooltip"
+                                              title="Current implementation status">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <select class="form-select" id="status" name="status">
+                                        <option value="">Select...</option>
+                                        <option value="Active" {% if interaction.status == 'Active' %}selected{% endif %}>Active</option>
+                                        <option value="Pilot" {% if interaction.status == 'Pilot' %}selected{% endif %}>Pilot</option>
+                                        <option value="Planned" {% if interaction.status == 'Planned' %}selected{% endif %}>Planned</option>
+                                        <option value="Deprecated" {% if interaction.status == 'Deprecated' %}selected{% endif %}>Deprecated</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="card border-success shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fas fa-save me-2"></i>Update Interaction
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-grid">
+                                    <a href="{{ url_for('interaction_detail', interaction_id=interaction.id) }}"
+                                       class="btn btn-outline-secondary btn-lg">
+                                        <i class="fas fa-times me-2"></i>Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <small class="text-muted">
+                                <i class="fas fa-keyboard me-1"></i>
+                                Press <kbd>Ctrl</kbd>+<kbd>S</kbd> (or <kbd>⌘</kbd>+<kbd>S</kbd> on Mac) to save
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
         </div>
     </div>
 </div>
 
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Select2 for searchable dropdowns
+    $('.select2-dropdown').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: function() {
+            return $(this).data('placeholder');
+        }
+    });
+
+    // Initialize Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Get form elements
     const sourceToolSelect = document.getElementById('source_tool_id');
     const targetToolSelect = document.getElementById('target_tool_id');
-    const lifecycleStageSelect = document.getElementById('lifecycle_stage');
-    
-    function updateLifecycleStage() {
+    const lifecycleStagesDisplay = document.getElementById('lifecycleStagesDisplay');
+    const stagesText = document.getElementById('stagesText');
+
+    /**
+     * Update the lifecycle stages display based on selected tools
+     */
+    function updateLifecycleStagesDisplay() {
         const sourceOption = sourceToolSelect.options[sourceToolSelect.selectedIndex];
         const targetOption = targetToolSelect.options[targetToolSelect.selectedIndex];
-        
+
         if (sourceOption && sourceOption.dataset.stage && targetOption && targetOption.dataset.stage) {
             const sourceStage = sourceOption.dataset.stage;
             const targetStage = targetOption.dataset.stage;
-            
-            // If both tools are from the same stage, select that stage
+
+            lifecycleStagesDisplay.style.display = 'block';
+
             if (sourceStage === targetStage) {
-                lifecycleStageSelect.value = sourceStage;
+                stagesText.innerHTML = `<span class="badge bg-primary">${sourceStage}</span>`;
             } else {
-                // If tools are from different stages, prioritize the source tool's stage
-                lifecycleStageSelect.value = sourceStage;
+                stagesText.innerHTML = `
+                    <span class="badge bg-primary">${sourceStage}</span>
+                    <i class="fas fa-arrow-right mx-2"></i>
+                    <span class="badge bg-success">${targetStage}</span>
+                `;
             }
         } else if (sourceOption && sourceOption.dataset.stage) {
-            // If only source tool is selected, use its stage
-            lifecycleStageSelect.value = sourceOption.dataset.stage;
+            lifecycleStagesDisplay.style.display = 'block';
+            stagesText.innerHTML = `<span class="badge bg-primary">${sourceOption.dataset.stage}</span>`;
         } else if (targetOption && targetOption.dataset.stage) {
-            // If only target tool is selected, use its stage
-            lifecycleStageSelect.value = targetOption.dataset.stage;
+            lifecycleStagesDisplay.style.display = 'block';
+            stagesText.innerHTML = `<span class="badge bg-primary">${targetOption.dataset.stage}</span>`;
+        } else {
+            lifecycleStagesDisplay.style.display = 'none';
         }
     }
-    
-    // Add event listeners to both tool selects (only if not already set)
-    if (!lifecycleStageSelect.value || lifecycleStageSelect.value === "") {
-        sourceToolSelect.addEventListener('change', updateLifecycleStage);
-        targetToolSelect.addEventListener('change', updateLifecycleStage);
-    }
+
+    // Add event listeners to tool selects (use Select2 events)
+    $('#source_tool_id, #target_tool_id').on('select2:select', updateLifecycleStagesDisplay);
+
+    // Chevron icon rotation on collapse/expand
+    document.querySelectorAll('.collapse').forEach(function(collapseEl) {
+        collapseEl.addEventListener('show.bs.collapse', function() {
+            const icon = this.parentElement.querySelector('.collapse-icon');
+            if (icon) {
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-chevron-down');
+            }
+        });
+
+        collapseEl.addEventListener('hide.bs.collapse', function() {
+            const icon = this.parentElement.querySelector('.collapse-icon');
+            if (icon) {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-right');
+            }
+        });
+    });
+
+    // Expand All button
+    document.getElementById('expandAllBtn').addEventListener('click', function() {
+        document.querySelectorAll('.collapse').forEach(function(collapseEl) {
+            const bsCollapse = new bootstrap.Collapse(collapseEl, {toggle: false});
+            bsCollapse.show();
+        });
+    });
+
+    // Collapse All button
+    document.getElementById('collapseAllBtn').addEventListener('click', function() {
+        document.querySelectorAll('.collapse').forEach(function(collapseEl) {
+            const bsCollapse = new bootstrap.Collapse(collapseEl, {toggle: false});
+            bsCollapse.hide();
+        });
+    });
+
+    // Keyboard shortcut: Ctrl+S or Cmd+S to submit form
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            document.getElementById('editInteractionForm').submit();
+        }
+    });
+
+    // Form validation
+    const form = document.getElementById('editInteractionForm');
+    form.addEventListener('submit', function(e) {
+        const requiredFields = ['source_tool_id', 'target_tool_id', 'interaction_type', 'description'];
+        let isValid = true;
+        let firstInvalidField = null;
+
+        requiredFields.forEach(function(fieldName) {
+            const field = document.getElementById(fieldName);
+            if (!field.value || field.value.trim() === '') {
+                isValid = false;
+                field.classList.add('is-invalid');
+                if (!firstInvalidField) {
+                    firstInvalidField = field;
+                }
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            if (firstInvalidField) {
+                firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalidField.focus();
+            }
+            alert('Please fill in all required fields (marked with *)');
+        }
+    });
+
+    // Initialize lifecycle stages display on page load
+    updateLifecycleStagesDisplay();
 });
 </script>
+
+<style>
+/* Collapse icon transition */
+.collapse-icon {
+    transition: transform 0.3s ease;
+}
+
+/* Select2 styling improvements */
+.select2-container--bootstrap-5 .select2-selection {
+    min-height: 38px;
+}
+
+/* Card header hover effect */
+.card-header[data-bs-toggle="collapse"] {
+    transition: background-color 0.2s ease;
+}
+
+.card-header[data-bs-toggle="collapse"]:hover {
+    background-color: #e2e6ea !important;
+}
+
+/* Keyboard shortcut styling */
+kbd {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+</style>
 
 {% endblock %}

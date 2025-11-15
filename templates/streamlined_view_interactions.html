@@ -152,7 +152,11 @@
                             {% endif %}
                         </td>
                         <td>{{ interaction.interaction_type }}</td>
-                        <td>{{ interaction.lifecycle_stage }}</td>
+                        <td>
+                            {% for stage in interaction.lifecycle_stages %}
+                                <span class="badge bg-primary">{{ stage }}</span>
+                            {% endfor %}
+                        </td>
                         <td>{{ interaction.description }}</td>
                         <td>{{ interaction.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
                         <td>

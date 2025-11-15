@@ -632,7 +632,7 @@ def edit_interaction(interaction_id):
             interaction.source_tool_id = request.form.get('source_tool_id')
             interaction.target_tool_id = request.form.get('target_tool_id')
             interaction.interaction_type = request.form.get('interaction_type')
-            interaction.lifecycle_stage = request.form.get('lifecycle_stage')
+            # lifecycle_stage removed - now auto-computed from tools (Co-chairs Nov 13, 2025)
             interaction.description = request.form.get('description')
             interaction.technical_details = request.form.get('technical_details')
             interaction.benefits = request.form.get('benefits')
@@ -652,16 +652,12 @@ def edit_interaction(interaction_id):
         
         # GET request - show edit form
         tools = ExemplarTool.query.order_by(ExemplarTool.name).all()
-        stages = MaldrethStage.query.order_by(MaldrethStage.position).all()
         interaction_types = INTERACTION_TYPES
-        lifecycle_stages = [stage.name for stage in stages]
-        
-        return render_template('streamlined_edit_interaction.html', 
+
+        return render_template('streamlined_edit_interaction.html',
                              interaction=interaction,
-                             tools=tools, 
-                             stages=stages, 
-                             interaction_types=interaction_types, 
-                             lifecycle_stages=lifecycle_stages)
+                             tools=tools,
+                             interaction_types=interaction_types)
     except Exception as e:
         logger.error(f"Error editing interaction: {e}")
         return render_template('error.html', error=str(e)), 500
