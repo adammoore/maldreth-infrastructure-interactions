@@ -255,9 +255,18 @@
                                                                 <td>interaction_type</td>
                                                                 <td><code>VARCHAR(100)</code></td>
                                                             </tr>
-                                                            <tr>
-                                                                <td>lifecycle_stage</td>
-                                                                <td><code>VARCHAR(50)</code></td>
+                                                            <tr class="table-warning">
+                                                                <td>
+                                                                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                                                    <strong>lifecycle_stage</strong>
+                                                                    <small class="text-muted">(deprecated)</small>
+                                                                </td>
+                                                                <td>
+                                                                    <code>VARCHAR(50) NULL</code>
+                                                                    <div class="small text-muted mt-1">
+                                                                        <i class="fas fa-info-circle me-1"></i>Auto-computed from source/target tools (Nov 2025)
+                                                                    </div>
+                                                                </td>
                                                             </tr>
                                                             <tr>
                                                                 <td>description</td>
@@ -544,11 +553,19 @@
                                             <td><span class="badge badge-sm bg-danger">Required</span></td>
                                             <td>Type from predefined list (API Integration, Data Exchange, etc.)</td>
                                         </tr>
-                                        <tr>
-                                            <td><code>Lifecycle Stage</code></td>
+                                        <tr class="table-warning">
+                                            <td>
+                                                <code>Lifecycle Stage</code>
+                                                <small class="text-muted ms-1">(deprecated)</small>
+                                            </td>
                                             <td>Enum</td>
-                                            <td><span class="badge badge-sm bg-danger">Required</span></td>
-                                            <td>MaLDReTH lifecycle stage (PLAN, COLLECT, ANALYSE, etc.)</td>
+                                            <td><span class="badge badge-sm bg-secondary">Deprecated</span></td>
+                                            <td>
+                                                <span class="text-decoration-line-through text-muted">MaLDReTH lifecycle stage (PLAN, COLLECT, ANALYSE, etc.)</span>
+                                                <div class="small text-success mt-1">
+                                                    <i class="fas fa-magic me-1"></i><strong>Auto-computed from source/target tools as of November 2025.</strong> If provided in CSV, will be ignored.
+                                                </div>
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td><code>Description</code></td>
