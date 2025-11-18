@@ -2175,10 +2175,20 @@ def migrate_database_schema():
         columns = [col['name'] for col in inspector.get_columns('exemplar_tools')]
         
         migrations_needed = []
-        
+
         # Check for each new column and add SQL to create them
         if 'provider' not in columns:
             migrations_needed.append('ALTER TABLE exemplar_tools ADD COLUMN provider VARCHAR(200)')
+        if 'license' not in columns:
+            migrations_needed.append('ALTER TABLE exemplar_tools ADD COLUMN license VARCHAR(100)')
+        if 'github_url' not in columns:
+            migrations_needed.append('ALTER TABLE exemplar_tools ADD COLUMN github_url VARCHAR(500)')
+        if 'notes' not in columns:
+            migrations_needed.append('ALTER TABLE exemplar_tools ADD COLUMN notes TEXT')
+        if 'created_via' not in columns:
+            migrations_needed.append("ALTER TABLE exemplar_tools ADD COLUMN created_via VARCHAR(100) DEFAULT 'UI'")
+        if 'is_archived' not in columns:
+            migrations_needed.append('ALTER TABLE exemplar_tools ADD COLUMN is_archived BOOLEAN DEFAULT FALSE')
         if 'auto_created' not in columns:
             migrations_needed.append('ALTER TABLE exemplar_tools ADD COLUMN auto_created BOOLEAN DEFAULT FALSE')
         if 'import_source' not in columns:
@@ -2197,6 +2207,10 @@ def migrate_database_schema():
                 migrations_needed.append("ALTER TABLE tool_interactions ADD COLUMN complexity VARCHAR(20) DEFAULT 'Medium'")
             if 'status' not in interaction_columns:
                 migrations_needed.append("ALTER TABLE tool_interactions ADD COLUMN status VARCHAR(20) DEFAULT 'Active'")
+            if 'auto_created' not in interaction_columns:
+                migrations_needed.append("ALTER TABLE tool_interactions ADD COLUMN auto_created BOOLEAN DEFAULT FALSE")
+            if 'is_archived' not in interaction_columns:
+                migrations_needed.append("ALTER TABLE tool_interactions ADD COLUMN is_archived BOOLEAN DEFAULT FALSE")
 
             # Nov 13, 2025 Co-chairs meeting: Make lifecycle_stage nullable (now computed from tools)
             if 'lifecycle_stage' in interaction_columns:
